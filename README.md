@@ -25,7 +25,7 @@ These inerence variables are interfaced by the user through seven methods:
 
 The guiding principle behind the design of the Satellite class is to be simple to use and efficient. The latter is gained by two means. First, the code uses simple geometric relationships within orbital mechanics to derive basic mathematical relations that can be expedited by vectored inputs and NumPy. Secondly, the methods are created such that the user has complete control over the enacted computations by only instantiating necessary instance variables. The restrictions on how to use these methods are outlined in the following subsections along with detailed explanations and example usage of each of the methods.
 
-### .timeData()
+### .timeData(timeData)
 **Description**  
 The `timeData` method instantiates the *times* attribute with the orbital time dependencies (the times that each position observation was taken). The length of the input data initializes the *length* attribute.  
 **Parameters**  
@@ -36,7 +36,7 @@ None
 None  
 **Example**  
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 finch = Satellite()
@@ -45,7 +45,7 @@ finch.timeData(timeData=UTCtimeData)
 ```
 
 
-### .positionData()
+### .positionData(timeData, type)
 **Description**  
 The `positionData` method interfaces with the *ECIdata* or *ECEFdata* attributes to initialize position data of the satellite. The user must specify the data as either ECI or ECEF data through the `type` parameter.  
 **Parameters**  
@@ -57,7 +57,7 @@ None
 The length of `posData` must be the same as the *length* attribute.  
 **Example**  
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 finch = Satellite()
@@ -65,7 +65,7 @@ ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6
 finch.positionData(posData=ECIvec, type="ECI")
 ```
 
-### .getERA()
+### .getERA(**kwargs)
 **Description**  
 The `getERA` method uses the *times* variable to calculate the earth rotation angles in radians. This is the angle between the <img src="https://render.githubusercontent.com/render/math?math=x_{ECI}"> and <img src="https://render.githubusercontent.com/render/math?math=x_{ECEF}"> coordinate axes. The array of these angles is stored in *ERAdata*.  
 **Parameters**  
@@ -78,7 +78,7 @@ None
 The *times* attribute must be initiated to use `getERA`. If one wishes to combine the `timeData` and `getERA` methods then the time dependency must be passed in as a **kwarg.  
 **Example**  
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 finch = Satellite()
@@ -90,7 +90,7 @@ ERAangles = finch.getERA()
 The commands can be simplified as in the following,  
 
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 finch = Satellite()
@@ -98,7 +98,7 @@ UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.03
 ERAangles = finch.getERA(timeData=UTCTimeData)
 ```
 
-### .getECI()
+### .getECI(**kwargs)
 **Description**  
 The `getECI` method uses the earth rotation angles to convert ECEF data to ECI data while instantiating *ECIdata*.  
 **Parameters**  
@@ -112,7 +112,7 @@ None
 The *ECEFdata* and *times* attributes must be instantiated or passed in as **kwargs.  
 **Example**  
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -122,7 +122,7 @@ finch = Satellite()
 ECIvec = finch.getECI(posData=ECEFvec, timeData=UTCTimeData)
 ```
 
-### .getECEF()
+### .getECEF(**kwargs)
 **Description**  
 The `getECEF` method uses the earth rotation angles to convert ECI data to ECEF data while instantiating *ECEFdata*.  
 **Parameters**  
@@ -136,7 +136,7 @@ None
 The *ECIdata* and *times* attributes must be initiated or passed in as **kwargs.  
 **Example**  
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -146,7 +146,7 @@ finch = Satellite()
 ECEFvec = finch.getECEF(posData=ECIvec, timeData=UTCTimeData)
 ```
 
-### .getAltAz()
+### .getAltAz(obsCoor, radius, **kwargs)
 **Description**  
 This method initiates the *horizontal* attribute of the Satellite object. This attribute is a ndarray of shape (n,2) where the first column is the altitude data and the second is the azimuth data. This method takes in an observers latitude and longitude in degrees as well as the surface radius.  
 **Parameters**  
@@ -161,7 +161,7 @@ This method initiates the *horizontal* attribute of the Satellite object. This a
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
 **Example**  
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -171,7 +171,7 @@ finch = Satellite()
 AltAz = finch.getAltAz(obsCoor=(43.662300, -79.394530), radius=6371, posData=ECIvec, timeData=UTCTimeData)
 ```
 
-### .saveData()
+### .saveData(fileName)
 **Description**  
 This method saves the class data to the local working directory.  
 **Parameters**  
@@ -182,7 +182,7 @@ None
 All instance variables must be initiated.  
 **Example**  
 ```python
-import celest
+from celest.satellite import *
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
