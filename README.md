@@ -1,10 +1,10 @@
-# SatPy
+# Celest
 
-This purpose of the SatPy library is to provide a simple interface to orbital coordinate conversions at an unprecedented speed which allows users to specify the exact computations to be enacted. This library is designed for small satellite applications who desire efficiency over precision in orbital calculations.
+This purpose of the Celest library is to provide a simple interface to orbital coordinate conversions at an unprecedented speed which allows users to specify the exact computations to be enacted. This library is designed for small satellite applications who desire efficiency over precision in orbital calculations.
 
 ## Satellite Class
 
-SatPy is broken into a single Satellite class representing the orbital object to store and compute orbital coordinate data. The class stores its data in six instance variables:
+Celest is broken into a single Satellite class representing the orbital object to store and compute orbital coordinate data. The class stores its data in six instance variables:
 
 1. **self.times**: Orbital time dependencies in an (n,) shaped ndarray.
 1. **self.ERAdata**: Earth rotation angles based on time dependencies in an (n,) shaped ndarray.
@@ -36,7 +36,7 @@ None
 None  
 **Example**  
 ```python
-import satpy
+import celest
 import numpy as np
 
 finch = Satellite()
@@ -57,7 +57,7 @@ None
 The length of `posData` must be the same as the *length* attribute.  
 **Example**  
 ```python
-import satpy
+import celest
 import numpy as np
 
 finch = Satellite()
@@ -78,7 +78,7 @@ None
 The *times* attribute must be initiated to use `getERA`. If one wishes to combine the `timeData` and `getERA` methods then the time dependency must be passed in as a **kwarg.  
 **Example**  
 ```python
-import satpy
+import celest
 import numpy as np
 
 finch = Satellite()
@@ -90,7 +90,7 @@ ERAangles = finch.getERA()
 The commands can be simplified as in the following,  
 
 ```python
-import satpy
+import celest
 import numpy as np
 
 finch = Satellite()
@@ -112,7 +112,7 @@ None
 The *ECEFdata* and *times* attributes must be instantiated or passed in as **kwargs.  
 **Example**  
 ```python
-import satpy
+import celest
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -136,7 +136,7 @@ None
 The *ECIdata* and *times* attributes must be initiated or passed in as **kwargs.  
 **Example**  
 ```python
-import satpy
+import celest
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -161,7 +161,7 @@ This method initiates the *horizontal* attribute of the Satellite object. This a
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
 **Example**  
 ```python
-import satpy
+import celest
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -182,7 +182,7 @@ None
 All instance variables must be initiated.  
 **Example**  
 ```python
-import satpy
+import celest
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
