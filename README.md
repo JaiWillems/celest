@@ -26,10 +26,10 @@ These inerence variables are interfaced by the user through seven methods:
 The guiding principle behind the design of the Satellite class is to be simple to use and efficient. The latter is gained by two means. First, the code uses simple geometric relationships within orbital mechanics to derive basic mathematical relations that can be expedited by vectored inputs and NumPy. Secondly, the methods are created such that the user has complete control over the enacted computations by only instantiating necessary instance variables. The restrictions on how to use these methods are outlined in the following subsections along with detailed explanations and example usage of each of the methods.
 
 ### .timeData()
-**Description**
-The `timeData` method instantiates the *times* attribute with the orbital time dependencies (the times that each position observation was taken). The length of the input data initializes the *length* attribute.
-**Parameters**
-`timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.
+**Description** 
+The `timeData` method instantiates the *times* attribute with the orbital time dependencies (the times that each position observation was taken). The length of the input data initializes the *length* attribute. 
+**Parameters**  
+`timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.  
 **Returns**
 None
 **Usage**
