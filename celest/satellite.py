@@ -1,4 +1,4 @@
-"""Main version of SatPy.
+"""Satellite orbital coordinate conversions.
 
 Notes
 -----
