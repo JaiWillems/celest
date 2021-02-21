@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="SatPy", # Replace with your own username
+    name="Celest", # Replace with your own username
     version="0.0.2",
     author="Jai Willems",
     author_email="jai52h@hotmail.com",
