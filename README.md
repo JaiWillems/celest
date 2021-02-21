@@ -67,7 +67,7 @@ finch.positionData(posData=ECIvec, type="ECI")
 
 ### .getERA()
 **Description**  
-The `getERA` method uses the *times* variable to calculate the earth rotation angles in radians. This is the angle between the $x_{ECI}$ and $x_{ECEF}$ coordinate axes. The array of these angles is stored in *ERAdata*.  
+The `getERA` method uses the *times* variable to calculate the earth rotation angles in radians. This is the angle between the <img src="https://render.githubusercontent.com/render/math?math=x_{ECI}> and <img src="https://render.githubusercontent.com/render/math?math=x_{ECEF}> coordinate axes. The array of these angles is stored in *ERAdata*.  
 **Parameters**  
 None  
 **\*\*kwargs**  
