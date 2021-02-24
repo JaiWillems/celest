@@ -45,7 +45,7 @@ finch.timeData(timeData=UTCtimeData)
 ```
 
 
-### .positionData(timeData, type)
+### .positionData(positionData, type)
 **Description**  
 The `positionData` method interfaces with the *ECIdata* or *ECEFdata* attributes to initialize position data of the satellite. The user must specify the data as either ECI or ECEF data through the `type` parameter.  
 **Parameters**  
