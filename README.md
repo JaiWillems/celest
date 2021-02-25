@@ -2,6 +2,12 @@
 
 This purpose of the Celest library is to provide a simple interface to orbital coordinate conversions at an unprecedented speed which allows users to specify the exact computations to be enacted. This library is designed for small satellite applications who desire efficiency over precision in orbital calculations.
 
+## Installation
+
+```terminal
+pip install Celest
+```
+
 ## Satellite Class
 
 Celest is broken into a single Satellite class representing the orbital object to store and compute orbital coordinate data. The class stores its data in six instance variables:
