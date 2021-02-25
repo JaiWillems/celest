@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="Celest", # Replace with your own username
-    version="0.0.2",
+    version="0.0.8",
     author="Jai Willems",
     author_email="jai52h@hotmail.com",
     description="Satellite orbital coordinate conversions.",
