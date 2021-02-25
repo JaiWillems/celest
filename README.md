@@ -36,7 +36,7 @@ None
 None  
 **Example**  
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 finch = Satellite()
@@ -57,7 +57,7 @@ None
 The length of `posData` must be the same as the *length* attribute.  
 **Example**  
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 finch = Satellite()
@@ -78,7 +78,7 @@ None
 The *times* attribute must be initiated to use `getERA`. If one wishes to combine the `timeData` and `getERA` methods then the time dependency must be passed in as a **kwarg.  
 **Example**  
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 finch = Satellite()
@@ -90,7 +90,7 @@ ERAangles = finch.getERA()
 The commands can be simplified as in the following,  
 
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 finch = Satellite()
@@ -112,7 +112,7 @@ None
 The *ECEFdata* and *times* attributes must be instantiated or passed in as **kwargs.  
 **Example**  
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -136,7 +136,7 @@ None
 The *ECIdata* and *times* attributes must be initiated or passed in as **kwargs.  
 **Example**  
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -161,7 +161,7 @@ This method initiates the *horizontal* attribute of the Satellite object. This a
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
 **Example**  
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
@@ -182,7 +182,7 @@ None
 All instance variables must be initiated.  
 **Example**  
 ```python
-from celest.satellite import *
+from celest import Satellite
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
