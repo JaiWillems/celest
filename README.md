@@ -17,6 +17,7 @@ Celest is broken into a single Satellite class representing the orbital object t
 1. **self.ECIdata**: Earth centered inertial position data in an (n,3) shaped ndarray where the columns are the x, y, z position data.
 1. **self.ECEFdata**: Earth centered earth fixed position data in an (n,3) shaped ndarray where the columns are the x, y, z position data.
 1. **self.horizontal**: Altitude and azimuth data in an (n,2) shaped ndarray where the columns are the alt, az position data.
+1. **self.nadirAng**: Nadir-LOS angle data in an (n,) shaped ndarray.
 1. **self.length**: Length of data attributes represented as an int
 
 These inerence variables are interfaced by the user through seven methods:
@@ -27,6 +28,7 @@ These inerence variables are interfaced by the user through seven methods:
 1. **getECI**: Instantiates *ECIdata* attribute.
 1. **getECEF**: Instantiates *ECEFdata* attribute.
 1. **getAltAz**: Instantiates *horizontal* attribute.
+1. **getNdrAng**: Instantiates *nadirAng* attribute.
 1. **saveData**: Save class data in local directory.
 
 The guiding principle behind the design of the Satellite class is to be simple to use and efficient. The latter is gained by two means. First, the code uses simple geometric relationships within orbital mechanics to derive basic mathematical relations that can be expedited by vectored inputs and NumPy. Secondly, the methods are created such that the user has complete control over the enacted computations by only instantiating necessary instance variables. The restrictions on how to use these methods are outlined in the following subsections along with detailed explanations and example usage of each of the methods.
@@ -51,9 +53,9 @@ finch.timeData(timeData=UTCtimeData)
 ```
 
 
-### .positionData(positionData, type)
+### .positionData(posData, type)
 **Description**  
-The `positionData` method interfaces with the *ECIdata* or *ECEFdata* attributes to initialize position data of the satellite. The user must specify the data as either ECI or ECEF data through the `type` parameter.  
+The `posData` method interfaces with the *ECIdata* or *ECEFdata* attributes to initialize position data of the satellite. The user must specify the data as either ECI or ECEF data through the `type` parameter.  
 **Parameters**  
 `posData`: ndarray of shape (n,3) with columns of xyz position data.  
 `type`: Specifies the type of position data as either "ECI" or "ECEF".  
@@ -175,6 +177,31 @@ ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6
 
 finch = Satellite()
 AltAz = finch.getAltAz(obsCoor=(43.662300, -79.394530), radius=6371, posData=ECIvec, timeData=UTCTimeData)
+```
+
+### .getNdrAng(obsCoor, radius, **kwargs)
+**Description** 
+This method initiates the *nadirAng* attribute of the Satellite object. This attribute is a ndarray of shape (n,) with the nadir-LOS angles. This method takes in an observers latitude and longitude in degrees as well as the surface radius.  
+**Parameters**  
+`obsCoor`: tuple of floats specifying the observer position in degrees (latitude, longitude).  
+`radius`: int or float representing the fixed radius of Earth.
+**\*\*kwargs**  
+`posData`: ndarray array of shape (n,3) with columns of X, Y, Z position data assumed ECI.  
+`timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.
+**Returns**  
+*nadirAng*: ndarray of shape (n,) with nadir-LOS angle data.
+**Usage**  
+The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
+**Example**  
+```python
+from celest import Satellite
+import numpy as np
+
+UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
+ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
+
+finch = Satellite()
+NdrAng = finch.getNdrAng(obsCoor=(43.662300, -79.394530), radius=6371, posData=ECIvec, timeData=UTCTimeData)
 ```
 
 ### .saveData(fileName)
