@@ -15,6 +15,7 @@ Satellite: Object used to collect and calculate orbital representations.
     getECI : Instantiate ECIdata attribute.
     getECEF : Instantiate ECEFdata attribute.
     getAltAz : Instantiate horizontal attribute.
+    getNdrAng : Instantiate nadirAng attribute.
     saveData : Save class data in local directory.
 """
 
@@ -39,6 +40,7 @@ class Satellite:
     getECI : Instantiate ECIdata attribute.
     getECEF : Instantiate ECEFdata attribute.
     getAltAz : Instantiate horizontal attribute.
+    getNdrAng : Instantiate nadirAng attribute.
     saveData : Save class data in local directory.
 
     Instance Variables
@@ -48,6 +50,7 @@ class Satellite:
     ECIdata : Earth centered inertial position data.
     ECEFdata : Earth centered earth fixed position data.
     horizontal : Altitude and azimuth data.
+    nadirAng : Nadir-LOS angle data.
     length : Length of data attributes.
     """
 
@@ -59,6 +62,7 @@ class Satellite:
         self.ECIdata = None
         self.ECEFdata = None
         self.horizontal = None
+        self.nadirAng = None
         self.length = None
 
     def timeData(self, timeData):
@@ -359,6 +363,67 @@ class Satellite:
         self.horizontal = altAz
 
         return self.horizontal
+
+    def getNdrAng(self, obsCoor, radius, **kwargs):
+        """
+        Return Nadir-LOS angle array.
+
+        This method takes in an observers latitude and longitude in degrees as
+        well as the surface radius in meters to return the angle made between
+        the satellites nadir and the line of light from the observer to the
+        ground station.
+
+        Parameters
+        ----------
+        obsCoor : tuple of floats
+            Specifies observer position in degrees, (latitude, longitude).
+        radius : int or float
+            Fixed radius of Earth.
+
+        **kwargs
+        --------
+        posData : ndarray
+            Array of shape (n,3) with columns of X, Y, Z position data assumed
+            ECI.
+        timeData : ndarray
+            Array of shape (n,). Contains datetime objects in UTC.
+
+        Returns
+        -------
+        self.nadirAng : ndarray
+            Array of shape (n,) with nadir-LOS angle data.
+
+        Usage
+        -----
+        Must have ECEFdata attribute initiated or the posData and timeData
+        inputs.
+        """
+        if type(self.ECEFdata) == type(None):
+            self.getECEF(**kwargs)
+
+        if obsCoor[1] < 0:
+            theta = radians(360 + obsCoor[1])
+        else:
+            theta = radians(obsCoor[1])
+        phi = np.radians(90 - obsCoor[0])
+        x = radius*cos(theta)*sin(phi)
+        y = radius*sin(theta)*sin(phi)
+        z = radius*cos(phi)
+        xyzObs = np.full((self.length, 3), np.array([x, y, z]))
+
+        ECEFvec = self.ECEFdata
+        xyzLOS = np.subtract(ECEFvec, xyzObs)
+
+        # Use simple linalg formula.
+        dividend = np.einsum('ij, ij->i', xyzLOS, ECEFvec)
+        divisor = np.multiply(np.linalg.norm(xyzLOS, axis=1),
+                              np.linalg.norm(ECEFvec, axis=1))
+        arg = np.divide(dividend, divisor)
+        ang = np.degrees(np.arccos(arg))
+
+        self.nadirAng = ang
+
+        return self.nadirAng
 
     def saveData(self, fileName):
         """
