@@ -208,11 +208,12 @@ NdrAng = finch.getNdrAng(obsCoor=(43.662300, -79.394530), radius=6371, posData=E
 **Description**  
 This method saves the class data to the local working directory.  
 **Parameters**  
-`fileName`: str representing the file name.  
+`fileName`: str representing the output file name. The output file can be a .txt or .csv file.  
+`delimiter`: str of length 1 representing the feild delimiter for the output file.  
 **Returns**  
 None  
 **Usage**  
-All instance variables must be initiated.  
+It is recommended to use a tab delimiter for .txt files and a comma delimiter for .csv files. Will return an error if fileName already exists in the current working directory.  
 **Example**  
 ```python
 from celest import Satellite
@@ -222,7 +223,6 @@ UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.03
 ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
 
 finch = Satellite()
-# getAltAz() in this way will initiate all instance variables
 finch.getAltAz(obsCoor=(43.662300, -79.394530), radius=6371, posData=ECIvec, timeData=UTCTimeData)
-finch.saveData(filename="data.txt")
+finch.saveData(fileName="data.csv", delimiter=",")
 ```
