@@ -426,7 +426,7 @@ class Satellite:
 
         return self.nadirAng
 
-    def saveData(self, fileName):
+    def saveData(self, fileName, delimiter):
         """
         Save class data in local directory.
 
