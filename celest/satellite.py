@@ -21,6 +21,7 @@ Satellite: Object used to collect and calculate orbital representations.
 
 
 import numpy as np
+import pandas as pd
 from math import pi, cos, sin, radians
 from datetime import datetime, timedelta
 import julian
@@ -216,7 +217,7 @@ class Satellite:
         --------
         posData : ndarray
             Array of shape (n,3) with columns of X, Y, Z position data assumed
-            ECEF.
+            ECI.
         timeData : ndarray
             Array of shape (n,). Contains datetime objects in UTC.
 
@@ -432,7 +433,9 @@ class Satellite:
         Parameters
         ----------
         fileName : str
-            File name to save data to.
+            File name of output file. Can be a .txt or .csv file.
+        delimiter : str
+            Feild delimiter for the output file. String of length 1.
 
         Returns
         -------
@@ -440,12 +443,33 @@ class Satellite:
 
         Usage
         -----
-        Must have all attributes initiated.
+        It is recommended to use a tab delimiter for .txt files and comma
+        delimiters for .csv files.
         """
-        header = np.array([["Time (UTC)", "ECI.X", "ECI.Y", "ECI.Z", "ECEF.X",
-                            "ECEF.Y", "ECEF.Z", "Alt", "Az"]])
-        dataFile = np.column_stack((self.times, self.ECIdata, self.ECEFdata,
-                                    self.horizontal))
-        dataFile = np.concatenate((header, dataFile), axis=0)
-        np.savetxt(fileName, dataFile, fmt="%24s", delimiter="\t",
-                   newline="\n")
+        data = {}
+
+        if type(self.times) != type(None):
+            data['Time (UTC)'] = pd.Series(self.times)
+
+        if type(self.ERAdata) != type(None):
+            data['ERA (Deg)'] = pd.Series(self.ERAdata)
+
+        if type(self.ECIdata) != type(None):
+            data['ECI.X'] = pd.Series(self.ECIdata[:, 0])
+            data['ECI.Y'] = pd.Series(self.ECIdata[:, 1])
+            data['ECI.Z'] = pd.Series(self.ECIdata[:, 2])
+
+        if type(self.ECEFdata) != type(None):
+            data['ECEF.X'] = pd.Series(self.ECEFdata[:, 0])
+            data['ECEF.Y'] = pd.Series(self.ECEFdata[:, 1])
+            data['ECEF.Z'] = pd.Series(self.ECEFdata[:, 2])
+
+        if type(self.horizontal) != type(None):
+            data['Alt (Deg)'] = pd.Series(self.horizontal[:, 0])
+            data['Az (Deg)'] = pd.Series(self.horizontal[:, 1])
+
+        if type(self.nadirAng) != type(None):
+            data['NadirAng (Deg)'] = pd.Series(self.nadirAng)
+
+        df = pd.DataFrame(data)
+        df.to_csv(fileName, sep=delimiter)
