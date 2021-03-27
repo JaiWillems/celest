@@ -164,7 +164,7 @@ This method initiates the *alt* and *az* attributes of the GroundPosition object
 `posData`: ndarray array of shape (n,3) with columns of X, Y, Z position data assumed ECI.  
 `timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.  
 **Returns**  
-*AltAz* : tuple of ndarrays of shape (n,) containing the computed altitude and azimuth data, (alt, az).
+*AltAz* : tuple of ndarrays of shape (n,) containing the computed altitude and azimuth data, (alt, az).  
 **Usage**  
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
 If passing in a new GroundPosition object, it will become stored in the *gs* dictionary with the GroundPosition's *name* attribute as the key and the object as the value. If the object is already stored in *gs*, then its *alt* and *az* attributes will be updated.  
@@ -191,10 +191,10 @@ This method initiates the *nadirAng* attribute of the GroundPosition object stor
 `posData`: ndarray array of shape (n,3) with columns of X, Y, Z position data assumed ECI.  
 `timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.
 **Returns**  
-*nadirAng*: ndarray of shape (n,) with nadir-LOS angle data.
+*nadirAng*: ndarray of shape (n,) with nadir-LOS angle data.  
 **Usage**  
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
-If passing in a new GroundPosition object, it will become stored in the *gs* dictionary with the GroundPosition's *name* attribute as the key and the object as the value. If the object is already stored in *gs*, then its *nadirAng* attribute will be updated.
+If passing in a new GroundPosition object, it will become stored in the *gs* dictionary with the GroundPosition's *name* attribute as the key and the object as the value. If the object is already stored in *gs*, then its *nadirAng* attribute will be updated.  
 **Example**  
 ```python
 from celest import Satellite, GroundPosition
@@ -257,12 +257,12 @@ There exists only one method of the GroundPosition class that is used internally
 
 #### .getRadius(coor)
 **Description**  
-This method uses the World Geodetic System WGS84 to calculate the radius at the given coordinate position. 
+This method uses the World Geodetic System WGS84 to calculate the radius at the given coordinate position.  
 **Parameters**  
-`coor`: Tuple of ground position coordinates as (latitude, longitude) in decimal degrees. 
+`coor`: Tuple of ground position coordinates as (latitude, longitude) in decimal degrees.  
 **Returns**  
 *radius*: Float representing the radius given in km.  
 **Usage**  
-This method is designed to be used internally to instantiate the *radius*.
+This method is designed to be used internally to instantiate the *radius*.  
 **Example**  
 None
