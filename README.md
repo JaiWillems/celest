@@ -1,6 +1,6 @@
 # Celest
 
-This purpose of the Celest library is to provide a simple interface to orbital coordinate conversions at an unprecedented speed which allows users to specify the exact computations to be enacted. This library is designed for small satellite applications who desire efficiency over precision in orbital calculations.
+The Celest library is designed to provide a simple interface to satellite orbital position representations at an unprecedented speed. This library is designed for small satellite applications who desire efficiency over precision in orbital calculations.
 
 ## Installation
 
@@ -8,32 +8,33 @@ This purpose of the Celest library is to provide a simple interface to orbital c
 pip install Celest
 ```
 
-## Satellite Class
+## Class Overview
+Celest is broken into two classes, a Satellite class and a GroundPosition class. This section details the detailes for each class.
+### Satellite Class
 
-Celest is broken into a single Satellite class representing the orbital object to store and compute orbital coordinate data. The class stores its data in six instance variables:
+The Satellite class represents the orbital object to store and compute orbital position representations. The class stores its data in six instance variables:
 
 1. **self.times**: Orbital time dependencies in an (n,) shaped ndarray.
 1. **self.ERAdata**: Earth rotation angles based on time dependencies in an (n,) shaped ndarray.
 1. **self.ECIdata**: Earth centered inertial position data in an (n,3) shaped ndarray where the columns are the x, y, z position data.
 1. **self.ECEFdata**: Earth centered earth fixed position data in an (n,3) shaped ndarray where the columns are the x, y, z position data.
-1. **self.horizontal**: Altitude and azimuth data in an (n,2) shaped ndarray where the columns are the alt, az position data.
-1. **self.nadirAng**: Nadir-LOS angle data in an (n,) shaped ndarray.
+1. **self. gs** : Dictionary with the GroundPosition *name* attribute as the key and the GroundPosition object as the corresponding value.
 1. **self.length**: Length of data attributes represented as an int
 
-These inerence variables are interfaced by the user through seven methods:
+These instance variables are interfaced by the user through eight methods:
 
 1. **timeData**: Instantiates *times* attribute with orbital time dependency.
 1. **positionData**: Instantiates *ECIdata* or *ECEFdata* attribute with orbital position data.
 1. **getERA**: Instantiates *ERAdata* attribute.
 1. **getECI**: Instantiates *ECIdata* attribute.
 1. **getECEF**: Instantiates *ECEFdata* attribute.
-1. **getAltAz**: Instantiates *horizontal* attribute.
-1. **getNdrAng**: Instantiates *nadirAng* attribute.
+1. **getAltAz**: Instantiates GroundPosition's *alt* and *az* attributes.
+1. **getNdrAng**: Instantiates GroundPosition's *nadirAng* attribute.
 1. **saveData**: Save class data in local directory.
 
-The guiding principle behind the design of the Satellite class is to be simple to use and efficient. The latter is gained by two means. First, the code uses simple geometric relationships within orbital mechanics to derive basic mathematical relations that can be expedited by vectored inputs and NumPy. Secondly, the methods are created such that the user has complete control over the enacted computations by only instantiating necessary instance variables. The restrictions on how to use these methods are outlined in the following subsections along with detailed explanations and example usage of each of the methods.
+The guiding principle behind the design of the Satellite class is to be user simple and efficient. The restrictions on how to use these methods are outlined in the following subsections along with detailed explanations and example usage of each of the methods.
 
-### .timeData(timeData)
+#### .timeData(timeData)
 **Description**  
 The `timeData` method instantiates the *times* attribute with the orbital time dependencies (the times that each position observation was taken). The length of the input data initializes the *length* attribute.  
 **Parameters**  
@@ -53,7 +54,7 @@ finch.timeData(timeData=UTCtimeData)
 ```
 
 
-### .positionData(posData, type)
+#### .positionData(posData, type)
 **Description**  
 The `posData` method interfaces with the *ECIdata* or *ECEFdata* attributes to initialize position data of the satellite. The user must specify the data as either ECI or ECEF data through the `type` parameter.  
 **Parameters**  
@@ -73,7 +74,7 @@ ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6
 finch.positionData(posData=ECIvec, type="ECI")
 ```
 
-### .getERA(**kwargs)
+#### .getERA(**kwargs)
 **Description**  
 The `getERA` method uses the *times* variable to calculate the earth rotation angles in radians. This is the angle between the <img src="https://render.githubusercontent.com/render/math?math=x_{ECI}"> and <img src="https://render.githubusercontent.com/render/math?math=x_{ECEF}"> coordinate axes. The array of these angles is stored in *ERAdata*.  
 **Parameters**  
@@ -106,7 +107,7 @@ UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.03
 ERAangles = finch.getERA(timeData=UTCTimeData)
 ```
 
-### .getECI(**kwargs)
+#### .getECI(**kwargs)
 **Description**  
 The `getECI` method uses the earth rotation angles to convert ECEF data to ECI data while instantiating *ECIdata*.  
 **Parameters**  
@@ -130,7 +131,7 @@ finch = Satellite()
 ECIvec = finch.getECI(posData=ECEFvec, timeData=UTCTimeData)
 ```
 
-### .getECEF(**kwargs)
+#### .getECEF(**kwargs)
 **Description**  
 The `getECEF` method uses the earth rotation angles to convert ECI data to ECEF data while instantiating *ECEFdata*.  
 **Parameters**  
@@ -154,37 +155,38 @@ finch = Satellite()
 ECEFvec = finch.getECEF(posData=ECIvec, timeData=UTCTimeData)
 ```
 
-### .getAltAz(obsCoor, radius, **kwargs)
+#### .getAltAz(groundPos, **kwargs)
 **Description**  
-This method initiates the *horizontal* attribute of the Satellite object. This attribute is a ndarray of shape (n,2) where the first column is the altitude data and the second is the azimuth data. This method takes in an observers latitude and longitude in degrees as well as the surface radius.  
+This method initiates the *alt* and *az* attributes of the GroundPosition object stored in the Satellites *gs* attribute. These attributes are both ndarray's of shape (n,) where rows correspond to the times in the *times* attribute. This method gains ground location information from the groundPos parameter.  
 **Parameters**  
-`obsCoor`: tuple of floats specifying the observer position in degrees (latitude, longitude).  
-`radius`: int or float representing the fixed radius of Earth.  
+`groundPos`: GroundPosition object instantiated as per its documentation.  
 **\*\*kwargs**  
 `posData`: ndarray array of shape (n,3) with columns of X, Y, Z position data assumed ECI.  
 `timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.  
 **Returns**  
-*horizontal*: ndarray of shape (n,2) with columns of alt, az position data.  
+*AltAz* : tuple of ndarrays of shape (n,) containing the computed altitude and azimuth data, (alt, az).
 **Usage**  
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
+If passing in a new GroundPosition object, it will become stored in the *gs* dictionary with the GroundPosition's *name* attribute as the key and the object as the value. If the object is already stored in *gs*, then its *alt* and *az* attributes will be updated.
 **Example**  
 ```python
-from celest import Satellite
+from celest import Satellite, GroundPosition
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
 ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
 
+toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
+
 finch = Satellite()
-AltAz = finch.getAltAz(obsCoor=(43.662300, -79.394530), radius=6371, posData=ECIvec, timeData=UTCTimeData)
+Alt, Az = finch.getAltAz(groundPos=toronto, posData=ECIvec, timeData=UTCTimeData)
 ```
 
-### .getNdrAng(obsCoor, radius, **kwargs)
+#### .getNdrAng(groundPos, **kwargs)
 **Description** 
-This method initiates the *nadirAng* attribute of the Satellite object. This attribute is a ndarray of shape (n,) with the nadir-LOS angles. This method takes in an observers latitude and longitude in degrees as well as the surface radius.  
+This method initiates the *nadirAng* attribute of the GroundPosition object stored in the Satellite's *gs* attribute. The *nadirAng* attribute is a ndarray of shape (n,) with the nadir-LOS angles. This method gains ground location information from the groundPos parameters.  
 **Parameters**  
-`obsCoor`: tuple of floats specifying the observer position in degrees (latitude, longitude).  
-`radius`: int or float representing the fixed radius of Earth.
+`groundPos`: GroundPosition object instantiated as per its documentation.  
 **\*\*kwargs**  
 `posData`: ndarray array of shape (n,3) with columns of X, Y, Z position data assumed ECI.  
 `timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.
@@ -192,19 +194,22 @@ This method initiates the *nadirAng* attribute of the Satellite object. This att
 *nadirAng*: ndarray of shape (n,) with nadir-LOS angle data.
 **Usage**  
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
+If passing in a new GroundPosition object, it will become stored in the *gs* dictionary with the GroundPosition's *name* attribute as the key and the object as the value. If the object is already stored in *gs*, then its *nadirAng* attribute will be updated.
 **Example**  
 ```python
-from celest import Satellite
+from celest import Satellite, GroundPosition
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
 ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
 
+toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
+
 finch = Satellite()
-NdrAng = finch.getNdrAng(obsCoor=(43.662300, -79.394530), radius=6371, posData=ECIvec, timeData=UTCTimeData)
+NdrAng = finch.getNdrAng(groundPos=toronto, posData=ECIvec, timeData=UTCTimeData)
 ```
 
-### .saveData(fileName)
+#### .saveData(fileName, delimiter)
 **Description**  
 This method saves the class data to the local working directory.  
 **Parameters**  
@@ -216,13 +221,48 @@ None
 It is recommended to use a tab delimiter for .txt files and a comma delimiter for .csv files. Will return an error if fileName already exists in the current working directory.  
 **Example**  
 ```python
-from celest import Satellite
+from celest import Satellite, GroundPosition
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
 ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
 
+toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
+
 finch = Satellite()
-finch.getAltAz(obsCoor=(43.662300, -79.394530), radius=6371, posData=ECIvec, timeData=UTCTimeData)
+finch.getAltAz(groundPos=toronto, posData=ECIvec, timeData=UTCTimeData)
 finch.saveData(fileName="data.csv", delimiter=",")
 ```
+
+### GroundPosition Class
+The GroundPosition class represents a ground location to store geographically specific orbital position representations. The class stores its data in seven instance variables:
+
+1. **self. name**: String representing a tag for identifying the ground station location.
+1. **self.coor**: Tuple of ground position coordinates as (latitude, longitude) in decimal degrees.
+1. **self.radius**: Radius of earths surface at *coor* given in km.
+1. **self.alt**: ndarray of shape (n,) containing altitude data instantiated by the Satellite `.getAltAz()` method.
+1. **self. az**: ndarray of shape (n,) containing azimuth data instantiated by the Satellite `.getAltAz()` method.
+1. **self.nadirAng**: ndarray of shape (n,) containing nadir angle data instantiated by the Satellite `.getNdrAng()` method.
+1. **self.length**: Length n of data attributes.
+
+Note that the GoundPosition object is completely instantiated through the initial class declaration. An example innitiation of a GroundPosition object is given by the following:
+
+```python
+from celest import GroundPosition
+
+toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
+```
+
+There exists only one method of the GroundPosition class that is used internally to calculate the Earths radius at the position defined by *coor*. This method approximates the earth as an ellipsoid using the World Geodetic System WGS84 to account for changing radius with latitude.
+
+#### .getRadius(coor)
+**Description**  
+This method uses the World Geodetic System WGS84 to calculate the radius at the given coordinate position. 
+**Parameters**  
+`coor`: Tuple of ground position coordinates as (latitude, longitude) in decimal degrees. 
+**Returns**  
+*radius*: Float representing the radius given in km.  
+**Usage**  
+This method is designed to be used internally to instantiate the *radius*.
+**Example**  
+None
