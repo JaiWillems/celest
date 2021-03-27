@@ -1,6 +1,6 @@
 # Celest
 
-The Celest library is designed to provide a simple interface to satellite orbital position representations at an unprecedented speed. This library is designed for small satellite applications who desire efficiency over precision in orbital calculations.
+The Celest library was created to provide a simple interface to satellite orbital position representations at an unprecedented speed. This library is designed for small satellite applications who desire efficiency over precision in orbital calculations.
 
 ## Installation
 
