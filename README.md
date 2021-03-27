@@ -189,7 +189,7 @@ This method initiates the *nadirAng* attribute of the GroundPosition object stor
 `groundPos`: GroundPosition object instantiated as per its documentation.  
 **\*\*kwargs**  
 `posData`: ndarray array of shape (n,3) with columns of X, Y, Z position data assumed ECI.  
-`timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.
+`timeData`: ndarray of shape (n,) containing `datetime.datetime` objects in UTC.  
 **Returns**  
 *nadirAng*: ndarray of shape (n,) with nadir-LOS angle data.  
 **Usage**  
