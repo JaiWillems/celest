@@ -167,7 +167,7 @@ This method initiates the *alt* and *az* attributes of the GroundPosition object
 *AltAz* : tuple of ndarrays of shape (n,) containing the computed altitude and azimuth data, (alt, az).
 **Usage**  
 The function requires *ECEFdata* to be initiated or have the position and time dependencies passed in as **kwargs.  
-If passing in a new GroundPosition object, it will become stored in the *gs* dictionary with the GroundPosition's *name* attribute as the key and the object as the value. If the object is already stored in *gs*, then its *alt* and *az* attributes will be updated.
+If passing in a new GroundPosition object, it will become stored in the *gs* dictionary with the GroundPosition's *name* attribute as the key and the object as the value. If the object is already stored in *gs*, then its *alt* and *az* attributes will be updated.  
 **Example**  
 ```python
 from celest import Satellite, GroundPosition
