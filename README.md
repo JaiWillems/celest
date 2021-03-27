@@ -9,7 +9,7 @@ pip install Celest
 ```
 
 ## Class Overview
-Celest is broken into two classes, a Satellite class and a GroundPosition class. This section details the detailes for each class.
+Celest is broken into two classes, a Satellite class and a GroundPosition class. This section details the specifics for each class.
 ### Satellite Class
 
 The Satellite class represents the orbital object to store and compute orbital position representations. The class stores its data in six instance variables:
