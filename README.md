@@ -70,7 +70,7 @@ from celest import Satellite
 import numpy as np
 
 finch = Satellite()
-ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
+ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ..., [2.73e+03, 2.08e+03, -6.02e+03]])
 finch.positionData(posData=ECIvec, type="ECI")
 ```
 
@@ -125,7 +125,7 @@ from celest import Satellite
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
-ECEFvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
+ECEFvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ..., [2.73e+03, 2.08e+03, -6.02e+03]])
 
 finch = Satellite()
 ECIvec = finch.getECI(posData=ECEFvec, timeData=UTCTimeData)
@@ -149,7 +149,7 @@ from celest import Satellite
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
-ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
+ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ..., [2.73e+03, 2.08e+03 -6.02e+03]])
 
 finch = Satellite()
 ECEFvec = finch.getECEF(posData=ECIvec, timeData=UTCTimeData)
@@ -174,7 +174,7 @@ from celest import Satellite, GroundPosition
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
-ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
+ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ..., [2.73e+03, 2.08e+03, -6.02e+03]])
 
 toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
 
@@ -201,7 +201,7 @@ from celest import Satellite, GroundPosition
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
-ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
+ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ..., [2.73e+03, 2.08e+03 -6.02e+03]])
 
 toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
 
@@ -225,7 +225,7 @@ from celest import Satellite, GroundPosition
 import numpy as np
 
 UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
-ECIvec = np.array([[-4.46e+03 -5.22e+03  1.75e-04], ..., [ 2.73e+03  2.08e+03 -6.02e+03]])
+ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ..., [2.73e+03, 2.08e+03, -6.02e+03]])
 
 toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
 
