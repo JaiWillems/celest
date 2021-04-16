@@ -2,11 +2,11 @@
 
 Notes
 -----
-This module contains the Satellite class to perform coordinate
-system calculations.
+This module contains the Satellite class to calculate different position
+representations for Earth orbiting satellites.
 
-Class's
--------
+Class
+-----
 Satellite: Object used to collect and calculate orbital representations.
     timeData : Instantiate time attribute with orbital time dependency.
     positionData : Instantiate ECIdata or ECEFdata attribute with orbital
@@ -40,8 +40,9 @@ class Satellite:
     getERA : Instantiate ERAdata attribute.
     getECI : Instantiate ECIdata attribute.
     getECEF : Instantiate ECEFdata attribute.
-    getAltAz : Instantiate horizontal attribute.
-    getNdrAng : Instantiate nadirAng attribute.
+    getAltAz : Instantiates the GroundPosition object's .alt and .az
+        attributes.
+    getNdrAng : Instantiates the GroundPosition object's .nadirAng attribute.
     saveData : Save class data in local directory.
 
     Instance Variables
@@ -50,8 +51,8 @@ class Satellite:
     ERAdata : Earth rotation angles.
     ECIdata : Earth centered inertial position data.
     ECEFdata : Earth centered earth fixed position data.
-    horizontal : Altitude and azimuth data.
-    nadirAng : Nadir-LOS angle data.
+    gs : Dictionary with GroundPosition.name as the key and the GroundPosition
+        object as the corresponding value.
     length : Length of data attributes.
     """
 
@@ -62,8 +63,7 @@ class Satellite:
         self.ERAdata = None
         self.ECIdata = None
         self.ECEFdata = None
-        self.horizontal = None
-        self.nadirAng = None
+        self.gs = {}
         self.length = None
 
     def timeData(self, timeData):
@@ -102,9 +102,9 @@ class Satellite:
         -------
         None
         """
-        if type == "ECI":
+        if type == 'ECI':
             self.ECIdata = posData
-        elif type == "ECEF":
+        elif type == 'ECEF':
             self.ECEFdata = posData
 
     def getERA(self, **kwargs):
@@ -132,7 +132,7 @@ class Satellite:
         Must have times attribute initiated or timeData input.
         """
         if type(self.times) == type(None):
-            timeData = kwargs["timeData"]
+            timeData = kwargs['timeData']
             self.timeData(timeData)
 
         angArr = np.zeros((self.length,))
@@ -183,8 +183,8 @@ class Satellite:
         if type(self.ERAdata) == type(None):
             self.getERA(**kwargs)
         if type(self.ECEFdata) == type(None):
-            ECEFdata = kwargs["posData"]
-            self.positionData(ECEFdata, "ECEF")
+            ECEFdata = kwargs['posData']
+            self.positionData(ECEFdata, 'ECEF')
 
         # Rotate ECEFdata around z-axis by ERA.
         ECIvec = np.zeros((self.length, 3))
@@ -234,8 +234,8 @@ class Satellite:
         if type(self.ERAdata) == type(None):
             self.getERA(**kwargs)
         if type(self.ECIdata) == type(None):
-            ECIdata = kwargs["posData"]
-            self.positionData(ECIdata, "ECI")
+            ECIdata = kwargs['posData']
+            self.positionData(ECIdata, 'ECI')
 
         # Rotate ECIdata around z-axis by -ERA.
         ECEFvec = np.zeros((self.length, 3))
@@ -254,20 +254,19 @@ class Satellite:
 
         return self.ECEFdata
 
-    def getAltAz(self, obsCoor, radius, **kwargs):
+    def getAltAz(self, groundPos, **kwargs):
         """
         Instantiate horizontal attribute.
 
-        This method takes in an observers latitude and longitude in degrees as
-        well as the surface radius in meters to instantiate the horisontal
-        attribute.
+        This method takes in a GroundPosition object and instantiates its alt
+        and az attributes using the satellites position data. The
+        GroundPosition object is then stored as a value in the gs attribute's
+        dictionary with the corresponding key being its name attribute.
 
         Parameters
         ----------
-        obsCoor : tuple of floats
-            Specifies observer position in degrees, (latitude, longitude).
-        radius : int or float
-            Fixed radius of Earth.
+        groundPos : GroundPosition object
+            GroundPosition object instantiated as per its documentation.
 
         **kwargs
         --------
@@ -279,8 +278,9 @@ class Satellite:
 
         Returns
         -------
-        self.horizontal : ndarray
-            Array of shape (n,2) with columns of alt, az position data.
+        AltAz : tuple of ndarrays
+            (alt, az) tuple containing the computed altitude and azimuth data.
+            Both alt and az are both arrays of shape (n,).
 
         Usage
         -----
@@ -318,7 +318,13 @@ class Satellite:
         if type(self.ECEFdata) == type(None):
             self.getECEF(**kwargs)
 
+        if groundPos.name not in self.gs:
+            groundPos.length = self.length
+            self.gs[groundPos.name] = groundPos
+
         # Convert observer position into spherical then cartesian.
+        obsCoor = groundPos.coor
+        radius = groundPos.radius
         if obsCoor[1] < 0:
             theta = radians(360 + obsCoor[1])
         else:
@@ -332,8 +338,7 @@ class Satellite:
         # Determine line of sight vector then altitude.
         ECEFvec = self.ECEFdata
         xyzLOS = np.subtract(ECEFvec, xyzObs)
-        altAz = np.zeros((self.length, 2))
-        altAz[:, 0] = 90 - getAngle(xyzLOS, xyzObs)
+        self.gs[groundPos.name].alt = 90 - getAngle(xyzLOS, xyzObs)
 
         # Find surface tangent vector passing through z-axis.
         kHat = np.full((self.length, 3), np.array([0, 0, 1]))
@@ -358,28 +363,28 @@ class Satellite:
         posInd = np.where(np.all(posEq, axis=1))[0]
         negInd = np.where(np.all(negEq, axis=1))[0]
 
-        altAz[posInd, 1] = getAngle(tangentVec[posInd], projLOS[posInd])
-        altAz[negInd, 1] = 360 - getAngle(tangentVec[negInd], projLOS[negInd])
+        Az = np.zeros((self.length,))
+        Az[posInd] = getAngle(tangentVec[posInd], projLOS[posInd])
+        Az[negInd] = 360 - getAngle(tangentVec[negInd], projLOS[negInd])
 
-        self.horizontal = altAz
+        self.gs[groundPos.name].az = Az
 
-        return self.horizontal
+        return self.gs[groundPos.name].alt, self.gs[groundPos.name].az
 
-    def getNdrAng(self, obsCoor, radius, **kwargs):
+    def getNdrAng(self, groundPos, **kwargs):
         """
         Return Nadir-LOS angle array.
 
-        This method takes in an observers latitude and longitude in degrees as
-        well as the surface radius in meters to return the angle made between
-        the satellites nadir and the line of light from the observer to the
-        ground station.
+        This method takes in a GroundPosition object and instantiates its
+        nadirAng attribute with the angle made between the satellites nadir and
+        line-of-sight (from the observer to the ground station) vectors. The
+        GroundPosition object is then stored as a value in the gs attribute's
+        dictionary with the corresponding key being its name attribute.
 
         Parameters
         ----------
-        obsCoor : tuple of floats
-            Specifies observer position in degrees, (latitude, longitude).
-        radius : int or float
-            Fixed radius of Earth.
+        groundPos : GroundPosition object
+            GroundPosition object instantiated as per its documentation.
 
         **kwargs
         --------
@@ -391,7 +396,7 @@ class Satellite:
 
         Returns
         -------
-        self.nadirAng : ndarray
+        nadirAng : ndarray
             Array of shape (n,) with nadir-LOS angle data.
 
         Usage
@@ -402,6 +407,12 @@ class Satellite:
         if type(self.ECEFdata) == type(None):
             self.getECEF(**kwargs)
 
+        if groundPos.name not in self.gs:
+            groundPos.length = self.length
+            self.gs[groundPos.name] = groundPos
+
+        obsCoor = groundPos.coor
+        radius = groundPos.radius
         if obsCoor[1] < 0:
             theta = radians(360 + obsCoor[1])
         else:
@@ -422,20 +433,21 @@ class Satellite:
         arg = np.divide(dividend, divisor)
         ang = np.degrees(np.arccos(arg))
 
-        self.nadirAng = ang
+        self.gs[groundPos.name].nadirAng = ang
 
-        return self.nadirAng
+        return self.gs[groundPos.name].nadirAng
 
     def saveData(self, fileName, delimiter):
         """
-        Save class data in local directory.
+        Save satellite data to local directory.
 
         Parameters
         ----------
         fileName : str
             File name of output file. Can be a .txt or .csv file.
         delimiter : str
-            Feild delimiter for the output file. String of length 1.
+            String of length 1 representing the feild delimiter for the output
+            file.
 
         Returns
         -------
@@ -444,7 +456,8 @@ class Satellite:
         Usage
         -----
         It is recommended to use a tab delimiter for .txt files and comma
-        delimiters for .csv files.
+        delimiters for .csv files. Will return an error if fileName already
+        exists in the current working directory.
         """
         data = {}
 
@@ -452,7 +465,7 @@ class Satellite:
             data['Time (UTC)'] = pd.Series(self.times)
 
         if type(self.ERAdata) != type(None):
-            data['ERA (Deg)'] = pd.Series(self.ERAdata)
+            data['ERA (rad)'] = pd.Series(self.ERAdata)
 
         if type(self.ECIdata) != type(None):
             data['ECI.X'] = pd.Series(self.ECIdata[:, 0])
@@ -464,12 +477,12 @@ class Satellite:
             data['ECEF.Y'] = pd.Series(self.ECEFdata[:, 1])
             data['ECEF.Z'] = pd.Series(self.ECEFdata[:, 2])
 
-        if type(self.horizontal) != type(None):
-            data['Alt (Deg)'] = pd.Series(self.horizontal[:, 0])
-            data['Az (Deg)'] = pd.Series(self.horizontal[:, 1])
-
-        if type(self.nadirAng) != type(None):
-            data['NadirAng (Deg)'] = pd.Series(self.nadirAng)
+        for key in self.gs:
+            if type(self.gs[key].alt) != type(None):
+                data[f'{key}.alt'] = self.gs[key].alt
+                data[f'{key}.az'] = self.gs[key].az
+            if type(self.gs[key].nadirAng) != type(None):
+                data[f'{key}.NdrAng'] = self.gs[key].nadirAng
 
         df = pd.DataFrame(data)
         df.to_csv(fileName, sep=delimiter)
