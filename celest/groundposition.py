@@ -30,6 +30,7 @@ class GroundPosition:
     name : Tag for ground station location.
     coor : Ground position coordinates as (latitude, longitude) in degrees.
     radius : Radius of earths surface at given coordinates.
+    ECEFpos : GroundPosition location in ECEF frame.
     alt : Altitude data.
     az : Azimuth data.
     nadirAng : Nadir angle data.
@@ -51,14 +52,14 @@ class GroundPosition:
         self.name = name
         self.coor = coor
         self.radius = self.getRadius(coor)
-        self.ECEFpos = self.getECEF()
+        self.ECEFpos = self.getECEF(coor, self.radius)
         self.alt = None
         self.az = None
         self.nadirAng = None
         self.length = None
 
     def __str__(self):
-        """Generates GroundPosition information string."""
+        """Defines GroundPosition information string."""
         title = 'Celest.GoundPosition Object\n'
         name = f'Name: {self.name}\t'
         coor = f'Coordinates: {self.coor}\t'
@@ -66,7 +67,7 @@ class GroundPosition:
 
         return title + name + coor + radius
 
-    def getRadius(self, coor):
+    def getRadius(self, obsCoor):
         """
         Instantiates radius attribute.
 
@@ -75,7 +76,7 @@ class GroundPosition:
 
         Parameters
         ----------
-        coor : tuple of floats
+        obsCoor : tuple of floats
             Specifies observer position in decimal degrees,
             (latitude, longitude).
 
@@ -84,7 +85,7 @@ class GroundPosition:
         radius : float
             The radius given in km.
         """
-        phi = radians(coor[0])
+        phi = radians(obsCoor[0])
 
         # Define WGS84 Parameters.
         semiMajor = 6378.137**2
@@ -95,7 +96,7 @@ class GroundPosition:
 
         return sqrt(numerator / denominator)
 
-    def getECEF(self):
+    def getECEF(self, obsCoor, radius):
         """
         Instantiates ECEFpos attribute.
 
@@ -104,15 +105,17 @@ class GroundPosition:
 
         Parameters
         ----------
-        None
+        obsCoor : tuple of floats
+            Specifies observer position in decimal degrees,
+            (latitude, longitude).
+        radius : float
+            Earth radius at the given coordinates.
 
         Returns
         -------
-        radius : ndarray
-            The ECEF position as an X Y Z array.
+        ECEFpos : ndarray
+            Array of shape (3,) with X, Y, Z ECEF position data.
         """
-        obsCoor = self.coor
-        radius = self.radius
         if obsCoor[1] < 0:
             theta = radians(360 + obsCoor[1])
         else:
@@ -121,5 +124,6 @@ class GroundPosition:
         x = radius*cos(theta)*sin(phi)
         y = radius*sin(theta)*sin(phi)
         z = radius*cos(phi)
+        ECEFpos = np.array([x, y, z])
 
-        return np.array([x, y, z])
+        return ECEFpos
