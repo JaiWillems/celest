@@ -19,11 +19,13 @@ EncounterSpec : Object used to localize GoundPosition encounter information.
 
 
 import numpy as np
-from datetime import datetime
 import pandas as pd
-from jplephem.spk import SPK
+import pkg_resources
 import julian
+from datetime import datetime
+from jplephem.spk import SPK
 from celest import Satellite
+
 
 
 class Encounter:
@@ -116,7 +118,8 @@ class Encounter:
             julianTimes[i] = julian.to_jd(datetime.strptime(time[:18],
                                           "%Y-%m-%d %H:%M:%S"))
 
-        kernal = SPK.open("de421.bsp")
+        ephem = pkg_resources.resource_filename(__name__, 'data/de421.bsp')
+        kernal = SPK.open(ephem)
 
         ssb2sun = kernal[0, 10].compute(julianTimes)
         ssb2eb = kernal[0, 3].compute(julianTimes)
