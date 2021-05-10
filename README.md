@@ -304,7 +304,7 @@ The `addEncounter` method uses the input data to create a key/value pair in the 
 **Parameters**  
 `name`: String acting as the encounter identifier.  
 `encType`: String specifying the encounter as either an imaging, "IMG", or data linking, "DL", encounter.  
-`groundPos`: `GroundPosition` object associated with the encounter.
+`groundPos`: `GroundPosition` object associated with the encounter.  
 `ang`: Angluar constraint for the encounter.  
 `angType`: String specifying the constraint angle as either the altitude, "alt", or nadir-LOS, "nadirLOS", angle type.  
 `maxAng`: Boolean defining the contraint angle as a maximum constraint if True or as minimum constraint if False. Note that the nadirLOS angle is measured to increase away from nadir.  
@@ -331,7 +331,7 @@ The `getSunPos` method uses the de421 ephemeris to calculate the sun's positio i
 **Returns**  
 *sunPos*: Array of shape (n,3) with columns of x, y, z ECEF sun position data.  
 **Usage**  
-None 
+None  
 **Example**  
 None
 
@@ -373,7 +373,7 @@ This method saves the window data to the local working directory.
 **Returns**  
 None  
 **Usage**  
-It is recommended to use a tab delimiter for .txt files and a comma delimiter for .csv files. Will return an error if fileName already exists in the current working directory. 
+It is recommended to use a tab delimiter for .txt files and a comma delimiter for .csv files. Will return an error if fileName already exists in the current working directory.  
 **Example**  
 ```python
 from celest import Satellite, GroundPosition, Encounter
@@ -395,6 +395,38 @@ encounters.getWindows(finch)
 encounters.saveWindows("EncounterWindows.txt", "\t")
 ```
 
+#### .getStats()
+**Description**  
+This method produces various statistics for each encounter and encounter type. The generated statistics include the raw number of viable passes, cumulative time, daily average counts, and the daily average time for each encounter and encounter type.  
+**Parameters**  
+None   
+**Returns**  
+*Data*: The statistics are returned in a Pandas DataFrame object with the vertical axis representing the statistic type and the horizontal axis representing the encounter or encounter type.  
+**Usage**  
+The returned pandas DataFrame can be printed for easy viewing of the statistics through a terminal. Since the statistics are based on the windows, encounter windows must be instantiated.  
+**Example**  
+```python
+from celest import Satellite, GroundPosition, Encounter
+import numpy as np
+
+UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ..., '2020-06-01 12:01:00.0340'])
+ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ..., [2.73e+03, 2.08e+03, -6.02e+03]])
+
+toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
+
+finch = Satellite()
+finch.getAltAz(groundPos=toronto, posData=ECIvec, timeData=UTCTimeData)
+finch.getNdrAng(groundPos=toronto)
+
+encounters = Encounter()
+encounters.addEncounter("CYYZ IMG", "IMG", toronto, 30, "nadirLOS", True, solar=1)
+
+encounters.getWindows(finch)
+
+stats = encounters.getStats()
+print(stats)
+```
+
 ### EncounterSpec Class
 
 The EncounterSpec class localizes encounter specific information. The class stores its data in nine instance variables:
@@ -410,4 +442,3 @@ The EncounterSpec class localizes encounter specific information. The class stor
 1. **self.length**: Length of data attributes represented as an int
 
 These instance variables are interfaced by the user through no methods as the class was designed for internal use by `Encounters`.
-
