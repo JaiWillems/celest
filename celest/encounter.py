@@ -268,6 +268,80 @@ class Encounter:
         df = pd.DataFrame(data)
         df.to_csv(fileName, sep=delimiter)
 
+    def getStats(self):
+        """
+        Get encounter statistics.
+
+        This method produces various statistics for each encounter and
+        encounter type. The generated statistics include the raw number of
+        viable passes, cumulative time, daily average counts, and the daily
+        average time for each encounter and encounter type.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        data : Pandas DataFrame
+            Pandas DataFrame containing the statistics for each encounter and
+            encounter type.
+
+        Usage
+        -----
+        The returned pandas DataFrame can be printed for easy viewing of the
+        statistics.
+        """
+        data = {}
+
+        numDL = 0
+        timeDL = 0
+        avgNumDL = 0
+        avgTimeDL = 0
+
+        numIMG = 0
+        timeIMG = 0
+        avgNumIMG = 0
+        avgTimeIMG = 0
+
+        for encounter in self.encounters:
+
+            encType = self.encounters[encounter].type
+            windows = self.encounters[encounter].windows
+            length = round(self.encounters[encounter].length, 2)
+            time = round(np.sum(windows[:, 2].astype(float)), 2)
+
+            start = datetime.strptime(windows[0, 0], "%Y-%m-%d %H:%M:%S")
+            end = datetime.strptime(windows[-1, 1], "%Y-%m-%d %H:%M:%S")
+            deltaT = (end-start).days
+
+            avgNum = round(length / deltaT, 2)
+            avgTime = round(time / length, 2)
+
+            if encType == "DL":
+                numDL += length
+                timeDL += time
+                avgNumDL += avgNum
+                avgTimeDL += avgTime
+
+            if encType == "IMG":
+                numIMG += length
+                timeIMG += time
+                avgNumIMG += avgNum
+                avgTimeIMG += avgTime
+
+            data[encounter] = pd.Series([length, avgNum, time, avgTime])
+
+        data["Total DL"] = pd.Series([numDL, avgNumDL, timeDL, avgTimeDL])
+        data["Total IMG"] = pd.Series([numIMG, avgNumIMG, timeIMG, avgTimeIMG])
+        df = pd.DataFrame.from_dict(data)
+        df.index = ["Number of Viable Encounters",
+                    "Average Encounters per Day",
+                    "Viable Encounters Duration (s)",
+                    "Average Encounter Duration (s)"]
+
+        return df
+
 
 class EncounterSpec:
     """
