@@ -14,5 +14,6 @@ pip install Celest
 The following release will include:
 * Julian date and offset inputs,
 * Type annotations,
+* Numpy style documentation strings,
 * Encounter scheduling function for the encounter class, and
 * Faster ECI and ECEF conversions through new multiplication method.
