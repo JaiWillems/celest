@@ -17,5 +17,6 @@ The following release will include:
 * Type annotations,
 * Numpy style documentation strings,
 * Setup.py requirements addition,
+* Updated **kwarg usage,
 * Encounter scheduling function for the encounter class, and
 * Faster ECI and ECEF conversions through new multiplication method.
