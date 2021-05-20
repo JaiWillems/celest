@@ -16,5 +16,6 @@ The following release will include:
 * Julian date and offset inputs,
 * Type annotations,
 * Numpy style documentation strings,
+* Setup.py requirements addition,
 * Encounter scheduling function for the encounter class, and
 * Faster ECI and ECEF conversions through new multiplication method.
