@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.6",
     author="Jai Willems",
     author_email="jai52h@hotmail.com",
-    description="Satellite orbital position representation library.",
+    description="Satellite positional representation and encounter planning library.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/JaiWillems/Celest",
