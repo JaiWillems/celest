@@ -1,5 +1,10 @@
 # Celest
 
+![PyPI - License](https://img.shields.io/pypi/l/Celest)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/Celest)
+[![PyPI version](https://badge.fury.io/py/Celest.svg)](https://badge.fury.io/py/Celest)
+![PyPI - Format](https://img.shields.io/pypi/format/Celest)
+
 The Celest library is designed to provide a simple interface for satellite positional representations and encounter planning.
 * ***Documentation:*** https://jaiwillems.github.io/Celest/
 * ***Source Code:*** https://github.com/JaiWillems/Celest/tree/main/celest
@@ -14,6 +19,7 @@ pip install Celest
 ## Upcomming Release
 The following release will include:
 * Julian date and offset inputs,
+* Sun\encounter constraint,
 * Type annotations,
 * Numpy style documentation strings,
 * Setup.py requirements addition,
