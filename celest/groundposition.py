@@ -13,7 +13,7 @@ import numpy as np
 from typing import Tuple
 
 
-class GroundPosition:
+class GroundPosition(object):
     """Localize ground position based information.
 
     The GoundPosition class stores ground location data and is used in the

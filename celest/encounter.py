@@ -16,7 +16,7 @@ from satellite import Satellite
 from groundposition import GroundPosition
 
 
-class Encounter:
+class Encounter(object):
     """Computes, schedules, and store satellite encounter data.
 
     The Encounter class extends off the information stored in Satellite and
@@ -57,8 +57,9 @@ class Encounter:
         self.sunPos = None
 
     def addEncounter(self, name: str, encType: Literal["IMG", "DL"], groundPos:
-        GroundPosition, ang: float, angType: Literal["alt", "nadirLOS"],
-        maxAng: bool, solar: Literal[-1, 0, 1]=0) -> None:
+                     GroundPosition, ang: float, angType:
+                     Literal["alt", "nadirLOS"], maxAng: bool, solar:
+                     Literal[-1, 0, 1]=0) -> None:
         """Define an encounter type.
 
         This method uses the input data to create a key/value pair in the
@@ -129,23 +130,17 @@ class Encounter:
         >>> sunPos = encounter.getSunPos(timeData=UTCTimeData)
         """
         # Get sun position in ECI.
-        julianTimes = np.zeros((timeData.size,))
-
-        for i, time in enumerate(timeData):
-            julianTimes[i] = julian.to_jd(datetime.strptime(time[:18],
-                                          "%Y-%m-%d %H:%M:%S"))
-
         ephem = pkg_resources.resource_filename(__name__, 'data/de421.bsp')
         kernal = SPK.open(ephem)
 
-        ssb2sun = kernal[0, 10].compute(julianTimes)
-        ssb2eb = kernal[0, 3].compute(julianTimes)
-        eb2e = kernal[3, 399].compute(julianTimes)
+        ssb2sun = kernal[0, 10].compute(timeData)
+        ssb2eb = kernal[0, 3].compute(timeData)
+        eb2e = kernal[3, 399].compute(timeData)
         e2sun = (ssb2sun - ssb2eb - eb2e).T
 
         # Convert sun position data to ECEF
         sun = Satellite()
-        e2sunECEF = sun.getECEF(posData=e2sun, timeData=timeData)
+        e2sunECEF = sun.getECEF(posData=e2sun, timeData=timeData, jul=True)
         self.sunPos = e2sunECEF
         return self.sunPos
 
@@ -373,7 +368,7 @@ class Encounter:
         return df
 
 
-class EncounterSpec:
+class EncounterSpec(object):
     """Localize encounter information.
 
     The EncounterSpec object localizes encounter information specific to a

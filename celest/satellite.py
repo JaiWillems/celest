@@ -17,10 +17,11 @@ import pandas as pd
 from math import pi, cos, sin, radians
 from datetime import datetime
 import julian
+from typing import Union
 from groundposition import GroundPosition
 
 
-class Satellite:
+class Satellite(object):
     """Store position representations and compute orbital conversions,
 
     The Satellite class represents a satellite object, be it artificial or
@@ -79,13 +80,20 @@ class Satellite:
         self.gs = {}
         self.length = None
 
-    def timeData(self, timeData: np.ndarray) -> None:
+    def timeData(self, timeData: np.ndarray, jul: bool=False, julOffset:
+                 float=0) -> None:
         """Instantiate time attribute with orbital time dependency.
 
         Parameters
         ----------
         timeData : np.ndarray
-            Array of shape (n,) containing datetime objects in UTC.
+            Array of shape (n,) containing time data.
+        jul : bool, optional
+            Indicates the input times are Julian dates if True or UTC datetime
+            strings if False.
+        julOffset : float, optional
+            Offset to be added to the inputed Julian dates.
+
 
         Returns
         -------
@@ -103,8 +111,19 @@ class Satellite:
         ...                         '2020-06-01 12:01:00.0340'])
         >>> finch.timeData(timeData=UTCtimeData)
         """
-        self.times = timeData
         self.length = timeData.shape[0]
+
+        if jul:
+            self.times = timeData + julOffset
+        else:
+            self.times = np.zeros((self.length,))
+            for i in range(self.length):
+                try:
+                    self.times[i] = julian.to_jd(datetime.strptime(timeData[i],
+                                                 "%Y-%m-%d %H:%M:%S.%f"))
+                except:
+                    self.times[i] = julian.to_jd(datetime.strptime(timeData[i],
+                                                 "%Y-%m-%d %H:%M:%S"))
 
     def positionData(self, posData: np.ndarray, type: str) -> None:
         """Instantiate orbital position data.
@@ -138,11 +157,14 @@ class Satellite:
         elif type == 'ECEF':
             self.ECEFdata = posData
 
-    def getERA(self, **kwargs: np.ndarray) -> np.ndarray:
+    def getERA(self, timeData: np.ndarray=None, **kwargs:
+               Union[bool, float]) -> np.ndarray:
         """Instantiate ERAdata attribute.
 
         Parameters
         ----------
+        timeData : np.ndarray, optional
+            Array of shape (n,) containing time data.
         **kwargs : dict, optional
             Extra arguments to `getERA`: refer to getERA documentation for a
             list of all possible arguments.
@@ -169,15 +191,10 @@ class Satellite:
         >>> ERAangles = finch.getERA(timeData=UTCtimeData)
         """
         if type(self.times) == type(None):
-            timeData = kwargs['timeData']
-            self.timeData(timeData)
+            self.timeData(timeData **kwargs)
 
         angArr = np.zeros((self.length,))
-        Julian = np.zeros((self.length,))
-
-        for i in range(self.length):
-            Julian[i] = julian.to_jd(datetime.strptime(self.times[i][:19],
-                                                       '%Y-%m-%d %H:%M:%S'))
+        Julian = self.times
 
         # Multiply the elaped time since J2000 by Earth rotation rate and add
         # orientation at J2000.
@@ -189,11 +206,16 @@ class Satellite:
 
         return self.ERAdata
 
-    def getECI(self, **kwargs: np.ndarray) -> np.ndarray:
+    def getECI(self, posData: np.ndarray=None, timeData: np.ndarray=None,
+               **kwargs: Union[bool, float]) -> np.ndarray:
         """Instantiate ECIdata attribute.
 
         Parameters
         ----------
+        posData : np.ndarray, optional
+            Array of shape (n,3) with columns of X, Y, Z ECEF position data.
+        timeData : np.ndarray, optional
+            Array of shape (n,) containing time data.
         **kwargs : dict, optional
             Extra arguments to `getECI`: refer to getECI documentation for a
             list of all possible arguments.
@@ -210,7 +232,7 @@ class Satellite:
         Notes
         -----
         The Satellite class instance must have ECEFdata and ERAdata attributes
-        initiated or posData and timeData inputs passed in under **kwargs.
+        initiated or posData and timeData inputs passed in.
 
         Examples
         --------
@@ -222,10 +244,9 @@ class Satellite:
         >>> ECIvec = finch.getECI(posData=ECEFvec, timeData=UTCTimeData)
         """
         if type(self.ERAdata) == type(None):
-            self.getERA(**kwargs)
+            self.getERA(timeData=timeData, **kwargs)
         if type(self.ECEFdata) == type(None):
-            ECEFdata = kwargs['posData']
-            self.positionData(ECEFdata, 'ECEF')
+            self.positionData(posData=posData, type="ECEF")
 
         # Rotate ECEFdata around z-axis by ERA.
         ECIvec = np.zeros((self.length, 3))
@@ -244,11 +265,16 @@ class Satellite:
 
         return self.ECIdata
 
-    def getECEF(self, **kwargs: np.ndarray) -> np.ndarray:
+    def getECEF(self, posData: np.ndarray=None, timeData: np.ndarray=None,
+                **kwargs: Union[bool, float]) -> np.ndarray:
         """Instantiate ECEFdata attribute.
 
         Parameters
         ----------
+        posData : np.ndarray, optional
+            Array of shape (n,3) with columns of X, Y, Z ECI position data.
+        timeData : np.ndarray, optional
+            Array of shape (n,) containing time data.
         **kwargs : dict, optional
             Extra arguments to `getECEF`: refer to getECEF documentation for a
             list of all possible arguments.
@@ -265,7 +291,7 @@ class Satellite:
         Notes
         -----
         The Satellite class instance must have ECIdata and ERAdata attributes
-        initiated or posData and timeData inputs passed in under **kwargs.
+        initiated or posData and timeData inputs passed in.
 
         Examples
         --------
@@ -277,10 +303,9 @@ class Satellite:
         >>> ECEFvec = finch.getECEF(posData=ECIvec, timeData=UTCTimeData)
         """
         if type(self.ERAdata) == type(None):
-            self.getERA(**kwargs)
+            self.getERA(timeData=timeData, **kwargs)
         if type(self.ECIdata) == type(None):
-            ECIdata = kwargs['posData']
-            self.positionData(ECIdata, 'ECI')
+            self.positionData(posData=posData, type="ECI")
 
         # Rotate ECIdata around z-axis by -ERA.
         ECEFvec = np.zeros((self.length, 3))
@@ -299,7 +324,9 @@ class Satellite:
 
         return self.ECEFdata
 
-    def getAltAz(self, groundPos: GroundPosition, **kwargs: np.ndarray) -> np.ndarray:
+    def getAltAz(self, groundPos: GroundPosition, posData: np.ndarray=None,
+                 timeData: np.ndarray=None, **kwargs:
+                 Union[bool, float]) -> np.ndarray:
         """Instantiate GroundPositions .alt and .az attributes.
 
         This method takes in a GroundPosition object and instantiates its .alt
@@ -311,6 +338,11 @@ class Satellite:
         ----------
         groundPos : GroundPosition object
             GroundPosition object instantiated as per its documentation.
+        posData : np.ndarray, optional
+            Array of shape (n,3) with columns of X, Y, Z position data
+            assumed ECI.
+        timeData : np.ndarray, optional
+            Array of shape (n,) containing time data.
         **kwargs : dict, optional
             Extra arguments to `getAltAz`: refer to getAltAz documentation for
             a list of all possible arguments.
@@ -324,7 +356,7 @@ class Satellite:
         Notes
         -----
         The Satellite class instance must have the ECEFdata attribute initiated
-        or have the posData and timeData inputs passed in under **kwargs.
+        or have the posData and timeData inputs passed in.
 
         Examples
         --------
@@ -364,7 +396,7 @@ class Satellite:
             return ang
 
         if type(self.ECEFdata) == type(None):
-            self.getECEF(**kwargs)
+            self.getECEF(posData=posData, timeData=timeData, **kwargs)
 
         if groundPos.name not in self.gs:
             groundPos.length = self.length
@@ -419,7 +451,9 @@ class Satellite:
 
         return self.gs[groundPos.name].alt, self.gs[groundPos.name].az
 
-    def getNdrAng(self, groundPos: GroundPosition, **kwargs: np.ndarray) -> np.ndarray:
+    def getNdrAng(self, groundPos: GroundPosition, posData: np.ndarray=None,
+                  timeData: np.ndarray=None, **kwargs:
+                  Union[bool, float]) -> np.ndarray:
         """Instantiate GroundPositions.nadirAng attribute.
 
         This method takes in a GroundPosition object and instantiates its
@@ -432,6 +466,11 @@ class Satellite:
         ----------
         groundPos : GroundPosition object
             GroundPosition object instantiated as per its documentation.
+        posData : np.ndarray, optional
+            Array of shape (n,3) with columns of X, Y, Z position data
+            assumed ECI.
+        timeData : np.ndarray, optional
+            Array of shape (n,) containing time data.
         **kwargs : dict, optional
             Extra arguments to `getNdrAng`: refer to getNdrAng documentation
             for a list of all possible arguments.
@@ -444,7 +483,7 @@ class Satellite:
         Notes
         -----
         The Satellite instance must have the ECEFdata attribute initiated or
-        the posData and timeData inputs passed in as **kwargs.
+        the posData and timeData inputs passed in.
 
         Examples
         --------
@@ -459,7 +498,7 @@ class Satellite:
         ...                          timeData=UTCTimeData)
         """
         if type(self.ECEFdata) == type(None):
-            self.getECEF(**kwargs)
+            self.getECEF(posData=posData, timeData=timeData, **kwargs)
 
         if groundPos.name not in self.gs:
             groundPos.length = self.length
