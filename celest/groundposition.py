@@ -51,9 +51,9 @@ class GroundPosition(object):
 
     Methods
     -------
-    getRadius(obsCoor)
+    _getRadius(obsCoor)
         Used to instantiate the radius attribute.
-    getECEF(obsCoor, radius)
+    _getECEF(obsCoor, radius)
         Used to instantiate the ECEFpos attribute.
 
     Examples
@@ -64,8 +64,8 @@ class GroundPosition(object):
         """Define instance variables."""
         self.name = name
         self.coor = coor
-        self.radius = self.getRadius(coor)
-        self.ECEFpos = self.getECEF(coor, self.radius)
+        self.radius = self._getRadius(coor)
+        self.ECEFpos = self._getECEF(coor, self.radius)
         self.alt = None
         self.az = None
         self.nadirAng = None
@@ -80,7 +80,7 @@ class GroundPosition(object):
 
         return title + name + coor + radius
 
-    def getRadius(self, obsCoor: Tuple[float, float]) -> float:
+    def _getRadius(self, obsCoor: Tuple[float, float]) -> float:
         """Instantiates radius attribute.
 
         This method uses the World Geodetic System, WGS84, to calculate the
@@ -118,7 +118,7 @@ class GroundPosition(object):
 
         return sqrt(numerator / denominator)
 
-    def getECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.ndarray:
+    def _getECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.ndarray:
         """Instantiates ECEFpos attribute.
 
         Converts the ground positions geographical coordinates and radius into
