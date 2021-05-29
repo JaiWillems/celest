@@ -46,14 +46,18 @@ class GroundPosition(object):
         Azimuth data as an array of shape (n,) given in degrees.
     nadirAng : np.ndarray
         Nadir angle data as an array of shape (n,) given in degrees.
+    distance : np.ndarray
+        Distance to the satellite as an array of chape (n,).
+    altitude : np.ndarray
+        Altitude above the WGS84 spheroid as an array of shape (n,).
     length : int
         Length, n, of data attributes.
 
     Methods
     -------
-    _getRadius(obsCoor)
+    _radius(obsCoor)
         Used to instantiate the radius attribute.
-    _getECEF(obsCoor, radius)
+    _ECEF(obsCoor, radius)
         Used to instantiate the ECEFpos attribute.
 
     Examples
@@ -64,11 +68,12 @@ class GroundPosition(object):
         """Define instance variables."""
         self.name = name
         self.coor = coor
-        self.radius = self._getRadius(coor)
-        self.ECEFpos = self._getECEF(coor, self.radius)
+        self.radius = self._radius(coor)
+        self.ECEFpos = self._ECEF(coor, self.radius)
         self.alt = None
         self.az = None
         self.nadirAng = None
+        self.distance = None
         self.length = None
 
     def __str__(self) -> str:
@@ -80,7 +85,7 @@ class GroundPosition(object):
 
         return title + name + coor + radius
 
-    def _getRadius(self, obsCoor: Tuple[float, float]) -> float:
+    def _radius(self, obsCoor: Tuple[float, float]) -> float:
         """Instantiates radius attribute.
 
         This method uses the World Geodetic System, WGS84, to calculate the
@@ -118,7 +123,7 @@ class GroundPosition(object):
 
         return sqrt(numerator / denominator)
 
-    def _getECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.ndarray:
+    def _ECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.ndarray:
         """Instantiates ECEFpos attribute.
 
         Converts the ground positions geographical coordinates and radius into

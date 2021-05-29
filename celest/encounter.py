@@ -122,16 +122,16 @@ class Encounter(object):
 
     Methods
     -------
-    addEncounter(name, encType, groundPos, ang, angType, maxAng, solar=0)
+    add_encounter(name, encType, groundPos, ang, angType, maxAng, solar=0)
         Defines and stores EncounterSpec object in the encounters attribute
         dictionary.
-    _getSunPos(timeData)
+    _sun_position(timeData)
         Instantiates sunPos attribute.
-    getWindows(satellite)
+    windows(satellite)
         Instantiates windows attribute of the EncounterSpec objects.
-    saveWindows(fileName, delimiter)
+    save_windows(fileName, delimiter)
         Saves window data in local directory.
-    getStats()
+    encounter_stats()
         Get encounter statistics.
     """
 
@@ -140,7 +140,7 @@ class Encounter(object):
         self.encounters = {}
         self.sunPos = None
 
-    def addEncounter(self, name: str, encType: Literal["IMG", "DL"], groundPos:
+    def add_encounter(self, name: str, encType: Literal["IMG", "DL"], groundPos:
                      GroundPosition, ang: float, angType:
                      Literal["alt", "nadirLOS"], maxAng: bool, solar:
                      Literal[-1, 0, 1]=0) -> None:
@@ -177,7 +177,7 @@ class Encounter(object):
         Examples
         --------
         >>> encounters = Encounter()
-        >>> encounters.addEncounter("CYYZ IMG", "IMG", toronto, 30, "nadirLOS",
+        >>> encounters.add_encounter("CYYZ IMG", "IMG", toronto, 30, "nadirLOS",
         ...                         True, solar=1)
         """
         if angType == "nadirLOS":
@@ -189,7 +189,7 @@ class Encounter(object):
                                   maxAng, solar)
         self.encounters[name] = encounter
 
-    def _getSunPos(self, timeData: np.ndarray) -> np.ndarray:
+    def _sun_position(self, timeData: np.ndarray) -> np.ndarray:
         """Instantiate sunPos attribute.
 
         This method uses the de421 ephemeris to calculate the sun"s position in
@@ -211,7 +211,7 @@ class Encounter(object):
         >>> encounter = Encounter()
         >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
         ...                        '2020-06-01 12:01:00.0340'])
-        >>> sunPos = encounter._getSunPos(timeData=UTCTimeData)
+        >>> sunPos = encounter._sun_position(timeData=UTCTimeData)
         """
         # Get sun position in ECI.
         ephem = pkg_resources.resource_filename(__name__, 'data/de421.bsp')
@@ -224,11 +224,11 @@ class Encounter(object):
 
         # Convert sun position data to ECEF
         sun = Satellite()
-        e2sunECEF = sun.getECEF(posData=e2sun, timeData=timeData, jul=True)
+        e2sunECEF = sun.ECEF(posData=e2sun, timeData=timeData, jul=True)
         self.sunPos = e2sunECEF
         return self.sunPos
 
-    def _specialInterp(self, satellite: Satellite, groundPos: GroundPosition,
+    def _special_interp(self, satellite: Satellite, groundPos: GroundPosition,
                        encounter: EncounterSpec, factor: int, buffer: float,
                        dt: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray,
                        np.ndarray]:
@@ -329,14 +329,14 @@ class Encounter(object):
 
             # Get interpolated angle data.
             finch = Satellite()
-            finch.timeData(timeData=times, jul=True)
-            finch.positionData(posData=ECEFdata, type="ECEF")
-            alt, az = finch.getAltAz(groundPos=groundPos)
-            nadir = finch.getNdrAng(groundPos=groundPos)
+            finch.time_data(timeData=times, jul=True)
+            finch.position_data(posData=ECEFdata, type="ECEF")
+            alt, az = finch.horizontal(groundPos=groundPos)
+            nadir = finch.nadir_ang(groundPos=groundPos)
         
         return times, alt, az, nadir
 
-    def getWindows(self, satellite: Satellite, interp: bool=True, factor:
+    def windows(self, satellite: Satellite, interp: bool=True, factor:
                    int=5, buffer: float=10, dt: int=1) -> None:
         """Instantiates windows attribute of EncounterSpec objects.
 
@@ -374,7 +374,7 @@ class Encounter(object):
 
         Exampls:
         --------
-        >>> encounters.getWindows(finch)
+        >>> encounters.windows(finch)
 
         See documentation for more detail on instantiated dependencies.
         """
@@ -391,7 +391,7 @@ class Encounter(object):
             if interp:
                 params = [satellite, satellite.gs[groundPos], encounter,
                           factor, buffer, dt]
-                times, alt, az, nadir = self._specialInterp(*params)
+                times, alt, az, nadir = self._special_interp(*params)
             else:
                 times = satellite.times
                 alt = satellite.gs[groundPos].alt
@@ -408,7 +408,7 @@ class Encounter(object):
 
             # Get sun position vector.
             if solar != 0:
-                sunECEFpos = self._getSunPos(timeData=times)
+                sunECEFpos = self._sun_position(timeData=times)
                 gndECEFpos = np.full((sunECEFpos.shape[0], 3),
                                      satellite.gs[groundPos].ECEFpos)
                 dividend = np.einsum("ij, ij->i", sunECEFpos, gndECEFpos)
@@ -442,7 +442,7 @@ class Encounter(object):
             self.encounters[i].windows = windowTimes
             self.encounters[i].length = windowTimes.shape[0]
 
-    def saveWindows(self, fileName: str, delimiter: str) -> None:
+    def save_windows(self, fileName: str, delimiter: str) -> None:
         """Save window data to local directory.
 
         Parameters
@@ -461,13 +461,13 @@ class Encounter(object):
         -----
         It is recommended to use a tab delimiter for .txt files and comma
         delimiters for .csv files. The method will return an error if fileName
-        already exists in the current working directory. The getWindows
-        function must be called prior to the saveWindows method call.
+        already exists in the current working directory. The windows
+        function must be called prior to the save_windows method call.
 
         Examples
         --------
-        >>> encounters.getWindows(finch)
-        >>> encounters.saveWindows("EncounterWindows.txt", "\t")
+        >>> encounters.windows(finch)
+        >>> encounters.save_windows("EncounterWindows.txt", "\t")
 
         See documentation for more detail on instantiated dependencies.
         """
@@ -496,7 +496,7 @@ class Encounter(object):
         df = pd.DataFrame(data)
         df.to_csv(fileName, sep=delimiter)
 
-    def getStats(self) -> pd.DataFrame:
+    def encounter_stats(self) -> pd.DataFrame:
         """Generate encounter statistics.
 
         This method produces various statistics for each encounterSpec object
@@ -520,7 +520,7 @@ class Encounter(object):
 
         Examples:
         ---------
-        >>> stats = encounters.getStats()
+        >>> stats = encounters.encounter_stats()
 
         See documentation for more detail on instantiated dependencies.
         """
