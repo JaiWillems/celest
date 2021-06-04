@@ -1,28 +1,28 @@
 # Celest
 
-![PyPI - License](https://img.shields.io/pypi/l/Celest)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/Celest)
-[![PyPI version](https://badge.fury.io/py/Celest.svg)](https://badge.fury.io/py/Celest)
-![PyPI - Format](https://img.shields.io/pypi/format/Celest)
+[![PyPI version](https://badge.fury.io/py/Celest.svg)](https://badge.fury.io/py/Celest) ![PyPI - Downloads](https://img.shields.io/pypi/dm/Celest) ![PyPI - License](https://img.shields.io/pypi/l/Celest) ![PyPI - Format](https://img.shields.io/pypi/format/Celest)
 
 The Celest library is designed to provide a simple interface for satellite positional representations and encounter planning.
-* ***Documentation:*** https://jaiwillems.github.io/Celest/
-* ***Source Code:*** https://github.com/JaiWillems/Celest/tree/main/celest
-* ***PyPI:*** https://pypi.org/project/Celest/
+* **Documentation:** https://jaiwillems.github.io/Celest/
+* **Source Code:** https://github.com/JaiWillems/Celest
+* **PyPI:** https://pypi.org/project/Celest/
+* **Bug Report or Feature Request:** https://github.com/JaiWillems/Celest/issues
+
+Celest provides:
+* Fast orbital conversions between ECI, ECEF, and Horizontal coordinate systems.
+* Encounter generation and planning.
 
 ## Installation
-Celest can be installed through a terminal using the following command:
+Celest can be installed from PyPI with the following command:
 ```terminal
 pip install Celest
 ```
 
-## Upcomming Release
-The following release will include:
-* Julian date and offset inputs,
-* Sun\encounter constraint,
-* Type annotations,
-* Numpy style documentation strings,
-* Setup.py requirements addition,
-* Updated **kwarg usage,
-* Encounter scheduling function for the encounter class, and
+
+## Release 0.2.0 Features
+The Celest 0.2.0 release will include:
+* Sun-encounter constraint,
+* Test driven development,
+* Analytical pass analysis method,
+* An encounter scheduling function for the encounter class, and
 * Faster ECI and ECEF conversions through new multiplication method.
