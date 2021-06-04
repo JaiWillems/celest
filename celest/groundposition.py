@@ -8,7 +8,6 @@ GroundPosition class was created for managerial purposes.
 """
 
 
-from math import sin, cos, sqrt, radians
 import numpy as np
 from typing import Tuple
 
@@ -37,18 +36,18 @@ class GroundPosition(object):
         degrees in the (latitude, longitude) format.
     radius : float
         Radius of earths surface at the given coordinates using WGS84.
-    ECEFpos : np.ndarray
+    ECEFpos : np.array
         Array of shape (3,) representing the GroundPosition location in the
         ECEF cartesian frame.
-    alt : np.ndarray
+    alt : np.array
         Altitude data as an array of shape (n,) given in degrees.
-    az : np.ndarray
+    az : np.array
         Azimuth data as an array of shape (n,) given in degrees.
-    nadirAng : np.ndarray
+    nadirAng : np.array
         Nadir angle data as an array of shape (n,) given in degrees.
-    distance : np.ndarray
+    distance : np.array
         Distance to the satellite as an array of chape (n,).
-    altitude : np.ndarray
+    altitude : np.array
         Altitude above the WGS84 spheroid as an array of shape (n,).
     length : int
         Length, n, of data attributes.
@@ -64,6 +63,7 @@ class GroundPosition(object):
     --------
     >>> toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
     """
+
     def __init__(self, name: str, coor: Tuple[float, float]) -> None:
         """Define instance variables."""
         self.name = name
@@ -112,18 +112,18 @@ class GroundPosition(object):
 
         where :math:`\phi` is the observers lattitude.
         """
-        phi = radians(obsCoor[0])
+        phi = np.radians(obsCoor[0])
 
         # Define WGS84 Parameters.
         semiMajor = 6378.137**2
         semiMinor = 6356.752314245**2
 
         numerator = semiMajor * semiMinor
-        denominator = semiMajor * sin(phi)**2 + semiMinor * cos(phi)**2
+        denominator = semiMajor * np.sin(phi)**2 + semiMinor * np.cos(phi)**2
 
-        return sqrt(numerator / denominator)
+        return np.sqrt(numerator / denominator)
 
-    def _ECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.ndarray:
+    def _ECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.array:
         """Instantiates ECEFpos attribute.
 
         Converts the ground positions geographical coordinates and radius into
@@ -139,18 +139,18 @@ class GroundPosition(object):
 
         Returns
         -------
-        np.ndarray
+        np.array
             Array of shape (3,) representing the GroundPosition location in the
             ECEF cartesian frame.
         """
         if obsCoor[1] < 0:
-            theta = radians(360 + obsCoor[1])
+            theta = np.radians(360 + obsCoor[1])
         else:
-            theta = radians(obsCoor[1])
+            theta = np.radians(obsCoor[1])
         phi = np.radians(90 - obsCoor[0])
-        x = radius*cos(theta)*sin(phi)
-        y = radius*sin(theta)*sin(phi)
-        z = radius*cos(phi)
+        x = radius*np.cos(theta)*np.sin(phi)
+        y = radius*np.sin(theta)*np.sin(phi)
+        z = radius*np.cos(phi)
         ECEFpos = np.array([x, y, z])
 
         return ECEFpos

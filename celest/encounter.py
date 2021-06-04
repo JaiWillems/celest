@@ -64,7 +64,7 @@ class EncounterSpec(object):
     solar : {-1, 0, 1}, optional
         Defines sunlight constraint where -1 gets windows at night, 0 gets
         windows at day or night, and 1 gets windows at day.
-    windows : np.ndarray
+    windows : np.array
         Array of shape (n,3) of window start, end, and elapsed seconds data.
     length : int
         Length, n, of data attributes.
@@ -75,8 +75,8 @@ class EncounterSpec(object):
     """
 
     def __init__(self, name: str, encType: Literal["IMG", "DL"], groundPos:
-        GroundPosition, ang: float, angType: Literal["alt", "nadirLOS"],
-        maxAng: bool, solar: Literal[-1, 0, 1]=0) -> None:
+                 GroundPosition, ang: float, angType: Literal["alt", "nadirLOS"],
+                 maxAng: bool, solar: Literal[-1, 0, 1] = 0) -> None:
         """Define instance variables."""
         self.name = name
         self.type = encType
@@ -116,7 +116,7 @@ class Encounter(object):
     encounters : Dict
         Dictionary of EncounterSpec objects where the key is the
         EncounterSpec's name attribute.
-    sunPos : np.ndarray
+    sunPos : np.array
         Array of shape (n,3) containing the sun position in the ECEF
         cartesian frame.
 
@@ -140,10 +140,7 @@ class Encounter(object):
         self.encounters = {}
         self.sunPos = None
 
-    def add_encounter(self, name: str, encType: Literal["IMG", "DL"], groundPos:
-                     GroundPosition, ang: float, angType:
-                     Literal["alt", "nadirLOS"], maxAng: bool, solar:
-                     Literal[-1, 0, 1]=0) -> None:
+    def add_encounter(self, name: str, encType: Literal["IMG", "DL"], groundPos: GroundPosition, ang: float, angType: Literal["alt", "nadirLOS"], maxAng: bool, solar: Literal[-1, 0, 1] = 0) -> None:
         """Define an encounter type.
 
         This method uses the input data to create a key/value pair in the
@@ -185,11 +182,11 @@ class Encounter(object):
         elif angType == "alt":
             angType = 0
 
-        encounter = EncounterSpec(name, encType, groundPos, ang, angType,
-                                  maxAng, solar)
+        encounter = EncounterSpec(
+            name, encType, groundPos, ang, angType, maxAng, solar)
         self.encounters[name] = encounter
 
-    def _sun_position(self, timeData: np.ndarray) -> np.ndarray:
+    def _sun_position(self, timeData: np.array) -> np.array:
         """Instantiate sunPos attribute.
 
         This method uses the de421 ephemeris to calculate the sun"s position in
@@ -197,7 +194,7 @@ class Encounter(object):
 
         Parameters
         ----------
-        timeData : np.ndarray
+        timeData : np.array
             Array of shape (n,) containing datetime objects in UTC.
 
         Returns
@@ -205,7 +202,7 @@ class Encounter(object):
         list
             Array of shape (n,3) with columns of X, Y, Z ECEF sun position
             data.
-        
+
         Examples
         --------
         >>> encounter = Encounter()
@@ -228,10 +225,7 @@ class Encounter(object):
         self.sunPos = e2sunECEF
         return self.sunPos
 
-    def _special_interp(self, satellite: Satellite, groundPos: GroundPosition,
-                       encounter: EncounterSpec, factor: int, buffer: float,
-                       dt: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray,
-                       np.ndarray]:
+    def _special_interp(self, satellite: Satellite, groundPos: GroundPosition, encounter: EncounterSpec, factor: int, buffer: float, dt: int) -> Tuple[np.array, np.array, np.array, np.array]:
         """Interpolate encounter regions.
 
         This method identifies the positional data relevent to the inputed
@@ -253,18 +247,18 @@ class Encounter(object):
         dt : int
             The number of data points adjacent to a valid encounter region to
             interpolate within.
-        
+
         returns
         -------
-        np.ndarray
+        np.array
             The array of new times corresponding to interpolated position data.
-        np.ndarray
+        np.array
             The array of interpolated altitude data.
-        np.ndarray
+        np.array
             The array of interpolated azimuth data.
-        np.ndarray
+        np.array
             The array of interpolated nadir angle data.
-        
+
         Notes
         -----
         The inspiration for the buffer is to interpolate regions that have the
@@ -300,7 +294,7 @@ class Encounter(object):
             regions = np.where((nadir < ang + buffer) & (alt > 0))[0]
         elif angType and not isMax:
             regions = np.where((nadir > ang - buffer) & (alt > 0))[0]
-        
+
         regions = np.split(regions, np.where(np.diff(regions) != 1)[0] + 1)
 
         for i in np.flip(regions):
@@ -333,11 +327,10 @@ class Encounter(object):
             finch.position_data(posData=ECEFdata, type="ECEF")
             alt, az = finch.horizontal(groundPos=groundPos)
             nadir = finch.nadir_ang(groundPos=groundPos)
-        
+
         return times, alt, az, nadir
 
-    def windows(self, satellite: Satellite, interp: bool=True, factor:
-                   int=5, buffer: float=10, dt: int=1) -> None:
+    def windows(self, satellite: Satellite, interp: bool = True, factor: int = 5, buffer: float = 10, dt: int = 1) -> None:
         """Instantiates windows attribute of EncounterSpec objects.
 
         This method determines determines the windows for each EncounterSpec
@@ -389,8 +382,8 @@ class Encounter(object):
             solar = encounter.solar
 
             if interp:
-                params = [satellite, satellite.gs[groundPos], encounter,
-                          factor, buffer, dt]
+                params = [satellite, satellite.gs[groundPos],
+                          encounter, factor, buffer, dt]
                 times, alt, az, nadir = self._special_interp(*params)
             else:
                 times = satellite.times
@@ -409,11 +402,11 @@ class Encounter(object):
             # Get sun position vector.
             if solar != 0:
                 sunECEFpos = self._sun_position(timeData=times)
-                gndECEFpos = np.full((sunECEFpos.shape[0], 3),
-                                     satellite.gs[groundPos].ECEFpos)
+                gndECEFpos = np.full(
+                    (sunECEFpos.shape[0], 3), satellite.gs[groundPos].ECEFpos)
                 dividend = np.einsum("ij, ij->i", sunECEFpos, gndECEFpos)
-                divisor = np.multiply(np.linalg.norm(sunECEFpos, axis=1),
-                                      np.linalg.norm(gndECEFpos, axis=1))
+                divisor = np.multiply(np.linalg.norm(
+                    sunECEFpos, axis=1), np.linalg.norm(gndECEFpos, axis=1))
                 arg = np.divide(dividend, divisor)
                 ang = np.degrees(np.arccos(arg))
 
@@ -431,6 +424,9 @@ class Encounter(object):
             windowTimes = np.empty((len(winIndArr), 3), dtype="U25")
 
             for j in range(len(winIndArr)):
+
+                if j == 0:
+                    break
 
                 start = julian.from_jd(times[winIndArr[j][0]])
                 end = julian.from_jd(times[winIndArr[j][-1]])
@@ -477,15 +473,14 @@ class Encounter(object):
         elapsedSec = np.array([])
 
         for key in self.encounters:
-            encounterTypes = np.append(encounterTypes,
-                                       np.full((self.encounters[key].length,),
-                                               key))
-            encounterStart = np.append(encounterStart,
-                                       self.encounters[key].windows[:, 0])
-            encounterEnd = np.append(encounterEnd,
-                                     self.encounters[key].windows[:, 1])
-            elapsedSec = np.append(elapsedSec,
-                                   self.encounters[key].windows[:, 2])
+            encounterTypes = np.append(encounterTypes, np.full(
+                (self.encounters[key].length,), key))
+            encounterStart = np.append(
+                encounterStart, self.encounters[key].windows[:, 0])
+            encounterEnd = np.append(
+                encounterEnd, self.encounters[key].windows[:, 1])
+            elapsedSec = np.append(
+                elapsedSec, self.encounters[key].windows[:, 2])
 
         data = {}
         data["Encounter Start"] = pd.Series(encounterStart)
@@ -567,9 +562,7 @@ class Encounter(object):
         data["Total DL"] = pd.Series([numDL, avgNumDL, timeDL, avgTimeDL])
         data["Total IMG"] = pd.Series([numIMG, avgNumIMG, timeIMG, avgTimeIMG])
         df = pd.DataFrame.from_dict(data)
-        df.index = ["Number of Viable Encounters",
-                    "Average Encounters per Day",
-                    "Viable Encounters Duration (s)",
-                    "Average Encounter Duration (s)"]
+        df.index = ["Number of Viable Encounters", "Average Encounters per Day",
+                    "Viable Encounters Duration (s)", "Average Encounter Duration (s)"]
 
         return df
