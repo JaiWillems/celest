@@ -13,8 +13,8 @@ import julian
 from datetime import datetime
 from jplephem.spk import SPK
 from typing import Literal, Tuple
-from satellite import Satellite
-from groundposition import GroundPosition
+from .satellite import Satellite
+from .groundposition import GroundPosition
 
 
 class EncounterSpec(object):

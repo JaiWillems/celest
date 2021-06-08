@@ -17,7 +17,7 @@ import pandas as pd
 from datetime import datetime
 import julian
 from typing import Union, Tuple
-from groundposition import GroundPosition
+from .groundposition import GroundPosition
 
 
 class Satellite(object):
