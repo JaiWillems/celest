@@ -1,149 +1,191 @@
-"""Satellite orbital coordinate conversions.
+"""Satellite orbital representations and coordinate conversions.
+
+The satellite module contains the Satellite class to calculate different
+orbital position representations including ECI, ECEF, and Horizontal systems.
+The Satellite class also forms the bases for the Encounter module to perform
+encounter planning.
 
 Notes
 -----
-This module contains the Satellite class to calculate different position
-representations for Earth orbiting satellites.
-
-Class
------
-Satellite: Object used to collect and calculate orbital representations.
-    timeData : Instantiate time attribute with orbital time dependency.
-    positionData : Instantiate ECIdata or ECEFdata attribute with orbital
-        position data.
-    getERA : Instantiate ERAdata attribute.
-    getECI : Instantiate ECIdata attribute.
-    getECEF : Instantiate ECEFdata attribute.
-    getAltAz : Instantiate horizontal attribute.
-    getNdrAng : Instantiate nadirAng attribute.
-    saveData : Save class data in local directory.
+Units of the satellite module are represented by the metric system. Specific
+units will be detailed in method documentation strings.
 """
 
 
 import numpy as np
 import pandas as pd
-from math import pi, cos, sin, radians
-from datetime import datetime, timedelta
+from datetime import datetime
 import julian
+from typing import Union, Tuple
+from groundposition import GroundPosition
 
 
-class Satellite:
-    """
-    Satellite object stores and computes orbital coordinate data. Units are in
-    metric.
+class Satellite(object):
+    """Store position representations and compute orbital conversions,
+
+    The Satellite class represents a satellite object, be it artificial or
+    natural, and allows for the position to be represented with time through
+    multiple representations.
+
+    Attributes
+    ----------
+    times : np.array
+        Array of shape (n,) of orbital time dependencies in UTC.
+    ERAdata : np.array
+        Array of shape (n,) of Earth rotation angles.
+    ECIdata : np.array
+        Array of shape (n,3) of Earth centered inertial representations where
+        the columns are X, Y, Z data.
+    ECEFdata : np.array
+        Array of shape (n,3) of Earth centered Earth fixed representations
+        where the columns are X, Y, Z data.
+    gs : Dict
+        Dictionary with GroundPosition.name as the key and the GroundPosition
+        object as the corresponding value.
+    length : int
+        Length n of the data attributes.
 
     Methods
     -------
-    timeData : Instantiate time attribute with orbital time dependency.
-    positionData : Instantiate ECIdata or ECEFdata attribute with orbital
-        position data.
-    getERA : Instantiate ERAdata attribute.
-    getECI : Instantiate ECIdata attribute.
-    getECEF : Instantiate ECEFdata attribute.
-    getAltAz : Instantiates the GroundPosition object's .alt and .az
-        attributes.
-    getNdrAng : Instantiates the GroundPosition object's .nadirAng attribute.
-    saveData : Save class data in local directory.
-
-    Instance Variables
-    ------------------
-    times : Orbital time dependencies.
-    ERAdata : Earth rotation angles.
-    ECIdata : Earth centered inertial position data.
-    ECEFdata : Earth centered earth fixed position data.
-    gs : Dictionary with GroundPosition.name as the key and the GroundPosition
-        object as the corresponding value.
-    length : Length of data attributes.
+    time_data(timeData)
+        Instantiate time attribute with orbital time dependency.
+    position_data(posData, type)
+        Instantiate ECIdata or ECEFdata attribute with orbital position data.
+    ERA(**kwargs)
+        Instantiate ERAdata attribute.
+    ECI(**kwargs)
+        Instantiate ECIdata attribute.
+    ECEF(**kwargs)
+        Instantiate ECEFdata attribute.
+    horizontal(groundPos, **kwargs)
+        Instantiates the GroundPosition object's .alt and .az attributes.
+    nadir_ang(groundPos, **kwargs)
+        Instantiates the GroundPosition object's .nadirAng attribute.
+    distance(groundPos)
+        Instantiates the GroundPosition object's .distance attribute.
+    save_data(fileName, delimiter)
+        Save class data in local directory.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Define instance variables."""
 
         self.times = None
         self.ERAdata = None
         self.ECIdata = None
         self.ECEFdata = None
+        self.elevation = None
         self.gs = {}
         self.length = None
 
-    def timeData(self, timeData):
-        """
-        Instantiate time attribute with orbital time dependency.
-
-        Takes UTC times.
+    def time_data(self, timeData: np.array, jul: bool=False, julOffset:
+                  float=0) -> None:
+        """Instantiate time attribute with orbital time dependency.
 
         Parameters
         ----------
-        timeData : ndarray
-            Array of shape (n,). Contains datetime objects in UTC.
+        timeData : np.array
+            Array of shape (n,) containing time data.
+        jul : bool, optional
+            Indicates the input times are Julian dates if True or UTC datetime
+            strings if False.
+        julOffset : float, optional
+            Offset to be added to the inputed Julian dates.
 
-        Returns
-        -------
-        None
+        Notes
+        -----
+        For more coincise code, the timeData can be passed directly into all
+        conversion methods.
+
+        Examples
+        --------
+        >>> finch = Satellite()
+        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
+        ...                         '2020-06-01 12:01:00.0340'])
+        >>> finch.time_data(timeData=UTCtimeData)
         """
-        self.times = timeData
         self.length = timeData.shape[0]
 
-    def positionData(self, posData, type):
-        """
-        Instantiate ECIdata or ECEFdata attribute with orbital position data.
+        if jul:
+            self.times = timeData + julOffset
+        else:
+            self.times = np.zeros((self.length,))
+            for i in range(self.length):
+                try:
+                    self.times[i] = julian.to_jd(datetime.strptime(
+                        timeData[i], "%Y-%m-%d %H:%M:%S.%f"))
+                except:
+                    self.times[i] = julian.to_jd(datetime.strptime(
+                        timeData[i], "%Y-%m-%d %H:%M:%S"))
 
-        Takes in ECI or ECEF positon data in cartesian coordinates and a data
-        type specifier.
+    def position_data(self, posData: np.array, type: str) -> None:
+        """Instantiate orbital position data.
 
         Parameters
         ----------
-        posData : ndarray
-            Array of shape (n,3) with columns of X, Y, Z position data.
-        type : str
-            Specifies posData as "ECI" or "ECEF".
+        posData : np.array
+            Array of shape (n,3) with columns of X, Y, Z position data. Units
+            in meters.
+        type : {"ECI", "ECEF"}
+            Specifies posData as either "ECI" or "ECEF".
 
-        Returns
-        -------
-        None
+        Notes
+        -----
+        For more coincise code, the posData can be passed directly into all
+        conversion methods.
+
+        Examples
+        --------
+        >>> finch = Satellite()
+        >>> ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
+        ...                    [2.73e+03, 2.08e+03, -6.02e+03]])
+        >>> finch.position_data(posData=ECIvec, type="ECI")
         """
         if type == 'ECI':
             self.ECIdata = posData
         elif type == 'ECEF':
             self.ECEFdata = posData
 
-    def getERA(self, **kwargs):
-        """
-        Instantiate ERAdata attribute.
-
-        Uses times attribute to calculate the Earth Rotation Angle in radians.
+    def ERA(self, timeData: np.array=None, **kwargs:
+            Union[bool, float]) -> np.array:
+        """Instantiate ERAdata attribute.
 
         Parameters
         ----------
-        None
-
-        **kwargs
-        --------
-        timeData : ndarray
-            Array of shape (n,). Contains datetime objects in UTC.
+        timeData : np.array, optional
+            Array of shape (n,) containing time data.
+        **kwargs : dict, optional
+            Extra arguments to `getERA`: refer to getERA documentation for a
+            list of all possible arguments.
 
         Returns
         -------
-        self.ERAdata : ndarray
-            Array of shape (n,). Contains radian earth rotation angles.
+        np.array
+            Array of shape (n,) containing radian earth rotation angles.
 
-        Usage
+        Notes
         -----
-        Must have times attribute initiated or timeData input.
+        The Satellite class instance must have the times attribute initiated or
+        a timeData input passed in under **kwargs.
+
+        The method implements the earth rotation angle formula:
+
+        .. math:: \gamma = 360.99(\Delta T) + 280.46
+
+        Examples
+        --------
+        >>> finch = Satellite()
+        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
+        ...                         '2020-06-01 12:01:00.0340'])
+        >>> ERAangles = finch.ERA(timeData=UTCtimeData)
         """
         if type(self.times) == type(None):
-            timeData = kwargs['timeData']
-            self.timeData(timeData)
+            self.time_data(timeData, ** kwargs)
 
         angArr = np.zeros((self.length,))
-        Julian = np.zeros((self.length,))
+        Julian = self.times
 
-        for i in range(self.length):
-            Julian[i] = julian.to_jd(datetime.strptime(self.times[i][:19],
-                                                       '%Y-%m-%d %H:%M:%S'))
-
-        # Multiply the elaped time since J2000 by Earth rotation rate and add
-        # orientation at J2000.
+        # Multiply time elapsed since J2000 by ERA and add J2000 orientation.
         dJulian = Julian - 2451545
         angArr = (360.9856123035484 * dJulian + 280.46) % 360
 
@@ -152,39 +194,47 @@ class Satellite:
 
         return self.ERAdata
 
-    def getECI(self, **kwargs):
-        """
-        Instantiate ECIdata attribute.
-
-        Computes ECIdata attribute from ECEFdata and ERAdata attribites.
+    def ECI(self, posData: np.array=None, timeData: np.array=None, **kwargs:
+            Union[bool, float]) -> np.array:
+        """Instantiate ECIdata attribute.
 
         Parameters
         ----------
-        None
-
-        **kwargs
-        --------
-        posData : ndarray
-            Array of shape (n,3) with columns of X, Y, Z position data assumed
-            ECEF.
-        timeData : ndarray
-            Array of shape (n,). Contains datetime objects in UTC.
+        posData : np.array, optional
+            Array of shape (n,3) with columns of X, Y, Z ECEF position data.
+        timeData : np.array, optional
+            Array of shape (n,) containing time data.
+        **kwargs : dict, optional
+            Extra arguments to `getECI`: refer to getECI documentation for a
+            list of all possible arguments.
 
         Returns
         -------
-        self.ECIdata : ndarray
+        np.array
             Array of shape (n,3) with columns of X, Y, Z ECI position data.
 
-        Usage
+        See Also
+        --------
+        getECEF : Initiate ECEFdata attribute.
+
+        Notes
         -----
-        Must have ECEFdata and ERAdata attributes initiated or posData and/or
-        timeData inputs.
+        The Satellite class instance must have ECEFdata and ERAdata attributes
+        initiated or posData and timeData inputs passed in.
+
+        Examples
+        --------
+        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
+        ...                         '2020-06-01 12:01:00.0340'])
+        >>> ECEFvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
+        ...                     [2.73e+03, 2.08e+03, -6.02e+03]])
+        >>> finch = Satellite()
+        >>> ECIvec = finch.ECI(posData=ECEFvec, timeData=UTCTimeData)
         """
         if type(self.ERAdata) == type(None):
-            self.getERA(**kwargs)
+            self.ERA(timeData=timeData, **kwargs)
         if type(self.ECEFdata) == type(None):
-            ECEFdata = kwargs['posData']
-            self.positionData(ECEFdata, 'ECEF')
+            self.position_data(posData=posData, type="ECEF")
 
         # Rotate ECEFdata around z-axis by ERA.
         ECIvec = np.zeros((self.length, 3))
@@ -193,49 +243,57 @@ class Satellite:
         A21 = np.sin(self.ERAdata)
         A22 = np.cos(self.ERAdata)
 
-        ECIvec[:, 0] = np.add(np.multiply(A11, self.ECEFdata[:, 0]),
-                              np.multiply(A12, self.ECEFdata[:, 1]))
-        ECIvec[:, 1] = np.add(np.multiply(A21, self.ECEFdata[:, 0]),
-                              np.multiply(A22, self.ECEFdata[:, 1]))
+        ECIvec[:, 0] = np.add(np.multiply(
+            A11, self.ECEFdata[:, 0]), np.multiply(A12, self.ECEFdata[:, 1]))
+        ECIvec[:, 1] = np.add(np.multiply(
+            A21, self.ECEFdata[:, 0]), np.multiply(A22, self.ECEFdata[:, 1]))
         ECIvec[:, 2] = self.ECEFdata[:, 2]
 
         self.ECIdata = ECIvec
 
         return self.ECIdata
 
-    def getECEF(self, **kwargs):
-        """
-        Instantiate ECEFdata attribute.
-
-        Computes ECEFdata attribute from ECIdata and ERAdata attribites.
+    def ECEF(self, posData: np.array=None, timeData: np.array=None, **kwargs:
+             Union[bool, float]) -> np.array:
+        """Instantiate ECEFdata attribute.
 
         Parameters
         ----------
-        None
-
-        **kwargs
-        --------
-        posData : ndarray
-            Array of shape (n,3) with columns of X, Y, Z position data assumed
-            ECI.
-        timeData : ndarray
-            Array of shape (n,). Contains datetime objects in UTC.
+        posData : np.array, optional
+            Array of shape (n,3) with columns of X, Y, Z ECI position data.
+        timeData : np.array, optional
+            Array of shape (n,) containing time data.
+        **kwargs : dict, optional
+            Extra arguments to `getECEF`: refer to getECEF documentation for a
+            list of all possible arguments.
 
         Returns
         -------
-        self.ECEFdata : ndarray
+        np.array
             Array of shape (n,3) with columns of X, Y, Z ECEF position data.
 
-        Usage
+        See Also
+        --------
+        getECI : Initiate ECIdata attribute.
+
+        Notes
         -----
-        Must have ECIdata and ERAdata attributes initiated or posData and/or
-        timeData inputs.
+        The Satellite class instance must have ECIdata and ERAdata attributes
+        initiated or posData and timeData inputs passed in.
+
+        Examples
+        --------
+        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
+        ...                         '2020-06-01 12:01:00.0340'])
+        >>> ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
+        ...                    [2.73e+03, 2.08e+03 -6.02e+03]])
+        >>> finch = Satellite()
+        >>> ECEFvec = finch.ECEF(posData=ECIvec, timeData=UTCTimeData)
         """
         if type(self.ERAdata) == type(None):
-            self.getERA(**kwargs)
+            self.ERA(timeData=timeData, **kwargs)
         if type(self.ECIdata) == type(None):
-            ECIdata = kwargs['posData']
-            self.positionData(ECIdata, 'ECI')
+            self.position_data(posData=posData, type="ECI")
 
         # Rotate ECIdata around z-axis by -ERA.
         ECEFvec = np.zeros((self.length, 3))
@@ -244,22 +302,48 @@ class Satellite:
         A21 = np.sin(-self.ERAdata)
         A22 = np.cos(-self.ERAdata)
 
-        ECEFvec[:, 0] = np.add(np.multiply(A11, self.ECIdata[:, 0]),
-                               np.multiply(A12, self.ECIdata[:, 1]))
-        ECEFvec[:, 1] = np.add(np.multiply(A21, self.ECIdata[:, 0]),
-                               np.multiply(A22, self.ECIdata[:, 1]))
+        ECEFvec[:, 0] = np.add(np.multiply(
+            A11, self.ECIdata[:, 0]), np.multiply(A12, self.ECIdata[:, 1]))
+        ECEFvec[:, 1] = np.add(np.multiply(
+            A21, self.ECIdata[:, 0]), np.multiply(A22, self.ECIdata[:, 1]))
         ECEFvec[:, 2] = self.ECIdata[:, 2]
 
         self.ECEFdata = ECEFvec
 
         return self.ECEFdata
 
-    def getAltAz(self, groundPos, **kwargs):
-        """
-        Instantiate horizontal attribute.
+    def _get_ang(self, vecOne: np.array, vecTwo: np.array) -> float:
+        """Calculate degree angle bewteen two vectors."""
+        # Use simple linalg formula.
+        dividend = np.einsum('ij, ij->i', vecOne, vecTwo)
+        divisor = np.multiply(np.linalg.norm(
+            vecOne, axis=1), np.linalg.norm(vecTwo, axis=1))
+        arg = np.divide(dividend, divisor)
+        ang = np.degrees(np.arccos(arg))
 
-        This method takes in a GroundPosition object and instantiates its alt
-        and az attributes using the satellites position data. The
+        return ang
+
+    def _geo_to_ECEF(self, obsCoor: Tuple[float, float], radius:
+                     float) -> np.array:
+        """Convert geographical coordinates to ECEF."""
+        if obsCoor[1] < 0:
+            theta = np.radians(360 + obsCoor[1])
+        else:
+            theta = np.radians(obsCoor[1])
+        phi = np.radians(90 - obsCoor[0])
+        x = radius*np.cos(theta)*np.sin(phi)
+        y = radius*np.sin(theta)*np.sin(phi)
+        z = radius*np.cos(phi)
+
+        return np.array([x, y, z])
+
+    def horizontal(self, groundPos: GroundPosition, posData: np.array = None,
+                   timeData: np.array = None, **kwargs:
+                   Union[bool, float]) -> np.array:
+        """Instantiate GroundPositions .alt and .az attributes.
+
+        This method takes in a GroundPosition object and instantiates its .alt
+        and .az attributes using the Satellite instance's position data. The
         GroundPosition object is then stored as a value in the gs attribute's
         dictionary with the corresponding key being its name attribute.
 
@@ -267,56 +351,40 @@ class Satellite:
         ----------
         groundPos : GroundPosition object
             GroundPosition object instantiated as per its documentation.
-
-        **kwargs
-        --------
-        posData : ndarray
-            Array of shape (n,3) with columns of X, Y, Z position data assumed
-            ECEF.
-        timeData : ndarray
-            Array of shape (n,). Contains datetime objects in UTC.
+        posData : np.array, optional
+            Array of shape (n,3) with columns of X, Y, Z position data
+            assumed ECI.
+        timeData : np.array, optional
+            Array of shape (n,) containing time data.
+        **kwargs : dict, optional
+            Extra arguments to `horizontal`: refer to horizontal documentation
+            for a list of all possible arguments.
 
         Returns
         -------
-        AltAz : tuple of ndarrays
-            (alt, az) tuple containing the computed altitude and azimuth data.
-            Both alt and az are both arrays of shape (n,).
+        tuple
+            The altitude/azimuth data is returned in a tuple where both the
+            altitude and azimuth are arrays of shape (n,).
 
-        Usage
+        Notes
         -----
-        Must have ECEFdata attribute initiated or the posData and timeData
-        inputs.
+        The Satellite class instance must have the ECEFdata attribute initiated
+        or have the posData and timeData inputs passed in.
+
+        Examples
+        --------
+        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
+        ...                         '2020-06-01 12:01:00.0340'])
+        >>> ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
+        ...                    [2.73e+03, 2.08e+03, -6.02e+03]])
+        >>> toronto = GroundPosition(name="Toronto",
+        ...                          coor=(43.662300, -79.394530))
+        >>> finch = Satellite()
+        >>> Alt, Az = finch.horizontal(groundPos=toronto, posData=ECIvec,
+        ...                          timeData=UTCTimeData)
         """
-        def getAngle(vecOne, vecTwo):
-            """
-            Calculate degree angle bewteen two vectors.
-
-            Takes two multidimensional cartesian coordinate vectors and returns
-            degree angle between the two arrays element-wise.
-
-            Parameters
-            ----------
-            vecOne : ndarray
-                Array of shape (n,3) representing n XYZ vectors.
-            vecTwo : ndarray
-                Array of shape (n,3) representing n XYZ vectors.
-
-            Returns
-            -------
-            ang : float
-                Degree angle between vecOne and vecTwo.
-            """
-            # Use simple linalg formula.
-            dividend = np.einsum('ij, ij->i', vecOne, vecTwo)
-            divisor = np.multiply(np.linalg.norm(vecOne, axis=1),
-                                  np.linalg.norm(vecTwo, axis=1))
-            arg = np.divide(dividend, divisor)
-            ang = np.degrees(np.arccos(arg))
-
-            return ang
-
         if type(self.ECEFdata) == type(None):
-            self.getECEF(**kwargs)
+            self.ECEF(posData=posData, timeData=timeData, **kwargs)
 
         if groundPos.name not in self.gs:
             groundPos.length = self.length
@@ -325,24 +393,16 @@ class Satellite:
         # Convert observer position into spherical then cartesian.
         obsCoor = groundPos.coor
         radius = groundPos.radius
-        if obsCoor[1] < 0:
-            theta = radians(360 + obsCoor[1])
-        else:
-            theta = radians(obsCoor[1])
-        phi = np.radians(90 - obsCoor[0])
-        x = radius*cos(theta)*sin(phi)
-        y = radius*sin(theta)*sin(phi)
-        z = radius*cos(phi)
-        xyzObs = np.full((self.length, 3), np.array([x, y, z]))
+        xyzObs = np.full((self.length, 3), self._geo_to_ECEF(obsCoor, radius))
 
         # Determine line of sight vector then altitude.
         ECEFvec = self.ECEFdata
         xyzLOS = np.subtract(ECEFvec, xyzObs)
-        self.gs[groundPos.name].alt = 90 - getAngle(xyzLOS, xyzObs)
+        self.gs[groundPos.name].alt = 90 - self._get_ang(xyzLOS, xyzObs)
 
         # Find surface tangent vector passing through z-axis.
         kHat = np.full((self.length, 3), np.array([0, 0, 1]))
-        beta = pi/2 - phi
+        beta = np.pi/2 - np.radians(90 - obsCoor[0])
         tangentVec = np.subtract((kHat.T * radius/np.sin(beta)).T, xyzObs)
 
         # Find LOS projection on tangent plane.
@@ -350,7 +410,7 @@ class Satellite:
         normProj = (xyzObs.T * coeff).T
         projLOS = np.subtract(xyzLOS, normProj)
 
-        # Determing aECIzimuth.
+        # Determing azimuth.
         vecOne = np.cross(tangentVec, xyzObs)
         normOne = 1/np.linalg.norm(vecOne, axis=1).reshape((self.length, 1))
         vecOneUnit = normOne*vecOne
@@ -364,48 +424,61 @@ class Satellite:
         negInd = np.where(np.all(negEq, axis=1))[0]
 
         Az = np.zeros((self.length,))
-        Az[posInd] = getAngle(tangentVec[posInd], projLOS[posInd])
-        Az[negInd] = 360 - getAngle(tangentVec[negInd], projLOS[negInd])
+        Az[posInd] = self._get_ang(tangentVec[posInd], projLOS[posInd])
+        Az[negInd] = 360 - self._get_ang(tangentVec[negInd], projLOS[negInd])
 
         self.gs[groundPos.name].az = Az
 
         return self.gs[groundPos.name].alt, self.gs[groundPos.name].az
 
-    def getNdrAng(self, groundPos, **kwargs):
-        """
-        Return Nadir-LOS angle array.
+    def nadir_ang(self, groundPos: GroundPosition, posData: np.array=None,
+                  timeData: np.array=None, **kwargs:
+                  Union[bool, float]) -> np.array:
+        """Instantiate GroundPositions.nadirAng attribute.
 
         This method takes in a GroundPosition object and instantiates its
         nadirAng attribute with the angle made between the satellites nadir and
-        line-of-sight (from the observer to the ground station) vectors. The
-        GroundPosition object is then stored as a value in the gs attribute's
-        dictionary with the corresponding key being its name attribute.
+        line-of-sight vectors. The GroundPosition object is then stored as a
+        value in the gs attribute dictionary with the corresponding key being
+        its name attribute.
 
         Parameters
         ----------
         groundPos : GroundPosition object
             GroundPosition object instantiated as per its documentation.
-
-        **kwargs
-        --------
-        posData : ndarray
-            Array of shape (n,3) with columns of X, Y, Z position data assumed
-            ECI.
-        timeData : ndarray
-            Array of shape (n,). Contains datetime objects in UTC.
+        posData : np.array, optional
+            Array of shape (n,3) with columns of X, Y, Z position data
+            assumed ECI.
+        timeData : np.array, optional
+            Array of shape (n,) containing time data.
+        **kwargs : dict, optional
+            Extra arguments to `nadir_ang`: refer to nadir_ang documentation
+            for a list of all possible arguments.
 
         Returns
         -------
-        nadirAng : ndarray
+        np.array
             Array of shape (n,) with nadir-LOS angle data.
 
-        Usage
+        Notes
         -----
-        Must have ECEFdata attribute initiated or the posData and timeData
-        inputs.
+        The Satellite instance must have the ECEFdata attribute initiated or
+        the posData and timeData inputs passed in.
+
+        Examples
+        --------
+        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
+        ...                         '2020-06-01 12:01:00.0340'])
+        >>> ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
+        ...                    [2.73e+03, 2.08e+03 -6.02e+03]])
+        >>> toronto = GroundPosition(name="Toronto",
+        ...                          coor=(43.662300, -79.394530))
+        >>> finch = Satellite()
+        >>> NdrAng = finch.nadir_ang(groundPos=toronto, posData=ECIvec,
+        ...                          timeData=UTCTimeData)
         """
         if type(self.ECEFdata) == type(None):
-            self.getECEF(**kwargs)
+            self.ECEF(posData=posData, timeData=timeData, **kwargs)
 
         if groundPos.name not in self.gs:
             groundPos.length = self.length
@@ -413,51 +486,112 @@ class Satellite:
 
         obsCoor = groundPos.coor
         radius = groundPos.radius
-        if obsCoor[1] < 0:
-            theta = radians(360 + obsCoor[1])
-        else:
-            theta = radians(obsCoor[1])
-        phi = np.radians(90 - obsCoor[0])
-        x = radius*cos(theta)*sin(phi)
-        y = radius*sin(theta)*sin(phi)
-        z = radius*cos(phi)
-        xyzObs = np.full((self.length, 3), np.array([x, y, z]))
+
+        xyzObs = np.full((self.length, 3), self._geo_to_ECEF(obsCoor, radius))
 
         ECEFvec = self.ECEFdata
         xyzLOS = np.subtract(ECEFvec, xyzObs)
 
-        # Use simple linalg formula.
-        dividend = np.einsum('ij, ij->i', xyzLOS, ECEFvec)
-        divisor = np.multiply(np.linalg.norm(xyzLOS, axis=1),
-                              np.linalg.norm(ECEFvec, axis=1))
-        arg = np.divide(dividend, divisor)
-        ang = np.degrees(np.arccos(arg))
-
+        ang = self._get_ang(xyzLOS, ECEFvec)
         self.gs[groundPos.name].nadirAng = ang
 
         return self.gs[groundPos.name].nadirAng
 
-    def saveData(self, fileName, delimiter):
+    def distance(self, groundPos: GroundPosition) -> np.array:
+        """Get distance from satellite to ground location.
+
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            GroundPosition object instantiated as per its documentation.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing time varying distances between the
+            satellite and a ground location.
         """
-        Save satellite data to local directory.
+        if groundPos.name not in self.gs:
+            groundPos.length = self.length
+            self.gs[groundPos.name] = groundPos
+
+        n = self.length
+        satECEF = self.ECEFdata
+        groundECEF = np.full((n, 3), groundPos.ECEFpos)
+
+        # Find LOS vector norm.
+        LOSvec = satECEF - groundECEF
+        distances = np.linalg.norm(LOSvec, axis=1)
+
+        self.gs[groundPos.name].distance = distances
+
+        return distances
+
+    def _WGS84_radius(self, lattitude: float) -> float:
+        """Calculate radius from WGS84.
+        """
+        phi = np.radians(lattitude)
+
+        # Define WGS84 Parameters.
+        semiMajor = 6378.137**2
+        semiMinor = 6356.752314245**2
+
+        numerator = semiMajor * semiMinor
+        denominator = semiMajor * np.sin(phi)**2 + semiMinor * np.cos(phi)**2
+
+        return np.sqrt(numerator / denominator)
+
+    def altitude(self) -> np.array:
+        """Get the altitude/elevation of the satellite.
+
+        This method implements WGS84 to calculate the radius of the earth and
+        then computes the satellites altitude/elevation.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing time varying altitudes of the
+            satellite.
+        """
+        ECEFdata = self.ECEFdata
+        x = ECEFdata[:, 0]
+        y = ECEFdata[:, 1]
+        z = ECEFdata[:, 2]
+        arg = np.sqrt(x**2 + y**2) / z
+        lattitude = np.arctan(arg)
+
+        earthRadius = self._WGS84_radius(lattitude)
+        satRadius = np.linalg.norm(ECEFdata, axis=1)
+
+        altitude = satRadius - earthRadius
+        self.elevation = altitude
+
+        return altitude
+
+    def save_data(self, fileName: str, delimiter: str) -> None:
+        """Save satellite data to local directory.
 
         Parameters
         ----------
         fileName : str
-            File name of output file. Can be a .txt or .csv file.
+            File name of the output file as wither a .txt or .csv file.
         delimiter : str
             String of length 1 representing the feild delimiter for the output
             file.
 
-        Returns
-        -------
-        None
-
-        Usage
+        Notes
         -----
         It is recommended to use a tab delimiter for .txt files and comma
-        delimiters for .csv files. Will return an error if fileName already
-        exists in the current working directory.
+        delimiters for .csv files. The method will return an error if the
+        fileName already exists in the current working directory.
+
+        Examples
+        --------
+        >>> finch.save_data(fileName="data.csv", delimiter=",")
         """
         data = {}
 
