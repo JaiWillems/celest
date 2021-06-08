@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/Celest.svg)](https://badge.fury.io/py/Celest) ![PyPI - Downloads](https://img.shields.io/pypi/dm/Celest) ![PyPI - License](https://img.shields.io/pypi/l/Celest) [![Documentation Status](https://readthedocs.org/projects/celest/badge/?version=latest)](https://celest.readthedocs.io/en/latest/?badge=latest) ![PyPI - Format](https://img.shields.io/pypi/format/Celest)
 
 The Celest library is designed to provide a simple interface for satellite positional representations and encounter planning.
-* **Documentation:** https://jaiwillems.github.io/Celest/
+* **Documentation:** https://celest.readthedocs.io/en/latest/
 * **Source Code:** https://github.com/JaiWillems/Celest
 * **PyPI:** https://pypi.org/project/Celest/
 * **Bug Report or Feature Request:** https://github.com/JaiWillems/Celest/issues
