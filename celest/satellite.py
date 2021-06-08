@@ -27,10 +27,6 @@ class Satellite(object):
     natural, and allows for the position to be represented with time through
     multiple representations.
 
-    Parameters
-    ----------
-    None
-
     Attributes
     ----------
     times : np.array
@@ -82,7 +78,8 @@ class Satellite(object):
         self.gs = {}
         self.length = None
 
-    def time_data(self, timeData: np.array, jul: bool = False, julOffset: float = 0) -> None:
+    def time_data(self, timeData: np.array, jul: bool=False, julOffset:
+                  float=0) -> None:
         """Instantiate time attribute with orbital time dependency.
 
         Parameters
@@ -94,11 +91,6 @@ class Satellite(object):
             strings if False.
         julOffset : float, optional
             Offset to be added to the inputed Julian dates.
-
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -137,10 +129,6 @@ class Satellite(object):
         type : {"ECI", "ECEF"}
             Specifies posData as either "ECI" or "ECEF".
 
-        Returns
-        -------
-        None
-
         Notes
         -----
         For more coincise code, the posData can be passed directly into all
@@ -158,7 +146,8 @@ class Satellite(object):
         elif type == 'ECEF':
             self.ECEFdata = posData
 
-    def ERA(self, timeData: np.array = None, **kwargs: Union[bool, float]) -> np.array:
+    def ERA(self, timeData: np.array=None, **kwargs:
+            Union[bool, float]) -> np.array:
         """Instantiate ERAdata attribute.
 
         Parameters
@@ -205,7 +194,8 @@ class Satellite(object):
 
         return self.ERAdata
 
-    def ECI(self, posData: np.array = None, timeData: np.array = None, **kwargs: Union[bool, float]) -> np.array:
+    def ECI(self, posData: np.array=None, timeData: np.array=None, **kwargs:
+            Union[bool, float]) -> np.array:
         """Instantiate ECIdata attribute.
 
         Parameters
@@ -263,7 +253,8 @@ class Satellite(object):
 
         return self.ECIdata
 
-    def ECEF(self, posData: np.array = None, timeData: np.array = None, **kwargs: Union[bool, float]) -> np.array:
+    def ECEF(self, posData: np.array=None, timeData: np.array=None, **kwargs:
+             Union[bool, float]) -> np.array:
         """Instantiate ECEFdata attribute.
 
         Parameters
@@ -322,8 +313,7 @@ class Satellite(object):
         return self.ECEFdata
 
     def _get_ang(self, vecOne: np.array, vecTwo: np.array) -> float:
-        """Calculate degree angle bewteen two vectors.
-        """
+        """Calculate degree angle bewteen two vectors."""
         # Use simple linalg formula.
         dividend = np.einsum('ij, ij->i', vecOne, vecTwo)
         divisor = np.multiply(np.linalg.norm(
@@ -333,9 +323,9 @@ class Satellite(object):
 
         return ang
 
-    def _geo_to_ECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.array:
-        """Convert geographical coordinates to ECEF.
-        """
+    def _geo_to_ECEF(self, obsCoor: Tuple[float, float], radius:
+                     float) -> np.array:
+        """Convert geographical coordinates to ECEF."""
         if obsCoor[1] < 0:
             theta = np.radians(360 + obsCoor[1])
         else:
@@ -367,8 +357,8 @@ class Satellite(object):
         timeData : np.array, optional
             Array of shape (n,) containing time data.
         **kwargs : dict, optional
-            Extra arguments to `horizontal`: refer to horizontal documentation for
-            a list of all possible arguments.
+            Extra arguments to `horizontal`: refer to horizontal documentation
+            for a list of all possible arguments.
 
         Returns
         -------
@@ -441,7 +431,9 @@ class Satellite(object):
 
         return self.gs[groundPos.name].alt, self.gs[groundPos.name].az
 
-    def nadir_ang(self, groundPos: GroundPosition, posData: np.array = None, timeData: np.array = None, **kwargs: Union[bool, float]) -> np.array:
+    def nadir_ang(self, groundPos: GroundPosition, posData: np.array=None,
+                  timeData: np.array=None, **kwargs:
+                  Union[bool, float]) -> np.array:
         """Instantiate GroundPositions.nadirAng attribute.
 
         This method takes in a GroundPosition object and instantiates its
@@ -590,10 +582,6 @@ class Satellite(object):
         delimiter : str
             String of length 1 representing the feild delimiter for the output
             file.
-
-        Returns
-        -------
-        None
 
         Notes
         -----

@@ -24,5 +24,12 @@ The Celest 0.2.0 release will include:
 * Sun-encounter constraint,
 * Test driven development,
 * Analytical pass analysis method,
-* An encounter scheduling function for the encounter class, and
+* Interpolation-factor parameter for inputed data,
+* Creating a public version of the `_special_interp` Encounter method,
+* Interpolation methods for all coordinates, and
 * Faster ECI and ECEF conversions through new multiplication method.
+
+## Long Term Release Features
+Goals for future Celest features include:
+* Encounter optimization and scheduling algorithm for the Encounter class, and
+* Satellite coordinate conversions for the Equatorial, Ecliptic, Galactic, and Supergalactic coordinate systems with simplicity and efficiency in mind.

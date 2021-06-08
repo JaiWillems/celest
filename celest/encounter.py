@@ -68,15 +68,11 @@ class EncounterSpec(object):
         Array of shape (n,3) of window start, end, and elapsed seconds data.
     length : int
         Length, n, of data attributes.
-
-    Methods
-    -------
-    None
     """
 
     def __init__(self, name: str, encType: Literal["IMG", "DL"], groundPos:
                  GroundPosition, ang: float, angType: Literal["alt", "nadirLOS"],
-                 maxAng: bool, solar: Literal[-1, 0, 1] = 0) -> None:
+                 maxAng: bool, solar: Literal[-1, 0, 1]=0) -> None:
         """Define instance variables."""
         self.name = name
         self.type = encType
@@ -107,10 +103,6 @@ class Encounter(object):
     GroundPosition objects to compute, store, and schedule Earth-Satellite
     encounters.
 
-    Parameters
-    ----------
-    None
-
     Attributes
     ----------
     encounters : Dict
@@ -140,7 +132,10 @@ class Encounter(object):
         self.encounters = {}
         self.sunPos = None
 
-    def add_encounter(self, name: str, encType: Literal["IMG", "DL"], groundPos: GroundPosition, ang: float, angType: Literal["alt", "nadirLOS"], maxAng: bool, solar: Literal[-1, 0, 1] = 0) -> None:
+    def add_encounter(self, name: str, encType: Literal["IMG", "DL"],
+                      groundPos: GroundPosition, ang: float, angType:
+                      Literal["alt", "nadirLOS"], maxAng: bool, solar:
+                      Literal[-1, 0, 1]=0) -> None:
         """Define an encounter type.
 
         This method uses the input data to create a key/value pair in the
@@ -167,15 +162,11 @@ class Encounter(object):
             Defines sunlight constraint where -1 gets windows at night, 0 gets
             windows at day or night, and 1 gets windows at day.
 
-        Returns
-        -------
-        None
-
         Examples
         --------
         >>> encounters = Encounter()
         >>> encounters.add_encounter("CYYZ IMG", "IMG", toronto, 30, "nadirLOS",
-        ...                         True, solar=1)
+        ...                          True, solar=1)
         """
         if angType == "nadirLOS":
             angType = 1
@@ -225,7 +216,9 @@ class Encounter(object):
         self.sunPos = e2sunECEF
         return self.sunPos
 
-    def _special_interp(self, satellite: Satellite, groundPos: GroundPosition, encounter: EncounterSpec, factor: int, buffer: float, dt: int) -> Tuple[np.array, np.array, np.array, np.array]:
+    def _special_interp(self, satellite: Satellite, groundPos: GroundPosition,
+                        encounter: EncounterSpec, factor: int, buffer: float,
+                        dt: int) -> Tuple[np.array, np.array, np.array, np.array]:
         """Interpolate encounter regions.
 
         This method identifies the positional data relevent to the inputed
@@ -330,7 +323,8 @@ class Encounter(object):
 
         return times, alt, az, nadir
 
-    def windows(self, satellite: Satellite, interp: bool = True, factor: int = 5, buffer: float = 10, dt: int = 1) -> None:
+    def windows(self, satellite: Satellite, interp: bool = True, factor: int=5,
+                buffer: float=10, dt: int=1) -> None:
         """Instantiates windows attribute of EncounterSpec objects.
 
         This method determines determines the windows for each EncounterSpec
@@ -351,11 +345,6 @@ class Encounter(object):
         dt : int, optional
             The number of data points adjacent to a valid encounter region to
             interpolate within.
-
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -448,10 +437,6 @@ class Encounter(object):
         delimiter : str
             String of length 1 representing the feild delimiter for the output
             file.
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -562,7 +547,9 @@ class Encounter(object):
         data["Total DL"] = pd.Series([numDL, avgNumDL, timeDL, avgTimeDL])
         data["Total IMG"] = pd.Series([numIMG, avgNumIMG, timeIMG, avgTimeIMG])
         df = pd.DataFrame.from_dict(data)
-        df.index = ["Number of Viable Encounters", "Average Encounters per Day",
-                    "Viable Encounters Duration (s)", "Average Encounter Duration (s)"]
+        df.index = ["Number of Viable Encounters",
+                    "Average Encounters per Day",
+                    "Viable Encounters Duration (s)",
+                    "Average Encounter Duration (s)"]
 
         return df

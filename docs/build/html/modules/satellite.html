@@ -1,0 +1,680 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>satellite &mdash; Celest 0.1.8 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="groundposition" href="groundposition.html" />
+    <link rel="prev" title="Installation" href="../guide/installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Celest
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/installation.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">satellite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="groundposition.html">groundposition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="encounter.html">encounter</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Celest</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>satellite</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/modules/satellite.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="satellite">
+<h1>satellite<a class="headerlink" href="#satellite" title="Permalink to this headline">¶</a></h1>
+<p>Satellite orbital representations and coordinate conversions.</p>
+<p>The satellite module contains the Satellite class to calculate different
+orbital position representations including ECI, ECEF, and Horizontal systems.
+The Satellite class also forms the bases for the Encounter module to perform
+encounter planning.</p>
+<p class="rubric">Notes</p>
+<p>Units of the satellite module are represented by the metric system. Specific
+units will be detailed in method documentation strings.</p>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">satellite.</code><code class="sig-name descname">Satellite</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Store position representations and compute orbital conversions,</p>
+<p>The Satellite class represents a satellite object, be it artificial or
+natural, and allows for the position to be represented with time through
+multiple representations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>None</strong> – </p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">times</code></dt>
+<dd><p>Array of shape (n,) of orbital time dependencies in UTC.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">ERAdata</code></dt>
+<dd><p>Array of shape (n,) of Earth rotation angles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">ECIdata</code></dt>
+<dd><p>Array of shape (n,3) of Earth centered inertial representations where
+the columns are X, Y, Z data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">ECEFdata</code></dt>
+<dd><p>Array of shape (n,3) of Earth centered Earth fixed representations
+where the columns are X, Y, Z data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">gs</code></dt>
+<dd><p>Dictionary with GroundPosition.name as the key and the GroundPosition
+object as the corresponding value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">length</code></dt>
+<dd><p>Length n of the data attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">time_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeData</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiate time attribute with orbital time dependency.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">position_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">posData</span></em>, <em class="sig-param"><span class="n">type</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiate ECIdata or ECEFdata attribute with orbital position data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">ERA</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiate ERAdata attribute.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">ECI</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiate ECIdata attribute.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">ECEF</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiate ECEFdata attribute.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">horizontal</code><span class="sig-paren">(</span><em class="sig-param">groundPos</em>, <em class="sig-param">\*\*kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiates the GroundPosition object’s .alt and .az attributes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">nadir_ang</code><span class="sig-paren">(</span><em class="sig-param">groundPos</em>, <em class="sig-param">\*\*kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiates the GroundPosition object’s .nadirAng attribute.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Instantiates the GroundPosition object’s .distance attribute.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fileName</span></em>, <em class="sig-param"><span class="n">delimiter</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Save class data in local directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">ECEF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Instantiate ECEFdata attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>posData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,3) with columns of X, Y, Z ECI position data.</p></li>
+<li><p><strong>timeData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,) containing time data.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to <cite>getECEF</cite>: refer to getECEF documentation for a
+list of all possible arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (n,3) with columns of X, Y, Z ECEF position data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-meth docutils literal notranslate"><span class="pre">getECI()</span></code></dt><dd><p>Initiate ECIdata attribute.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>The Satellite class instance must have ECIdata and ERAdata attributes
+initiated or posData and timeData inputs passed in.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">UTCTimeData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2020-06-01 12:00:00.0340&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="s1">&#39;2020-06-01 12:01:00.0340&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ECIvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">4.46e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.22e+03</span><span class="p">,</span> <span class="mf">1.75e-04</span><span class="p">],</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mf">2.73e+03</span><span class="p">,</span> <span class="mf">2.08e+03</span> <span class="o">-</span><span class="mf">6.02e+03</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span> <span class="o">=</span> <span class="n">Satellite</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ECEFvec</span> <span class="o">=</span> <span class="n">finch</span><span class="o">.</span><span class="n">ECEF</span><span class="p">(</span><span class="n">posData</span><span class="o">=</span><span class="n">ECIvec</span><span class="p">,</span> <span class="n">timeData</span><span class="o">=</span><span class="n">UTCTimeData</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">ECI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Instantiate ECIdata attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>posData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,3) with columns of X, Y, Z ECEF position data.</p></li>
+<li><p><strong>timeData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,) containing time data.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to <cite>getECI</cite>: refer to getECI documentation for a
+list of all possible arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (n,3) with columns of X, Y, Z ECI position data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-meth docutils literal notranslate"><span class="pre">getECEF()</span></code></dt><dd><p>Initiate ECEFdata attribute.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>The Satellite class instance must have ECEFdata and ERAdata attributes
+initiated or posData and timeData inputs passed in.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">UTCTimeData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2020-06-01 12:00:00.0340&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="s1">&#39;2020-06-01 12:01:00.0340&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ECEFvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">4.46e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.22e+03</span><span class="p">,</span> <span class="mf">1.75e-04</span><span class="p">],</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="p">[</span><span class="mf">2.73e+03</span><span class="p">,</span> <span class="mf">2.08e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.02e+03</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span> <span class="o">=</span> <span class="n">Satellite</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ECIvec</span> <span class="o">=</span> <span class="n">finch</span><span class="o">.</span><span class="n">ECI</span><span class="p">(</span><span class="n">posData</span><span class="o">=</span><span class="n">ECEFvec</span><span class="p">,</span> <span class="n">timeData</span><span class="o">=</span><span class="n">UTCTimeData</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">ERA</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Instantiate ERAdata attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,) containing time data.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to <cite>getERA</cite>: refer to getERA documentation for a
+list of all possible arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (n,) containing radian earth rotation angles.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Satellite class instance must have the times attribute initiated or
+a timeData input passed in under <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs.</p>
+<p>The method implements the earth rotation angle formula:</p>
+<div class="math notranslate nohighlight">
+\[\gamma = 360.99(\Delta T) + 280.46\]</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span> <span class="o">=</span> <span class="n">Satellite</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UTCTimeData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2020-06-01 12:00:00.0340&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="s1">&#39;2020-06-01 12:01:00.0340&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ERAangles</span> <span class="o">=</span> <span class="n">finch</span><span class="o">.</span><span class="n">ERA</span><span class="p">(</span><span class="n">timeData</span><span class="o">=</span><span class="n">UTCtimeData</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">altitude</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Get the altitude/elevation of the satellite.</p>
+<p>This method implements WGS84 to calculate the radius of the earth and
+then computes the satellites altitude/elevation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>None</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (n,) containing time varying altitudes of the
+satellite.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Get distance from satellite to ground location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>groundPos</strong> (<em>GroundPosition</em>) – GroundPosition object instantiated as per its documentation.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (n,) containing time varying distances between the
+satellite and a ground location.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">horizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Instantiate GroundPositions .alt and .az attributes.</p>
+<p>This method takes in a GroundPosition object and instantiates its .alt
+and .az attributes using the Satellite instance’s position data. The
+GroundPosition object is then stored as a value in the gs attribute’s
+dictionary with the corresponding key being its name attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>groundPos</strong> (<em>GroundPosition object</em>) – GroundPosition object instantiated as per its documentation.</p></li>
+<li><p><strong>posData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,3) with columns of X, Y, Z position data
+assumed ECI.</p></li>
+<li><p><strong>timeData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,) containing time data.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to <cite>horizontal</cite>: refer to horizontal documentation for
+a list of all possible arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The altitude/azimuth data is returned in a tuple where both the
+altitude and azimuth are arrays of shape (n,).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Satellite class instance must have the ECEFdata attribute initiated
+or have the posData and timeData inputs passed in.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">UTCTimeData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2020-06-01 12:00:00.0340&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="s1">&#39;2020-06-01 12:01:00.0340&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ECIvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">4.46e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.22e+03</span><span class="p">,</span> <span class="mf">1.75e-04</span><span class="p">],</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mf">2.73e+03</span><span class="p">,</span> <span class="mf">2.08e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.02e+03</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">toronto</span> <span class="o">=</span> <span class="n">GroundPosition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                         <span class="n">coor</span><span class="o">=</span><span class="p">(</span><span class="mf">43.662300</span><span class="p">,</span> <span class="o">-</span><span class="mf">79.394530</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span> <span class="o">=</span> <span class="n">Satellite</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Alt</span><span class="p">,</span> <span class="n">Az</span> <span class="o">=</span> <span class="n">finch</span><span class="o">.</span><span class="n">horizontal</span><span class="p">(</span><span class="n">groundPos</span><span class="o">=</span><span class="n">toronto</span><span class="p">,</span> <span class="n">posData</span><span class="o">=</span><span class="n">ECIvec</span><span class="p">,</span>
+<span class="gp">... </span>                         <span class="n">timeData</span><span class="o">=</span><span class="n">UTCTimeData</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">nadir_ang</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Instantiate GroundPositions.nadirAng attribute.</p>
+<p>This method takes in a GroundPosition object and instantiates its
+nadirAng attribute with the angle made between the satellites nadir and
+line-of-sight vectors. The GroundPosition object is then stored as a
+value in the gs attribute dictionary with the corresponding key being
+its name attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>groundPos</strong> (<em>GroundPosition object</em>) – GroundPosition object instantiated as per its documentation.</p></li>
+<li><p><strong>posData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,3) with columns of X, Y, Z position data
+assumed ECI.</p></li>
+<li><p><strong>timeData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,) containing time data.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to <cite>nadir_ang</cite>: refer to nadir_ang documentation
+for a list of all possible arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (n,) with nadir-LOS angle data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Satellite instance must have the ECEFdata attribute initiated or
+the posData and timeData inputs passed in.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">UTCTimeData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2020-06-01 12:00:00.0340&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="s1">&#39;2020-06-01 12:01:00.0340&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ECIvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">4.46e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.22e+03</span><span class="p">,</span> <span class="mf">1.75e-04</span><span class="p">],</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mf">2.73e+03</span><span class="p">,</span> <span class="mf">2.08e+03</span> <span class="o">-</span><span class="mf">6.02e+03</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">toronto</span> <span class="o">=</span> <span class="n">GroundPosition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                         <span class="n">coor</span><span class="o">=</span><span class="p">(</span><span class="mf">43.662300</span><span class="p">,</span> <span class="o">-</span><span class="mf">79.394530</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span> <span class="o">=</span> <span class="n">Satellite</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NdrAng</span> <span class="o">=</span> <span class="n">finch</span><span class="o">.</span><span class="n">nadir_ang</span><span class="p">(</span><span class="n">groundPos</span><span class="o">=</span><span class="n">toronto</span><span class="p">,</span> <span class="n">posData</span><span class="o">=</span><span class="n">ECIvec</span><span class="p">,</span>
+<span class="gp">... </span>                         <span class="n">timeData</span><span class="o">=</span><span class="n">UTCTimeData</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">position_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span></em>, <em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None</dt>
+<dd><p>Instantiate orbital position data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>posData</strong> (<em>np.array</em>) – Array of shape (n,3) with columns of X, Y, Z position data. Units
+in meters.</p></li>
+<li><p><strong>type</strong> (<em>{&quot;ECI&quot;</em><em>, </em><em>&quot;ECEF&quot;}</em>) – Specifies posData as either “ECI” or “ECEF”.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>For more coincise code, the posData can be passed directly into all
+conversion methods.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span> <span class="o">=</span> <span class="n">Satellite</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ECIvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">4.46e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.22e+03</span><span class="p">,</span> <span class="mf">1.75e-04</span><span class="p">],</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mf">2.73e+03</span><span class="p">,</span> <span class="mf">2.08e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.02e+03</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span><span class="o">.</span><span class="n">position_data</span><span class="p">(</span><span class="n">posData</span><span class="o">=</span><span class="n">ECIvec</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ECI&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None</dt>
+<dd><p>Save satellite data to local directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fileName</strong> (<em>str</em>) – File name of the output file as wither a .txt or .csv file.</p></li>
+<li><p><strong>delimiter</strong> (<em>str</em>) – String of length 1 representing the feild delimiter for the output
+file.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>It is recommended to use a tab delimiter for .txt files and comma
+delimiters for .csv files. The method will return an error if the
+fileName already exists in the current working directory.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span><span class="o">.</span><span class="n">save_data</span><span class="p">(</span><span class="n">fileName</span><span class="o">=</span><span class="s2">&quot;data.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">time_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span></em>, <em class="sig-param"><span class="n">jul</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">julOffset</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; None</dt>
+<dd><p>Instantiate time attribute with orbital time dependency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeData</strong> (<em>np.array</em>) – Array of shape (n,) containing time data.</p></li>
+<li><p><strong>jul</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicates the input times are Julian dates if True or UTC datetime
+strings if False.</p></li>
+<li><p><strong>julOffset</strong> (<em>float</em><em>, </em><em>optional</em>) – Offset to be added to the inputed Julian dates.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>For more coincise code, the timeData can be passed directly into all
+conversion methods.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span> <span class="o">=</span> <span class="n">Satellite</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UTCTimeData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2020-06-01 12:00:00.0340&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="s1">&#39;2020-06-01 12:01:00.0340&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finch</span><span class="o">.</span><span class="n">time_data</span><span class="p">(</span><span class="n">timeData</span><span class="o">=</span><span class="n">UTCtimeData</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="groundposition.html" class="btn btn-neutral float-right" title="groundposition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../guide/installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Jai Willems.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
