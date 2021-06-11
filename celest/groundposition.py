@@ -107,8 +107,7 @@ class GroundPosition(object):
         The Earth can be modeled as an ellipsoid given by the following
         equation:
 
-        .. math:: r = \sqrt{\frac{(6378.14)^2(6356.75)^2}{(6378.14)^2
-                            \sin{\phi}^2+(6356.75)^2\cos{\phi}^2}}
+        .. math:: r = \sqrt{\\frac{(6378.14)^2(6356.75)^2}{(6378.14)^2\sin{\phi}^2+(6356.75)^2\cos{\phi}^2}}
 
         where :math:`\phi` is the observers lattitude.
         """

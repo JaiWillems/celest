@@ -13,8 +13,7 @@ import julian
 from datetime import datetime
 from jplephem.spk import SPK
 from typing import Literal, Tuple
-from .satellite import Satellite
-from .groundposition import GroundPosition
+from celest import Satellite, GroundPosition
 
 
 class EncounterSpec(object):
@@ -315,11 +314,12 @@ class Encounter(object):
             ECEFdata = np.concatenate((xN, yN, zN), axis=1)
 
             # Get interpolated angle data.
+            groundLoc = GroundPosition(groundPos.name, groundPos.coor)
             finch = Satellite()
             finch.time_data(timeData=times, jul=True)
             finch.position_data(posData=ECEFdata, type="ECEF")
-            alt, az = finch.horizontal(groundPos=groundPos)
-            nadir = finch.nadir_ang(groundPos=groundPos)
+            alt, az = finch.horizontal(groundPos=groundLoc)
+            nadir = finch.nadir_ang(groundPos=groundLoc)
 
         return times, alt, az, nadir
 

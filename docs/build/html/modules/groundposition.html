@@ -55,15 +55,15 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> Celest
+            <a href="../index.html">
           
 
+          
+            
+            <img src="../_static/celest_documentation_logo.png" class="logo" alt="Logo"/>
           
           </a>
 
-          
-            
-            
           
 
           
@@ -316,6 +316,56 @@ ECEF cartesian frame.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">toronto</span> <span class="o">=</span> <span class="n">GroundPosition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span> <span class="n">coor</span><span class="o">=</span><span class="p">(</span><span class="mf">43.662300</span><span class="p">,</span> <span class="o">-</span><span class="mf">79.394530</span><span class="p">))</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_ECEF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obsCoor</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Instantiates ECEFpos attribute.</p>
+<p>Converts the ground positions geographical coordinates and radius into
+the ECEF cartesian reference frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coor</strong> (<em>tuple</em>) – Geodetic coordinates for the ground position location given in
+decimal degrees in the (latitude, longitude) format.</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – Radius of earths surface at the given coordinates using WGS84.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (3,) representing the GroundPosition location in the
+ECEF cartesian frame.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_radius</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obsCoor</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; float</dt>
+<dd><p>Instantiates radius attribute.</p>
+<p>This method uses the World Geodetic System, WGS84, to calculate the
+Earth’s radius at the given coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>obsCoor</strong> (<em>tuple</em>) – Geodetic coordinates for the ground position location given in
+decimal degrees in the (latitude, longitude) format.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The Earths radius at obsCoor given in km.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Earth can be modeled as an ellipsoid given by the following
+equation:</p>
+<div class="math notranslate nohighlight">
+\[r = \sqrt{\frac{(6378.14)^2(6356.75)^2}{(6378.14)^2\sin{\phi}^2+(6356.75)^2\cos{\phi}^2}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\phi\)</span> is the observers lattitude.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>

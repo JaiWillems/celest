@@ -20,10 +20,3 @@ Celest Documentation
    modules/satellite
    modules/groundposition
    modules/encounter
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

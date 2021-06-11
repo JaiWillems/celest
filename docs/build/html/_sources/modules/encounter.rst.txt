@@ -3,6 +3,6 @@ encounter
 
 .. automodule:: encounter
    :members:
-   :undoc-members:
+   :private-members:
    :show-inheritance:
    :noindex:

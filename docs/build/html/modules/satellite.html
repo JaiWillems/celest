@@ -55,15 +55,15 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> Celest
+            <a href="../index.html">
           
 
+          
+            
+            <img src="../_static/celest_documentation_logo.png" class="logo" alt="Logo"/>
           
           </a>
 
-          
-            
-            
           
 
           
@@ -181,11 +181,6 @@ units will be detailed in method documentation strings.</p>
 <p>The Satellite class represents a satellite object, be it artificial or
 natural, and allows for the position to be represented with time through
 multiple representations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>None</strong> – </p>
-</dd>
-</dl>
 <dl class="py attribute">
 <dt>
 <code class="sig-name descname">times</code></dt>
@@ -412,7 +407,7 @@ list of all possible arguments.</p></li>
 </dl>
 <p class="rubric">Notes</p>
 <p>The Satellite class instance must have the times attribute initiated or
-a timeData input passed in under <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs.</p>
+a timeData input passed in under **kwargs.</p>
 <p>The method implements the earth rotation angle formula:</p>
 <div class="math notranslate nohighlight">
 \[\gamma = 360.99(\Delta T) + 280.46\]</div>
@@ -427,17 +422,35 @@ a timeData input passed in under <a href="#id1"><span class="problematic" id="id
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">altitude</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
-<dd><p>Get the altitude/elevation of the satellite.</p>
-<p>This method implements WGS84 to calculate the radius of the earth and
-then computes the satellites altitude/elevation.</p>
+<code class="sig-name descname">_WGS84_radius</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lattitude</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float</dt>
+<dd><p>Calculate radius from WGS84.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>None</strong> – </p>
+<dd class="field-odd"><p><strong>latitude</strong> (<em>float</em>) – Lattitude of a ground location.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Array of shape (n,) containing time varying altitudes of the
-satellite.</p>
+<dd class="field-even"><p>Earth’s radius at <cite>lattitude</cite> using WGS84.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_geo_to_ECEF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obsCoor</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Convert geographical coordinates to ECEF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obsCoor</strong> (<em>Tuple</em>) – Coordinates of a ground location in decimal degrees
+<cite>(lattitude, longitude)</cite>.</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – Radius of the Earth at position <cite>obsCoor</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of shape (n,3) with rows of ECEF data.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>np.array</p>
@@ -447,7 +460,44 @@ satellite.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<code class="sig-name descname">_get_ang</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vecOne</span><span class="p">:</span> <span class="n">numpy.array</span></em>, <em class="sig-param"><span class="n">vecTwo</span><span class="p">:</span> <span class="n">numpy.array</span></em><span class="sig-paren">)</span> &#x2192; float</dt>
+<dd><p>Calculate degree angle bewteen two vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vecOne</strong> (<em>np.array</em>) – Arrays of shape (n,3) with rows of ECEF data.</p></li>
+<li><p><strong>vecTwo</strong> (<em>np.array</em>) – Arrays of shape (n,3) with rows of ECEF data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Degree angle between the two arrays.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">altitude</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<dd><p>Get the altitude/elevation of the satellite.</p>
+<p>This method implements WGS84 to calculate the radius of the earth and
+then computes the satellites altitude/elevation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Array of shape (n,) containing time varying altitudes of the
+satellite.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">celest.groundposition.GroundPosition</span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
 <dd><p>Get distance from satellite to ground location.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -465,7 +515,7 @@ satellite and a ground location.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">horizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<code class="sig-name descname">horizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">celest.groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
 <dd><p>Instantiate GroundPositions .alt and .az attributes.</p>
 <p>This method takes in a GroundPosition object and instantiates its .alt
 and .az attributes using the Satellite instance’s position data. The
@@ -478,8 +528,8 @@ dictionary with the corresponding key being its name attribute.</p>
 <li><p><strong>posData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,3) with columns of X, Y, Z position data
 assumed ECI.</p></li>
 <li><p><strong>timeData</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Array of shape (n,) containing time data.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to <cite>horizontal</cite>: refer to horizontal documentation for
-a list of all possible arguments.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to <cite>horizontal</cite>: refer to horizontal documentation
+for a list of all possible arguments.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -509,7 +559,7 @@ or have the posData and timeData inputs passed in.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">nadir_ang</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<code class="sig-name descname">nadir_ang</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">celest.groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
 <dd><p>Instantiate GroundPositions.nadirAng attribute.</p>
 <p>This method takes in a GroundPosition object and instantiates its
 nadirAng attribute with the angle made between the satellites nadir and

@@ -3,7 +3,7 @@ Installation
 
 Celest can be installed using the pip install command
 
-.. code-block:: terminal
+.. code-block::
 
    pip install Celest
 

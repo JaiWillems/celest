@@ -17,7 +17,7 @@ import pandas as pd
 from datetime import datetime
 import julian
 from typing import Union, Tuple
-from .groundposition import GroundPosition
+from celest import GroundPosition
 
 
 class Satellite(object):
@@ -166,7 +166,7 @@ class Satellite(object):
         Notes
         -----
         The Satellite class instance must have the times attribute initiated or
-        a timeData input passed in under **kwargs.
+        a timeData input passed in under \*\*kwargs.
 
         The method implements the earth rotation angle formula:
 
@@ -313,7 +313,18 @@ class Satellite(object):
         return self.ECEFdata
 
     def _get_ang(self, vecOne: np.array, vecTwo: np.array) -> float:
-        """Calculate degree angle bewteen two vectors."""
+        """Calculate degree angle bewteen two vectors.
+        
+        Parameters
+        ----------
+        vecOne, vecTwo : np.array
+            Arrays of shape (n,3) with rows of ECEF data.
+        
+        Returns
+        -------
+        float
+            Degree angle between the two arrays.
+        """
         # Use simple linalg formula.
         dividend = np.einsum('ij, ij->i', vecOne, vecTwo)
         divisor = np.multiply(np.linalg.norm(
@@ -325,7 +336,21 @@ class Satellite(object):
 
     def _geo_to_ECEF(self, obsCoor: Tuple[float, float], radius:
                      float) -> np.array:
-        """Convert geographical coordinates to ECEF."""
+        """Convert geographical coordinates to ECEF.
+        
+        Parameters
+        ----------
+        obsCoor : Tuple
+            Coordinates of a ground location in decimal degrees
+            `(lattitude, longitude)`.
+        radius : float
+            Radius of the Earth at position `obsCoor`.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n,3) with rows of ECEF data.
+        """
         if obsCoor[1] < 0:
             theta = np.radians(360 + obsCoor[1])
         else:
@@ -529,6 +554,16 @@ class Satellite(object):
 
     def _WGS84_radius(self, lattitude: float) -> float:
         """Calculate radius from WGS84.
+
+        Parameters
+        ----------
+        latitude : float
+            Lattitude of a ground location.
+        
+        Returns
+        -------
+        float
+            Earth's radius at `lattitude` using WGS84.
         """
         phi = np.radians(lattitude)
 
@@ -546,10 +581,6 @@ class Satellite(object):
 
         This method implements WGS84 to calculate the radius of the earth and
         then computes the satellites altitude/elevation.
-
-        Parameters
-        ----------
-        None
 
         Returns
         -------
