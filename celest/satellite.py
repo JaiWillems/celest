@@ -16,8 +16,8 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import julian
-from typing import Union, Tuple
-from celest import GroundPosition
+from typing import Union, Tuple, Literal
+from groundposition import GroundPosition
 
 
 class Satellite(object):
@@ -118,7 +118,7 @@ class Satellite(object):
                     self.times[i] = julian.to_jd(datetime.strptime(
                         timeData[i], "%Y-%m-%d %H:%M:%S"))
 
-    def position_data(self, posData: np.array, type: str) -> None:
+    def position_data(self, posData: np.array, type: Literal["ECI", "ECEF"]) -> None:
         """Instantiate orbital position data.
 
         Parameters
@@ -362,8 +362,8 @@ class Satellite(object):
 
         return np.array([x, y, z])
 
-    def horizontal(self, groundPos: GroundPosition, posData: np.array = None,
-                   timeData: np.array = None, **kwargs:
+    def horizontal(self, groundPos: GroundPosition, posData: np.array=None,
+                   timeData: np.array=None, **kwargs:
                    Union[bool, float]) -> np.array:
         """Instantiate GroundPositions .alt and .az attributes.
 

@@ -21,15 +21,20 @@ pip install Celest
 
 ## Release 0.2.0 Features
 The Celest 0.2.0 release will include:
-* Sun-encounter constraint,
 * Test driven development,
+* Improved specific and general encounter statistics,
+* Sun-encounter constraint angle,
 * Analytical pass analysis method,
+* ECEF and Geographical coordinate conversions,
+* Sexagesimal formatting option for angular outputs,
+* Astronomy module for celestial object localization,
 * Interpolation-factor parameter for inputed data,
-* Creating a public version of the `_special_interp` Encounter method,
-* Interpolation methods for all coordinates, and
+* Public special interpolation methods for all position representations,
+* Method for encounter indices return, and
 * Faster ECI and ECEF conversions through new multiplication method.
 
 ## Long Term Release Features
 Goals for future Celest features include:
-* Encounter optimization and scheduling algorithm for the Encounter class, and
+* Encounter optimization and scheduling algorithm for the Encounter class,
+* Improved runtime using multiprocessing, and
 * Satellite coordinate conversions for the Equatorial, Ecliptic, Galactic, and Supergalactic coordinate systems with simplicity and efficiency in mind.

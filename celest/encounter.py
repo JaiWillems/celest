@@ -13,7 +13,8 @@ import julian
 from datetime import datetime
 from jplephem.spk import SPK
 from typing import Literal, Tuple
-from celest import Satellite, GroundPosition
+from satellite import Satellite
+from groundposition import GroundPosition
 
 
 class EncounterSpec(object):
@@ -176,7 +177,7 @@ class Encounter(object):
             name, encType, groundPos, ang, angType, maxAng, solar)
         self.encounters[name] = encounter
 
-    def _sun_position(self, timeData: np.array) -> np.array:
+    def _sun_position(self, timeData: np.array) -> list:
         """Instantiate sunPos attribute.
 
         This method uses the de421 ephemeris to calculate the sun"s position in
@@ -200,10 +201,10 @@ class Encounter(object):
         ...                        '2020-06-01 12:01:00.0340'])
         >>> sunPos = encounter._sun_position(timeData=UTCTimeData)
         """
-        # Get sun position in ECI.
         ephem = pkg_resources.resource_filename(__name__, 'data/de421.bsp')
         kernal = SPK.open(ephem)
 
+        # Get sun position in ECI.
         ssb2sun = kernal[0, 10].compute(timeData)
         ssb2eb = kernal[0, 3].compute(timeData)
         eb2e = kernal[3, 399].compute(timeData)
@@ -323,7 +324,7 @@ class Encounter(object):
 
         return times, alt, az, nadir
 
-    def windows(self, satellite: Satellite, interp: bool = True, factor: int=5,
+    def windows(self, satellite: Satellite, interp: bool=True, factor: int=5,
                 buffer: float=10, dt: int=1) -> None:
         """Instantiates windows attribute of EncounterSpec objects.
 

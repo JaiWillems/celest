@@ -497,7 +497,7 @@ satellite.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">celest.groundposition.GroundPosition</span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
 <dd><p>Get distance from satellite to ground location.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -515,7 +515,7 @@ satellite and a ground location.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">horizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">celest.groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<code class="sig-name descname">horizontal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
 <dd><p>Instantiate GroundPositions .alt and .az attributes.</p>
 <p>This method takes in a GroundPosition object and instantiates its .alt
 and .az attributes using the Satellite instance’s position data. The
@@ -559,7 +559,7 @@ or have the posData and timeData inputs passed in.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">nadir_ang</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">celest.groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
+<code class="sig-name descname">nadir_ang</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; numpy.array</dt>
 <dd><p>Instantiate GroundPositions.nadirAng attribute.</p>
 <p>This method takes in a GroundPosition object and instantiates its
 nadirAng attribute with the angle made between the satellites nadir and
@@ -603,7 +603,7 @@ the posData and timeData inputs passed in.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">position_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span></em>, <em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None</dt>
+<code class="sig-name descname">position_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">posData</span><span class="p">:</span> <span class="n">numpy.array</span></em>, <em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">Literal<span class="p">[</span>ECI<span class="p">, </span>ECEF<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None</dt>
 <dd><p>Instantiate orbital position data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
