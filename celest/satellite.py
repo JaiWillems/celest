@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import julian
-from typing import Union, Tuple, Literal
+from typing import Union, Tuple
 from celest.groundposition import GroundPosition
 
 
@@ -118,7 +118,7 @@ class Satellite(object):
                     self.times[i] = julian.to_jd(datetime.strptime(
                         timeData[i], "%Y-%m-%d %H:%M:%S"))
 
-    def position_data(self, posData: np.array, type: Literal["ECI", "ECEF"]) -> None:
+    def position_data(self, posData: np.array, type: str) -> None:
         """Instantiate orbital position data.
 
         Parameters

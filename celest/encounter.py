@@ -12,7 +12,7 @@ import pkg_resources
 import julian
 from datetime import datetime
 from jplephem.spk import SPK
-from typing import Literal, Tuple
+from typing import Tuple
 from celest.satellite import Satellite
 from celest.groundposition import GroundPosition
 
@@ -70,9 +70,8 @@ class EncounterSpec(object):
         Length, n, of data attributes.
     """
 
-    def __init__(self, name: str, encType: Literal["IMG", "DL"], groundPos:
-                 GroundPosition, ang: float, angType: Literal["alt", "nadirLOS"],
-                 maxAng: bool, solar: Literal[-1, 0, 1]=0) -> None:
+    def __init__(self, name: str, encType: str, groundPos: GroundPosition,
+                 ang: float, angType: str, maxAng: bool, solar: str=0) -> None:
         """Define instance variables."""
         self.name = name
         self.type = encType
@@ -132,10 +131,8 @@ class Encounter(object):
         self.encounters = {}
         self.sunPos = None
 
-    def add_encounter(self, name: str, encType: Literal["IMG", "DL"],
-                      groundPos: GroundPosition, ang: float, angType:
-                      Literal["alt", "nadirLOS"], maxAng: bool, solar:
-                      Literal[-1, 0, 1]=0) -> None:
+    def add_encounter(self, name: str, encType: str, groundPos: GroundPosition,
+                      ang: float, angType: str, maxAng: bool, solar: int=0) -> None:
         """Define an encounter type.
 
         This method uses the input data to create a key/value pair in the
