@@ -10,7 +10,6 @@ such as the horizontal system for easy navigation of the night sky.
 import numpy as np
 import pkg_resources
 from jplephem.spk import SPK
-import julian
 
 
 class CelestialObject(object):
@@ -40,9 +39,8 @@ class CelestialObject(object):
 
     def __init__(self):
         """Initialize the ephemeris kernal."""
-        #ephem = pkg_resources.resource_filename(__name__, 'data/de421.bsp')
-        #self.kernal = SPK.open(ephem)
-        self.kernal = SPK.open('de421.bsp')
+        ephem = pkg_resources.resource_filename(__name__, 'data/de421.bsp')
+        self.kernal = SPK.open(ephem)
 
     def sun_position(self, timeData: np.array) -> list:
         """Calculate the Sun's position in the ECI frame.
