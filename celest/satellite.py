@@ -33,6 +33,9 @@ class Satellite(object):
         Array of shape (n,) of orbital time dependencies in UTC.
     ERAdata : np.array
         Array of shape (n,) of Earth rotation angles.
+    GEOdata : np.array
+        Array of shape (n, 3) containing Geographical coordinates where the
+        columns are lattitude, longitude, radius data.
     ECIdata : np.array
         Array of shape (n,3) of Earth centered inertial representations where
         the columns are X, Y, Z data.
@@ -72,6 +75,7 @@ class Satellite(object):
 
         self.times = None
         self.ERAdata = None
+        self.GEOdata = None
         self.ECIdata = None
         self.ECEFdata = None
         self.elevation = None
@@ -100,8 +104,8 @@ class Satellite(object):
         Examples
         --------
         >>> finch = Satellite()
-        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
-        ...                         '2020-06-01 12:01:00.0340'])
+        >>> UTCTimeData = np.array(["2020-06-01 12:00:00.0340", ...,
+        ...                         "2020-06-01 12:01:00.0340"])
         >>> finch.time_data(timeData=UTCtimeData)
         """
         self.length = timeData.shape[0]
@@ -124,15 +128,21 @@ class Satellite(object):
         Parameters
         ----------
         posData : np.array
-            Array of shape (n,3) with columns of X, Y, Z position data. Units
-            in meters.
-        type : {"ECI", "ECEF"}
-            Specifies posData as either "ECI" or "ECEF".
+            If `type="ECI"` or `type="ECEF", input will be an array of shape
+            (n,3) with columns of X, Y, Z position data. If `type="GEO"`, input
+            can be of shape (n, 2) with columns of latitude, longitude data or
+            of shape (n, 3) with the last column being a radius component.
+        type : {"GEO", "ECI", "ECEF"}
+            Specifies posData as either "GEO", "ECI" or "ECEF".
 
         Notes
         -----
         For more coincise code, the posData can be passed directly into all
         conversion methods.
+
+        If `type="GEO" and posData is of shape (n, 2), the radius componenet
+        will be filled with the Earths radius at the corresponding lattitude,
+        longitude position.
 
         Examples
         --------
@@ -141,9 +151,14 @@ class Satellite(object):
         ...                    [2.73e+03, 2.08e+03, -6.02e+03]])
         >>> finch.position_data(posData=ECIvec, type="ECI")
         """
-        if type == 'ECI':
+        if type == "GEO":
+            if posData.shape[1] == 2:
+                radius = self._WGS84_radius(posData[:, 0])
+                posData = np.concatenate((posData, radius), axis=1)
+            self.GEOdata = posData
+        elif type == "ECI":
             self.ECIdata = posData
-        elif type == 'ECEF':
+        elif type == "ECEF":
             self.ECEFdata = posData
 
     def ERA(self, timeData: np.array=None, **kwargs:
@@ -175,8 +190,8 @@ class Satellite(object):
         Examples
         --------
         >>> finch = Satellite()
-        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
-        ...                         '2020-06-01 12:01:00.0340'])
+        >>> UTCTimeData = np.array(["2020-06-01 12:00:00.0340", ...,
+        ...                         "2020-06-01 12:01:00.0340"])
         >>> ERAangles = finch.ERA(timeData=UTCtimeData)
         """
         if type(self.times) == type(None):
@@ -193,6 +208,139 @@ class Satellite(object):
         self.ERAdata = angArr
 
         return self.ERAdata
+    
+    def _ECEF_to_GEO(self, ECEFpos: np.array) -> np.array:
+        """Convert from ECEF to geographical coordinates.
+
+        Parameters
+        ----------
+        ECEFpos : np.array
+            Array of shape (n, 3) with rows containing XYZ ECEF position data.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n, 3) with columns of lattitude, longitude, radius
+            data in decimal degrees and km.
+        """
+        # Cartesian coordinates.
+        x = ECEFpos[:, 0]
+        y = ECEFpos[:, 1]
+        z = ECEFpos[:, 2]
+
+        # Convert to spherical coordinates.
+        radius = np.sqrt(x**2 + y**2 + z**2)
+        theta = np.degrees(np.arccos(np.divide(z, radius)))
+        phi = np.degrees(np.arctan(np.divide(y, x)))
+        phi[np.where(x < 0)[0]] = phi[np.where(x < 0)[0]] - 180
+
+        # Convert to geographical coordinates.
+        lat = 90 - theta
+        lon = phi
+        lon[np.where(lon < 180)[0]] = phi[np.where(lon < 180)[0]] + 360
+        lon[np.where(lon > 180)[0]] = phi[np.where(lon > 180)[0]] - 360
+
+        # Fomulate output array.
+        lat = lat.reshape(-1, 1)
+        lon = lon.reshape(-1, 1)
+        radius = radius.reshape(-1, 1)
+        geo = np.concatenate((lat, lon, radius), axis=1)
+
+        return geo
+
+    def _GEO_to_ECEF(self, geoPos: np.array) -> np.array:
+        """Convert from geographical to ECEF coordinates.
+
+        Parameters
+        ----------
+        geoPos : np.array
+            Array of shape (n, 3) containing Geodetic coordinates for a location
+            with columns of lattitude, longitude, radius given in decimal
+            degrees and km.
+        radius : np.array, optional
+            Radius of the position from the Earth's surface.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n, 3) containing the XYZ ECEF position data.
+        """
+        radius = geoPos[:, 2]
+        
+        # Convert geographical to spherical.
+        theta = geoPos[:, 1]
+        negLon = np.where(theta < 0)
+        posLon = np.where(theta > 0)
+        theta[negLon] = np.radians(theta[negLon] + 360)
+        theta[posLon] = np.radians(theta[posLon])
+        phi = np.radians(90 - geoPos[:, 0])
+
+        # Convert spherical to cartesian.
+        x = radius * np.cos(theta) * np.sin(phi).reshape(-1, 1)
+        y = radius * np.sin(theta) * np.sin(phi).reshape(-1, 1)
+        z = radius * np.cos(phi).reshape(-1, 1)
+        ECEFpos = np.concatenate((x, y, z), axis=1)
+
+        return ECEFpos
+
+    def GEO(self, posData: np.array=None) -> np.array:
+        """Instantiate the GEOdata attribute.
+
+        Parameters
+        ----------
+        posData : np.array
+            Array of shape (n, 3) with coumns of X, Y, Z ECEF position data.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n, 3) with rows of lattitude, longitude, radius
+            position data.
+        """
+        if type(self.ECEFdata) == type(None):
+            self.position_data(posData=posData, type="ECEF")
+
+        self.GEOdata = self._ECEF_to_GEO(ECEFpos=self.ECEFdata)
+
+        return self.GEOdata
+
+    def _ECI_and_ECEF(self, posData: np.array, type: str) -> np.array:
+        """Convert between ECI and ECEF positions.
+
+        Parameters
+        ----------
+        posData : np.array
+            Array of shape (n, 3) representing the input data as XYZ cartesian
+            data.
+        type : {"ECI", "ECEF"}
+            The type of inputted data.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n, 3) representing the output data as XYZ cartesian
+            data.
+        """
+        if type == "ECI":
+            theta = -self.ERAdata
+        else:
+            theta = self.ERAdata
+        
+        # Construct rotational matrix.
+        outVec = np.zeros((self.length, 3))
+        A11 = np.cos(theta)
+        A12 = -np.sin(theta)
+        A21 = np.sin(theta)
+        A22 = np.cos(theta)
+
+        # Rotate position data around z-axis by ERA.
+        outVec[:, 0] = np.add(np.multiply(A11, self.posData[:, 0]),
+                              np.multiply(A12, self.posData[:, 1]))
+        outVec[:, 1] = np.add(np.multiply(A21, self.posData[:, 0]),
+                              np.multiply(A22, self.posData[:, 1]))
+        outVec[:, 2] = self.posData[:, 2]
+
+        return outVec
 
     def ECI(self, posData: np.array=None, timeData: np.array=None, **kwargs:
             Union[bool, float]) -> np.array:
@@ -215,7 +363,7 @@ class Satellite(object):
 
         See Also
         --------
-        getECEF : Initiate ECEFdata attribute.
+        ECEF : Initiate ECEFdata attribute.
 
         Notes
         -----
@@ -224,8 +372,8 @@ class Satellite(object):
 
         Examples
         --------
-        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
-        ...                         '2020-06-01 12:01:00.0340'])
+        >>> UTCTimeData = np.array(["2020-06-01 12:00:00.0340", ...,
+        ...                         "2020-06-01 12:01:00.0340"])
         >>> ECEFvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
         ...                     [2.73e+03, 2.08e+03, -6.02e+03]])
         >>> finch = Satellite()
@@ -236,24 +384,11 @@ class Satellite(object):
         if type(self.ECEFdata) == type(None):
             self.position_data(posData=posData, type="ECEF")
 
-        # Rotate ECEFdata around z-axis by ERA.
-        ECIvec = np.zeros((self.length, 3))
-        A11 = np.cos(self.ERAdata)
-        A12 = -np.sin(self.ERAdata)
-        A21 = np.sin(self.ERAdata)
-        A22 = np.cos(self.ERAdata)
-
-        ECIvec[:, 0] = np.add(np.multiply(
-            A11, self.ECEFdata[:, 0]), np.multiply(A12, self.ECEFdata[:, 1]))
-        ECIvec[:, 1] = np.add(np.multiply(
-            A21, self.ECEFdata[:, 0]), np.multiply(A22, self.ECEFdata[:, 1]))
-        ECIvec[:, 2] = self.ECEFdata[:, 2]
-
-        self.ECIdata = ECIvec
+        self.ECIdata = self._ECI_and_ECEF(posData=self.ECEFdata, type="ECEF")
 
         return self.ECIdata
 
-    def ECEF(self, posData: np.array=None, timeData: np.array=None, **kwargs:
+    def ECEF(self, posData: np.array=None, timeData: np.array=None, type="ECI", **kwargs:
              Union[bool, float]) -> np.array:
         """Instantiate ECEFdata attribute.
 
@@ -263,6 +398,8 @@ class Satellite(object):
             Array of shape (n,3) with columns of X, Y, Z ECI position data.
         timeData : np.array, optional
             Array of shape (n,) containing time data.
+        type : {"ECI", "GEO"}, optional
+            Specifies posData as either "ECI" or "GEO".
         **kwargs : dict, optional
             Extra arguments to `getECEF`: refer to getECEF documentation for a
             list of all possible arguments.
@@ -274,7 +411,7 @@ class Satellite(object):
 
         See Also
         --------
-        getECI : Initiate ECIdata attribute.
+        ECI : Initiate ECIdata attribute.
 
         Notes
         -----
@@ -283,32 +420,27 @@ class Satellite(object):
 
         Examples
         --------
-        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
-        ...                         '2020-06-01 12:01:00.0340'])
+        >>> UTCTimeData = np.array(["2020-06-01 12:00:00.0340", ...,
+        ...                         "2020-06-01 12:01:00.0340"])
         >>> ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
         ...                    [2.73e+03, 2.08e+03 -6.02e+03]])
         >>> finch = Satellite()
         >>> ECEFvec = finch.ECEF(posData=ECIvec, timeData=UTCTimeData)
         """
-        if type(self.ERAdata) == type(None):
-            self.ERA(timeData=timeData, **kwargs)
-        if type(self.ECIdata) == type(None):
-            self.position_data(posData=posData, type="ECI")
+        if type(self.ECIdata) == type(None) and type(self.GEOdata) == type(None):
+            if type == "ECI":
+                self.position_data(posData=posData, type="ECI")
 
-        # Rotate ECIdata around z-axis by -ERA.
-        ECEFvec = np.zeros((self.length, 3))
-        A11 = np.cos(-self.ERAdata)
-        A12 = -np.sin(-self.ERAdata)
-        A21 = np.sin(-self.ERAdata)
-        A22 = np.cos(-self.ERAdata)
+            elif type == "GEO":
+                self.position_data(posData=posData, type="GEO")
 
-        ECEFvec[:, 0] = np.add(np.multiply(
-            A11, self.ECIdata[:, 0]), np.multiply(A12, self.ECIdata[:, 1]))
-        ECEFvec[:, 1] = np.add(np.multiply(
-            A21, self.ECIdata[:, 0]), np.multiply(A22, self.ECIdata[:, 1]))
-        ECEFvec[:, 2] = self.ECIdata[:, 2]
+        if type(self.GEOdata) != type(None):
+            self.ECEFdata = self._GEO_to_ECEF(posData=self.GEOdata)
 
-        self.ECEFdata = ECEFvec
+        elif type(self.ECIdata) != type(None):
+            if type(self.ERAdata) == type(None):
+                self.ERA(timeData=timeData, **kwargs)
+            self.ECEFdata = self._ECI_and_ECEF(posData=self.ECIdata, type="ECI")
 
         return self.ECEFdata
 
@@ -326,41 +458,13 @@ class Satellite(object):
             Degree angle between the two arrays.
         """
         # Use simple linalg formula.
-        dividend = np.einsum('ij, ij->i', vecOne, vecTwo)
+        dividend = np.einsum("ij, ij->i", vecOne, vecTwo)
         divisor = np.multiply(np.linalg.norm(
             vecOne, axis=1), np.linalg.norm(vecTwo, axis=1))
         arg = np.divide(dividend, divisor)
         ang = np.degrees(np.arccos(arg))
 
         return ang
-
-    def _geo_to_ECEF(self, obsCoor: Tuple[float, float], radius:
-                     float) -> np.array:
-        """Convert geographical coordinates to ECEF.
-        
-        Parameters
-        ----------
-        obsCoor : Tuple
-            Coordinates of a ground location in decimal degrees
-            `(lattitude, longitude)`.
-        radius : float
-            Radius of the Earth at position `obsCoor`.
-        
-        Returns
-        -------
-        np.array
-            Array of shape (n,3) with rows of ECEF data.
-        """
-        if obsCoor[1] < 0:
-            theta = np.radians(360 + obsCoor[1])
-        else:
-            theta = np.radians(obsCoor[1])
-        phi = np.radians(90 - obsCoor[0])
-        x = radius*np.cos(theta)*np.sin(phi)
-        y = radius*np.sin(theta)*np.sin(phi)
-        z = radius*np.cos(phi)
-
-        return np.array([x, y, z])
 
     def horizontal(self, groundPos: GroundPosition, posData: np.array=None,
                    timeData: np.array=None, **kwargs:
@@ -398,8 +502,8 @@ class Satellite(object):
 
         Examples
         --------
-        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
-        ...                         '2020-06-01 12:01:00.0340'])
+        >>> UTCTimeData = np.array(["2020-06-01 12:00:00.0340", ...,
+        ...                         "2020-06-01 12:01:00.0340"])
         >>> ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
         ...                    [2.73e+03, 2.08e+03, -6.02e+03]])
         >>> toronto = GroundPosition(name="Toronto",
@@ -431,7 +535,7 @@ class Satellite(object):
         tangentVec = np.subtract((kHat.T * radius/np.sin(beta)).T, xyzObs)
 
         # Find LOS projection on tangent plane.
-        coeff = np.einsum('ij, ij->i', xyzLOS, xyzObs)/radius**2
+        coeff = np.einsum("ij, ij->i", xyzLOS, xyzObs)/radius**2
         normProj = (xyzObs.T * coeff).T
         projLOS = np.subtract(xyzLOS, normProj)
 
@@ -439,7 +543,7 @@ class Satellite(object):
         vecOne = np.cross(tangentVec, xyzObs)
         normOne = 1/np.linalg.norm(vecOne, axis=1).reshape((self.length, 1))
         vecOneUnit = normOne*vecOne
-        vecTwo = (vecOneUnit.T * np.einsum('ij, ij->i', projLOS, vecOneUnit)).T
+        vecTwo = (vecOneUnit.T * np.einsum("ij, ij->i", projLOS, vecOneUnit)).T
         normTwo = 1/np.linalg.norm(vecTwo, axis=1).reshape((self.length, 1))
         vecTwoUnit = normTwo*vecTwo
 
@@ -492,8 +596,8 @@ class Satellite(object):
 
         Examples
         --------
-        >>> UTCTimeData = np.array(['2020-06-01 12:00:00.0340', ...,
-        ...                         '2020-06-01 12:01:00.0340'])
+        >>> UTCTimeData = np.array(["2020-06-01 12:00:00.0340", ...,
+        ...                         "2020-06-01 12:01:00.0340"])
         >>> ECIvec = np.array([[-4.46e+03, -5.22e+03, 1.75e-04], ...,
         ...                    [2.73e+03, 2.08e+03 -6.02e+03]])
         >>> toronto = GroundPosition(name="Toronto",
@@ -552,19 +656,30 @@ class Satellite(object):
 
         return distances
 
-    def _WGS84_radius(self, lattitude: float) -> float:
-        """Calculate radius from WGS84.
+    def _WGS84_radius(self, lattitude: np.array) -> np.array:
+        """Calculate the Earth's radius using WGS84.
 
         Parameters
         ----------
-        latitude : float
-            Lattitude of a ground location.
-        
+        latitude : np.array
+            Array of shape (n,) representing the lattitude of a ground
+            location.
+
         Returns
         -------
-        float
-            Earth's radius at `lattitude` using WGS84.
+        np.array
+            Earth's radius at each row in `lattitude` using WGS84.
+
+        Notes
+        -----
+        The Earth can be modeled as an ellipsoid given by the following
+        equation:
+
+        .. math:: r = \sqrt{\\frac{(6378.14)^2(6356.75)^2}{(6378.14)^2\sin{\phi}^2+(6356.75)^2\cos{\phi}^2}}
+
+        where :math:`\phi` is the observers lattitude.
         """
+        # Get lattidue parameter.
         phi = np.radians(lattitude)
 
         # Define WGS84 Parameters.
@@ -573,8 +688,9 @@ class Satellite(object):
 
         numerator = semiMajor * semiMinor
         denominator = semiMajor * np.sin(phi)**2 + semiMinor * np.cos(phi)**2
+        radius = np.sqrt(numerator / denominator)
 
-        return np.sqrt(numerator / denominator)
+        return radius
 
     def altitude(self) -> np.array:
         """Get the altitude/elevation of the satellite.
@@ -627,27 +743,32 @@ class Satellite(object):
         data = {}
 
         if type(self.times) != type(None):
-            data['Time (UTC)'] = pd.Series(self.times)
+            data["Time (UTC)"] = pd.Series(self.times)
 
         if type(self.ERAdata) != type(None):
-            data['ERA (rad)'] = pd.Series(self.ERAdata)
+            data["ERA (rad)"] = pd.Series(self.ERAdata)
 
         if type(self.ECIdata) != type(None):
-            data['ECI.X'] = pd.Series(self.ECIdata[:, 0])
-            data['ECI.Y'] = pd.Series(self.ECIdata[:, 1])
-            data['ECI.Z'] = pd.Series(self.ECIdata[:, 2])
+            data["ECI.X"] = pd.Series(self.ECIdata[:, 0])
+            data["ECI.Y"] = pd.Series(self.ECIdata[:, 1])
+            data["ECI.Z"] = pd.Series(self.ECIdata[:, 2])
 
         if type(self.ECEFdata) != type(None):
-            data['ECEF.X'] = pd.Series(self.ECEFdata[:, 0])
-            data['ECEF.Y'] = pd.Series(self.ECEFdata[:, 1])
-            data['ECEF.Z'] = pd.Series(self.ECEFdata[:, 2])
+            data["ECEF.X"] = pd.Series(self.ECEFdata[:, 0])
+            data["ECEF.Y"] = pd.Series(self.ECEFdata[:, 1])
+            data["ECEF.Z"] = pd.Series(self.ECEFdata[:, 2])
+        
+        if type(self.elevation) != type(None):
+            data["Elevation"] = pd.Series(self.elevation)
 
         for key in self.gs:
             if type(self.gs[key].alt) != type(None):
-                data[f'{key}.alt'] = self.gs[key].alt
-                data[f'{key}.az'] = self.gs[key].az
+                data[f"{key}.alt"] = self.gs[key].alt
+                data[f"{key}.az"] = self.gs[key].az
             if type(self.gs[key].nadirAng) != type(None):
-                data[f'{key}.NdrAng'] = self.gs[key].nadirAng
+                data[f"{key}.NdrAng"] = self.gs[key].nadirAng
+            if type(self.gs[key].distance) != type(None):
+                data[f"{key}.distance"] = self.gs[key].distance
 
         df = pd.DataFrame(data)
         df.to_csv(fileName, sep=delimiter)

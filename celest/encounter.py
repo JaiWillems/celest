@@ -183,7 +183,7 @@ class Encounter(object):
         Parameters
         ----------
         timeData : np.array
-            Array of shape (n,) containing datetime objects in UTC.
+            Array of shape (n,) containing datetime objects in Julian.
 
         Returns
         -------
