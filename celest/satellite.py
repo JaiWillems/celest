@@ -14,6 +14,7 @@ units will be detailed in method documentation strings.
 
 import numpy as np
 import pandas as pd
+from scipy.interpolate import interp1d
 from datetime import datetime
 import julian
 from typing import Union, Tuple
@@ -718,6 +719,363 @@ class Satellite(object):
         self.elevation = altitude
 
         return altitude
+    
+    def _times_broadening(self, times, indices, factor, dt):
+        """Broaden the times data.
+
+        Parameters
+        ----------
+        times : np.array
+            Array of times to broaden.
+        indices : np.array
+            Array of indices defining the `times` region to broaden.
+        factor : int
+            The factor increase in the number of steps in the broadening region.
+        dt : int, optional
+            The number of data points adjacent to the broadening region to include
+            in the times broadening process.
+        
+        Returns
+        -------
+        np.array
+            New `times` array with the region defined by `indices` broadened.
+        np.array
+            An array of the broadened times.
+        np.array
+            Updated indices of the broadened region in the `times` array.
+        """
+        # Reform the viable region.
+        indices = np.append(indices, np.arange(indices[-1] + 1, indices[-1] + 1 + dt, 1))
+        indices = np.insert(indices, 0, np.arange(indices[0] - dt, indices[0], 1))
+
+        minI = indices[0]
+        maxI = indices[-1]
+
+        # Determine new times and insert into current time data.
+        timeInsert = np.linspace(times[minI], times[maxI], int(factor * (maxI - minI + 1)))
+        times = np.delete(times, indices)
+        times = np.insert(times, minI, timeInsert)
+
+        return times, timeInsert, indices
+    
+    def interp_ECI(self, factor, dt=0, indices=None):
+        """Interpolate ECI data.
+        
+        If `indices=None`, this method will interpolate all ECI data, otherwise
+        it will interpolate the regions defined by `indices`.
+        
+        Parameters
+        ----------
+        factor : int
+            The factor increase in the number of steps in interpolated regions.
+        dt : int, optional
+            The number of data points adjacent to a valid encounter region to
+            interpolate within. Only used if `indices!=None`.
+        indices : np.array, optional
+            An array of arrays of indices defining encounter regions.
+            
+        returns
+        -------
+        np.array
+            An array of shape (n, 3) containing X, Y, Z interpolated ECI data.
+        np.array
+            An array of shape (n,) containing interpolated julian times.
+        """
+        # Get position information.
+        times = self.times
+        ECIdata = self.ECIdata
+
+        # Set up ECEF interpolation functions.
+        xInterp = interp1d(times, ECIdata[:, 0], kind="cubic")
+        yInterp = interp1d(times, ECIdata[:, 1], kind="cubic")
+        zInterp = interp1d(times, ECIdata[:, 2], kind="cubic")
+
+        if type(indices) != type(None):
+            for i in np.flip(indices):
+
+                times, time, i = self._times_broadening(times, i, factor, dt)
+
+                # Interpolate, insert, and reform ECEF data.
+                x = np.delete(ECIdata[:, 0], i)
+                y = np.delete(ECIdata[:, 1], i)
+                z = np.delete(ECIdata[:, 2], i)
+                xP = np.insert(x, i[0], xInterp(time)).reshape((-1, 1))
+                yP = np.insert(y, i[0], yInterp(time)).reshape((-1, 1))
+                zP = np.insert(z, i[0], zInterp(time)).reshape((-1, 1))
+                ECIdata = np.concatenate((xP, yP, zP), axis=1)
+
+        else:
+            timesP = np.linspace(min(times), max(times), factor * times.size)
+            xP, yP, zP = xInterp(timesP), yInterp(timesP), zInterp(timesP)
+            ECIdata = np.concatenate((xP, yP, zP), axis=1)
+
+        return ECIdata, times
+    
+    def interp_ECEF(self, factor, dt=0, indices=None):
+        """Interpolate ECEF data.
+        
+        If `indices=None`, this method will interpolate all ECEF data,
+        otherwise it will interpolate the regions defined by `indices`.
+        
+        Parameters
+        ----------
+        factor : int
+            The factor increase in the number of steps in interpolated regions.
+        dt : int, optional
+            The number of data points adjacent to a valid encounter region to
+            interpolate within. Only used if `indices!=None`.
+        indices : np.array, optional
+            An array of arrays of indices defining encounter regions.
+            
+        returns
+        -------
+        np.array
+            An array of shape (n, 3) containing X, Y, Z interpolated ECEF data.
+        np.array
+            An array of shape (n,) containing interpolated julian times.
+        """
+        # Get position information.
+        times = self.times
+        ECEFdata = self.ECEFdata
+
+        # Set up ECEF interpolation functions.
+        xInterp = interp1d(times, ECEFdata[:, 0], kind="cubic")
+        yInterp = interp1d(times, ECEFdata[:, 1], kind="cubic")
+        zInterp = interp1d(times, ECEFdata[:, 2], kind="cubic")
+
+        if type(indices) != type(None):
+            for i in np.flip(indices):
+
+                times, time, i = self._times_broadening(times, i, factor, dt)
+
+                # Interpolate, insert, and reform ECEF data.
+                x = np.delete(ECEFdata[:, 0], i)
+                y = np.delete(ECEFdata[:, 1], i)
+                z = np.delete(ECEFdata[:, 2], i)
+                xP = np.insert(x, i[0], xInterp(time)).reshape((-1, 1))
+                yP = np.insert(y, i[0], yInterp(time)).reshape((-1, 1))
+                zP = np.insert(z, i[0], zInterp(time)).reshape((-1, 1))
+                ECEFdata = np.concatenate((xP, yP, zP), axis=1)
+
+        else:
+            timesP = np.linspace(min(times), max(times), factor * times.size)
+            xP, yP, zP = xInterp(timesP), yInterp(timesP), zInterp(timesP)
+            ECEFdata = np.concatenate((xP, yP, zP), axis=1)
+
+        return ECEFdata, times
+    
+    def interp_alt(self, groundPos, factor, dt=0, indices=None):
+        """Interpolate altitude angle data.
+        
+        If `indices=None`, this method will interpolate all altitude data,
+        otherwise it will interpolate the regions defined by `indices`.
+        
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            The ground location containing the altitude to interpolate.
+        factor : int
+            The factor increase in the number of steps in interpolated regions.
+        dt : int, optional
+            The number of data points adjacent to a valid encounter region to
+            interpolate within. Only used if `indices!=None`.
+        indices : np.array, optional
+            An array of arrays of indices defining encounter regions.
+            
+        returns
+        -------
+        np.array
+            An array of shape (n,) containing interpolated altitude data.
+        np.array
+            An array of shape (n,) containing interpolated julian times.
+        """
+        # Get position information.
+        times = self.times
+        alt = groundPos.alt
+
+        # Set up altitude interpolation function.
+        altInterp = interp1d(times, alt, kind="cubic")
+
+        if type(indices) != type(None):
+            for i in np.flip(indices):
+                times, time, i = self._times_broadening(times, i, factor, dt)
+                temp = np.delete(alt, i)
+                altP = np.insert(temp, i[0], altInterp(time)).reshape((-1, 1))
+        else:
+            timesP = np.linspace(min(times), max(times), factor * times.size)
+            altP = altInterp(timesP)
+
+        return altP, times
+
+    def interp_az(self, groundPos, factor, dt=0, indices=None):
+        """Interpolate azimuth data.
+        
+        If `indices=None`, this method will interpolate all azimuth data,
+        otherwise it will interpolate the regions defined by `indices`.
+        
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            The ground location containing the azimuth to interpolate.
+        factor : int
+            The factor increase in the number of steps in interpolated regions.
+        dt : int, optional
+            The number of data points adjacent to a valid encounter region to
+            interpolate within. Only used if `indices!=None`.
+        indices : np.array, optional
+            An array of arrays of indices defining encounter regions. 
+           
+        returns
+        -------
+        np.array
+            An array of shape (n,) containing interpolated azimuth data.
+        np.array
+            An array of shape (n,) containing interpolated julian times.
+        """
+        # Get position information.
+        times = self.times
+        az = groundPos.az
+
+        # Set up azimuth interpolation function.
+        azInterp = interp1d(times, az, kind="cubic")
+
+        if type(indices) != type(None):
+            for i in np.flip(indices):
+                times, time, i = self._times_broadening(times, i, factor, dt)
+                temp = np.delete(az, i)
+                azP = np.insert(temp, i[0], azInterp(time)).reshape((-1, 1))
+        else:
+            timesP = np.linspace(min(times), max(times), factor * times.size)
+            azP = azInterp(timesP)
+
+        return azP, times
+
+    def interp_nadir(self, groundPos, factor, dt=0, indices=None):
+        """Interpolate nadir angle data.
+        
+        If `indices=None`, this method will interpolate all nadir angle data,
+        otherwise it will interpolate the regions defined by `indices`.
+        
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            The ground location containing the nadir angles to interpolate.
+        factor : int
+            The factor increase in the number of steps in interpolated regions.
+        dt : int, optional
+            The number of data points adjacent to a valid encounter region to
+            interpolate within. Only used if `indices!=None`.
+        indices : np.array, optional
+            An array of arrays of indices defining encounter regions.
+            
+        returns
+        -------
+        np.array
+            An array of shape (n,) containing interpolated nadir angle data.
+        np.array
+            An array of shape (n,) containing interpolated julian times.
+        """
+        # Get position information.
+        times = self.times
+        nadir = groundPos.nadirAng
+
+        # Set up nadir interpolation function.
+        nadirInterp = interp1d(times, nadir, kind="cubic")
+
+        if type(indices) != type(None):
+            for i in np.flip(indices):
+                times, time, i = self._times_broadening(times, i, factor, dt)
+                temp = np.delete(nadir, i)
+                nadirP = np.insert(temp, i[0], nadirInterp(time)).reshape((-1, 1))
+        else:
+            timesP = np.linspace(min(times), max(times), factor * times.size)
+            nadirP = nadirInterp(timesP)
+
+        return nadirP, times
+    
+    def interp_distance(self, groundPos, factor, dt=0, indices=None):
+        """Interpolate distance data.
+        
+        If `indices=None`, this method will interpolate all distance data,
+        otherwise it will interpolate the regions defined by `indices`.
+        
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            The ground location containing the distances to interpolate.
+        factor : int
+            The factor increase in the number of steps in interpolated regions.
+        dt : int, optional
+            The number of data points adjacent to a valid encounter region to
+            interpolate within. Only used if `indices!=None`.
+        indices : np.array, optional
+            An array of arrays of indices defining encounter regions.
+            
+        returns
+        -------
+        np.array
+            An array of shape (n,) containing interpolated distance data.
+        np.array
+            An array of shape (n,) containing interpolated julian times.
+        """
+        # Get position information.
+        times = self.times
+        distance = groundPos.distance
+
+        # Set up distance interpolation function.
+        distanceInterp = interp1d(times, distance, kind="cubic")
+
+        if type(indices) != type(None):
+            for i in np.flip(indices):
+                times, time, i = self._times_broadening(times, i, factor, dt)
+                temp = np.delete(distance, i)
+                distanceP = np.insert(temp, i[0], distanceInterp(time)).reshape((-1, 1))
+        else:
+            timesP = np.linspace(min(times), max(times), factor * times.size)
+            distanceP = distanceInterp(timesP)
+
+        return distanceP, times
+    
+    def interp_elev(self, factor, dt=0, indices=None):
+        """Interpolate satellite elevation data.
+        
+        If `indices=None`, this method will interpolate all elevation data,
+        otherwise it will interpolate the regions defined by `indices`.
+        
+        Parameters
+        ----------
+        factor : int
+            The factor increase in the number of steps in interpolated regions.
+        dt : int, optional
+            The number of data points adjacent to a valid encounter region to
+            interpolate within. Only used if `indices!=None`.
+        indices : np.array, optional
+            An array of arrays of indices defining encounter regions.
+            
+        returns
+        -------
+        np.array
+            An array of shape (n,) containing interpolated elevation data.
+        np.array
+            An array of shape (n,) containing interpolated julian times.
+        """
+        # Get position information.
+        times = self.times
+        altitude = self.altitude
+
+        # Set up elevation interpolation function.
+        altitudeInterp = interp1d(times, altitude, kind="cubic")
+
+        if type(indices) != type(None):
+            for i in np.flip(indices):
+                times, time, i = self._times_broadening(times, i, factor, dt)
+                temp = np.delete(altitude, i)
+                altitudeP = np.insert(temp, i[0], altitudeInterp(time)).reshape((-1, 1))
+        else:
+            timesP = np.linspace(min(times), max(times), factor * times.size)
+            altitudeP = altitudeInterp(timesP)
+
+        return altitudeP, times
 
     def save_data(self, fileName: str, delimiter: str) -> None:
         """Save satellite data to local directory.
