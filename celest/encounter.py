@@ -239,19 +239,12 @@ class Encounter(object):
         ...                        '2020-06-01 12:01:00.0340'])
         >>> sunPos = encounter._sun_position(timeData=UTCTimeData)
         """
-        ephem = pkg_resources.resource_filename(__name__, 'data/de421.bsp')
-        kernal = SPK.open(ephem)
-
-        # Get sun position in ECI.
-        ssb2sun = kernal[0, 10].compute(timeData)
-        ssb2eb = kernal[0, 3].compute(timeData)
-        eb2e = kernal[3, 399].compute(timeData)
-        e2sun = (ssb2sun - ssb2eb - eb2e).T
+        sun = CelestialObject()
+        sunPos = sun.sun_position(timeData=timeData)
 
         # Convert sun position data to ECEF
         sun = Satellite()
-        e2sunECEF = sun.ECEF(posData=e2sun, timeData=timeData, jul=True)
-        self.sunPos = e2sunECEF
+        self.sunPos = sun.ECEF(posData=sunPos, timeData=timeData, jul=True)
         return self.sunPos
 
     def _special_interp(self, satellite: Satellite, groundPos: GroundPosition,
@@ -286,8 +279,6 @@ class Encounter(object):
         np.array
             The array of interpolated altitude data.
         np.array
-            The array of interpolated azimuth data.
-        np.array
             The array of interpolated nadir angle data.
 
         Notes
@@ -297,70 +288,18 @@ class Encounter(object):
         between data points. The buffer is recommended all times but
         escpecially with coarse data.
         """
-        # Get satellite information.
-        times = satellite.times
-        ECEFdata = satellite.ECEFdata
 
-        # Get encounter information.
-        angType = encounter.angType
-        ang = encounter.ang
-        isMax = encounter.maxAng
+        regions = self.encounter_indices(encounter=encounter, buffer=buffer)
+        ECEFinterp, timesInterp = satellite.interp_ECEF(factor=factor, dt=dt, indices=regions)
 
-        # Get ground position information.
-        alt = groundPos.alt
-        az = groundPos.az
-        nadir = groundPos.nadirAng
+        groundLoc = GroundPosition(groundPos.name, groundPos.coor)
+        finch = Satellite()
+        finch.time_data(timeData=timesInterp, jul=True)
+        finch.position_data(posData=ECEFinterp, type="ECEF")
+        alt, _ = finch.horizontal(groundPos=groundLoc)
+        nadir = finch.nadir_ang(groundPos=groundLoc)
 
-        # Set up ECEF interpolation functions.
-        x = interp1d(times, ECEFdata[:, 0], kind="cubic")
-        y = interp1d(times, ECEFdata[:, 1], kind="cubic")
-        z = interp1d(times, ECEFdata[:, 2], kind="cubic")
-
-        # Derive interpolation regions.
-        if not angType and isMax:
-            regions = np.where((alt < ang + buffer) & (alt > 0))[0]
-        elif not angType and not isMax:
-            regions = np.where(alt > ang - buffer)[0]
-        elif angType and isMax:
-            regions = np.where((nadir < ang + buffer) & (alt > 0))[0]
-        elif angType and not isMax:
-            regions = np.where((nadir > ang - buffer) & (alt > 0))[0]
-
-        regions = np.split(regions, np.where(np.diff(regions) != 1)[0] + 1)
-
-        for i in np.flip(regions):
-
-            # Reform the viable region.
-            i = np.append(i, np.arange(i[-1] + 1, i[-1] + 1 + dt, 1))
-            i = np.insert(i, 0, np.arange(i[0] - dt, i[0], 1))
-
-            minI = i[0]
-            maxI = i[-1]
-
-            # Determine new times and insert into current time data.
-            time = np.linspace(times[minI], times[maxI],
-                               int(factor * (maxI - minI + 1)))
-            times = np.delete(times, i)
-            times = np.insert(times, minI, time)
-
-            # Interpolate, insert, and reform ECEF data.
-            xInterp = np.delete(ECEFdata[:, 0], i)
-            yInterp = np.delete(ECEFdata[:, 1], i)
-            zInterp = np.delete(ECEFdata[:, 2], i)
-            xN = np.insert(xInterp, minI, x(time)).reshape((-1, 1))
-            yN = np.insert(yInterp, minI, y(time)).reshape((-1, 1))
-            zN = np.insert(zInterp, minI, z(time)).reshape((-1, 1))
-            ECEFdata = np.concatenate((xN, yN, zN), axis=1)
-
-            # Get interpolated angle data.
-            groundLoc = GroundPosition(groundPos.name, groundPos.coor)
-            finch = Satellite()
-            finch.time_data(timeData=times, jul=True)
-            finch.position_data(posData=ECEFdata, type="ECEF")
-            alt, az = finch.horizontal(groundPos=groundLoc)
-            nadir = finch.nadir_ang(groundPos=groundLoc)
-
-        return times, alt, az, nadir
+        return timesInterp, alt, nadir
 
     def windows(self, satellite: Satellite, interp: bool=True, factor: int=5,
                 buffer: float=10, dt: int=1) -> None:
@@ -412,7 +351,7 @@ class Encounter(object):
             if interp:
                 params = [satellite, satellite.gs[groundPos],
                           encounter, factor, buffer, dt]
-                times, alt, az, nadir = self._special_interp(*params)
+                times, alt, nadir = self._special_interp(*params)
             else:
                 times = satellite.times
                 alt = satellite.gs[groundPos].alt
