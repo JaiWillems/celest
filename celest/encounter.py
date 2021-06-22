@@ -15,6 +15,7 @@ from jplephem.spk import SPK
 from typing import Tuple
 from celest.satellite import Satellite
 from celest.groundposition import GroundPosition
+from celest.astronomy import CelestialObject
 
 
 class EncounterSpec(object):
@@ -173,6 +174,46 @@ class Encounter(object):
         encounter = EncounterSpec(
             name, encType, groundPos, ang, angType, maxAng, solar)
         self.encounters[name] = encounter
+    
+    def encounter_indices(self, encounter, buffer=0):
+        """Return data indices of a specified encounter.
+
+        Parameters
+        ----------
+        encounter : EncounterSpec
+            Encounter specifications that define the encounter regions.
+        buffer : float
+            Positive angular buffer to interpolate data that comes within the
+            buffer from the encounter constraint angle.
+
+        Returns
+        -------
+        np.array
+            An array of nested arrays containing the indices of encounter regions.
+        """
+        # Get encounter information.
+        angType = encounter.angType
+        ang = encounter.ang
+        isMax = encounter.maxAng
+        groundPos = encounter.groundPos
+
+        # Get ground position information.
+        alt = groundPos.alt
+        nadir = groundPos.nadirAng
+
+        # Derive interpolation regions.
+        if not angType and isMax:
+            regions = np.where((alt < ang + buffer) & (alt > 0))[0]
+        elif not angType and not isMax:
+            regions = np.where(alt > ang - buffer)[0]
+        elif angType and isMax:
+            regions = np.where((nadir < ang + buffer) & (alt > 0))[0]
+        elif angType and not isMax:
+            regions = np.where((nadir > ang - buffer) & (alt > 0))[0]
+
+        regions = np.split(regions, np.where(np.diff(regions) != 1)[0] + 1)
+
+        return regions
 
     def _sun_position(self, timeData: np.array) -> list:
         """Instantiate sunPos attribute.
