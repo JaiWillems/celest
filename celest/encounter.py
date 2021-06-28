@@ -1,6 +1,6 @@
 """Satellite encounter planning.
 
-The encounter module contains the Encounter class that is used to compute,
+The encounter module contains the `Encounter` class that is used to compute,
 store, and schedule Earth-satellite encounters.
 """
 
@@ -35,12 +35,13 @@ class EncounterSpec(object):
         String specifying the constraint angle as either the altitude, or
         nadir-LOS angle type.
     maxAng : bool
-        Defines the contraint angle as a maximum constraint if True or as
-        minimum constraint if False. Note that the nadirLOS angle is
-        measured to increase away from nadir.
+        Defines the contraint angle as a maximum constraint if `maxAng=True` or
+        as minimum constraint if `maxAng=False`. Note that the `nadirLOS` angle
+        type is measured to increase away from nadir.
     solar : {-1, 0, 1}, optional
-        Defines sunlight constraint where -1 gets windows at night, 0 gets
-        windows at day or night, and 1 gets windows at day.
+        Defines sunlight constraint where `solar=-1` gets windows at night,
+        `solar=0` gets windows at day or night, and `solar=1` gets windows at
+        day.
 
     Attributes
     ----------
@@ -56,12 +57,13 @@ class EncounterSpec(object):
         String specifying the constraint angle as either the altitude, or
         nadir-LOS angle type.
     maxAng : bool
-        Defines the contraint angle as a maximum constraint if True or as
-        minimum constraint if False. Note that the nadirLOS angle is
-        measured to increase away from nadir.
+        Defines the contraint angle as a maximum constraint if `maxAng=True` or
+        as minimum constraint if `maxAng=False`. Note that the `nadirLOS` angle
+        type is measured to increase away from nadir.
     solar : {-1, 0, 1}, optional
-        Defines sunlight constraint where -1 gets windows at night, 0 gets
-        windows at day or night, and 1 gets windows at day.
+        Defines sunlight constraint where `solar=-1` gets windows at night,
+        `solar=0` gets windows at day or night, and `solar=1` gets windows at
+        day.
     windows : np.array
         Array of shape (n,3) of window start, end, and elapsed seconds data.
     length : int
@@ -71,6 +73,7 @@ class EncounterSpec(object):
     def __init__(self, name: str, encType: str, groundPos: GroundPosition,
                  ang: float, angType: str, maxAng: bool, solar: str=0) -> None:
         """Define instance variables."""
+
         self.name = name
         self.type = encType
         self.groundPos = groundPos
@@ -83,6 +86,7 @@ class EncounterSpec(object):
 
     def __str__(self) -> str:
         """Defines EncounterSpec informaiton string."""
+
         data = np.array([self.name, self.type, self.groundPos.name, self.ang,
                          self.angType, self.maxAng, self.solar])
         index = np.array(["Name:", "Encounter Type:", "Ground Position Name:",
@@ -102,7 +106,7 @@ class Encounter(object):
 
     Attributes
     ----------
-    encounters : Dict
+    encounters : dict
         Dictionary of EncounterSpec objects where the key is the
         EncounterSpec's name attribute.
     sunPos : np.array
@@ -126,6 +130,7 @@ class Encounter(object):
 
     def __init__(self) -> None:
         """Define instance variables."""
+
         self.encounters = {}
         self.sunPos = None
 
@@ -150,12 +155,13 @@ class Encounter(object):
             String specifying the constraint angle as either the altitude, or
             nadir-LOS angle type.
         maxAng : bool
-            Defines the contraint angle as a maximum constraint if True or as
-            minimum constraint if False. Note that the nadirLOS angle is
-            measured to increase away from nadir.
+            Defines the contraint angle as a maximum constraint if
+            `maxAng=True` or as minimum constraint if `maxAng=False`. Note that
+            the `nadirLOS` angle type is measured to increase away from nadir.
         solar : {-1, 0, 1}, optional
-            Defines sunlight constraint where -1 gets windows at night, 0 gets
-            windows at day or night, and 1 gets windows at day.
+            Defines sunlight constraint where `solar=-1` gets windows at night,
+            `solar=0` gets windows at day or night, and `solar=1` gets windows
+            at day.
 
         Examples
         --------
@@ -163,6 +169,7 @@ class Encounter(object):
         >>> encounters.add_encounter("CYYZ IMG", "IMG", toronto, 30, "nadirLOS",
         ...                          True, solar=1)
         """
+
         if angType == "nadirLOS":
             angType = 1
         elif angType == "alt":
@@ -186,8 +193,10 @@ class Encounter(object):
         Returns
         -------
         np.array
-            An array of nested arrays containing the indices of encounter regions.
+            An array of nested arrays containing the indices of encounter
+            regions.
         """
+
         # Get encounter information.
         angType = encounter.angType
         ang = encounter.ang
@@ -215,13 +224,13 @@ class Encounter(object):
     def _sun_position(self, timeData: np.array) -> list:
         """Instantiate sunPos attribute.
 
-        This method uses the de421 ephemeris to calculate the sun"s position in
-        the ECEF cartesian frame at each time in the timeData parameter.
+        This method uses the de421 ephemeris to calculate the sun's position in
+        the ECEF cartesian frame at each time in the `timeData` parameter.
 
         Parameters
         ----------
         timeData : np.array
-            Array of shape (n,) containing datetime objects in Julian.
+            Array of shape (n,) containing times in Julian.
 
         Returns
         -------
@@ -236,6 +245,7 @@ class Encounter(object):
         ...                        '2020-06-01 12:01:00.0340'])
         >>> sunPos = encounter._sun_position(timeData=UTCTimeData)
         """
+
         sun = CelestialObject()
         sunPos = sun.sun_position(timeData=timeData)
 
@@ -246,7 +256,7 @@ class Encounter(object):
 
     def _special_interp(self, satellite: Satellite, groundPos: GroundPosition,
                         encounter: EncounterSpec, factor: int, buffer: float,
-                        dt: int) -> Tuple[np.array, np.array, np.array, np.array]:
+                        dt: int) -> Tuple[np.array, np.array, np.array]:
         """Interpolate encounter regions.
 
         This method identifies the positional data relevent to the inputed
@@ -282,8 +292,8 @@ class Encounter(object):
         -----
         The inspiration for the buffer is to interpolate regions that have the
         potential to surpass the encounter constraint angle but may perhaps lie
-        between data points. The buffer is recommended all times but
-        escpecially with coarse data.
+        between data points. Using the buffer is recommended for all cases,
+        escpecially when data is course.
         """
 
         regions = self.encounter_indices(encounter=encounter, buffer=buffer)
@@ -310,8 +320,8 @@ class Encounter(object):
         satellite : Satellite
             Satellite object with appropriate dependencies instantiated.
         interp : {True, False}, optional
-            If True then the windows will be generated from data interpolated
-            around valid encounter regions.
+            If `interp=True` then the windows will be generated from data
+            interpolated around valid encounter regions.
         factor : int, optional
             The factor increase in the number of steps in interpolated regions.
         buffer : float, optional
@@ -323,11 +333,11 @@ class Encounter(object):
 
         Notes
         -----
-        If an EncounterSpec objects use an "alt" angle type then the Satellite
-        must have the corresponding GroundPositions alt and az attributes
-        instantiated. If an EncounterSpec objects use a "nadirLOS" angle type
-        then the Satellite must have the corresponding GroundPositions nadirAng
-        attribute instantiated.
+        If an EncounterSpec objects use an `"alt"` angle type then the
+        `Satellite` object must have the corresponding `GroundPositions` alt
+        and az attributes instantiated. If an EncounterSpec objects use a
+        `"nadirLOS"` angle type then the `Satellite` object must have the
+        corresponding `GroundPosition` nadirAng attribute instantiated.
 
         Exampls:
         --------
@@ -459,10 +469,6 @@ class Encounter(object):
         encounter time, daily average counts, and the daily average time for
         each encounter and encounter type.
 
-        Parameters
-        ----------
-        None
-
         Returns
         -------
         pd.DataFrame
@@ -479,6 +485,7 @@ class Encounter(object):
 
         See documentation for more detail on instantiated dependencies.
         """
+
         data = {}
 
         numDL = 0

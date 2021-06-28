@@ -1,10 +1,10 @@
 """Ground position information localization.
 
-The groundposition module contains the GroundPosition class used to localize
-information ties to a specific ground location. The GroundPosition class is
-used in conjunction with both the Satellite and Encounter class' to manage
+The groundposition module contains the `GroundPosition` class used to localize
+information ties to a specific ground location. The `GroundPosition` class is
+used in conjunction with both the `Satellite` and `Encounter` class' to manage
 altitude, azimuth, nadir angle, and window information. In short, the
-GroundPosition class was created for managerial purposes.
+`GroundPosition` class was created for managerial purposes.
 """
 
 
@@ -15,8 +15,8 @@ from typing import Tuple
 class GroundPosition(object):
     """Localize ground position based information.
 
-    The GoundPosition class stores ground location data and is used in the
-    Satellite and Encounter class' to manage altitude, azimuth, nadir angle,
+    The `GoundPosition` class stores ground location data and is used in the
+    `Satellite` and `Encounter` class' to manage altitude, azimuth, nadir angle,
     and window information.
 
     Parameters
@@ -55,9 +55,9 @@ class GroundPosition(object):
     Methods
     -------
     _radius(obsCoor)
-        Used to instantiate the radius attribute.
+        Used to instantiate the `radius` attribute.
     _ECEF(obsCoor, radius)
-        Used to instantiate the ECEFpos attribute.
+        Used to instantiate the `ECEFpos` attribute.
 
     Examples
     --------
@@ -66,6 +66,7 @@ class GroundPosition(object):
 
     def __init__(self, name: str, coor: Tuple[float, float]) -> None:
         """Define instance variables."""
+
         self.name = name
         self.coor = coor
         self.radius = self._radius(coor)
@@ -78,6 +79,7 @@ class GroundPosition(object):
 
     def __str__(self) -> str:
         """Defines GroundPosition information string."""
+
         title = 'Celest.GoundPosition Object\n'
         name = f'Name: {self.name}\t'
         coor = f'Coordinates: {self.coor}\t'
@@ -86,7 +88,7 @@ class GroundPosition(object):
         return title + name + coor + radius
 
     def _radius(self, obsCoor: Tuple[float, float]) -> float:
-        """Instantiates radius attribute.
+        """Instantiates `radius` attribute.
 
         This method uses the World Geodetic System, WGS84, to calculate the
         Earth's radius at the given coordinates.
@@ -100,7 +102,7 @@ class GroundPosition(object):
         Returns
         -------
         float
-            The Earths radius at obsCoor given in km.
+            The Earths radius at `obsCoor` given in km.
 
         Notes
         -----
@@ -111,6 +113,7 @@ class GroundPosition(object):
 
         where :math:`\phi` is the observers lattitude.
         """
+
         phi = np.radians(obsCoor[0])
 
         # Define WGS84 Parameters.
@@ -123,7 +126,7 @@ class GroundPosition(object):
         return np.sqrt(numerator / denominator)
 
     def _ECEF(self, obsCoor: Tuple[float, float], radius: float) -> np.array:
-        """Instantiates ECEFpos attribute.
+        """Instantiates `ECEFpos` attribute.
 
         Converts the ground positions geographical coordinates and radius into
         the ECEF cartesian reference frame.
@@ -139,9 +142,10 @@ class GroundPosition(object):
         Returns
         -------
         np.array
-            Array of shape (3,) representing the GroundPosition location in the
-            ECEF cartesian frame.
+            Array of shape (3,) representing the `GroundPosition` location in
+            the ECEF cartesian frame.
         """
+
         if obsCoor[1] < 0:
             theta = np.radians(360 + obsCoor[1])
         else:

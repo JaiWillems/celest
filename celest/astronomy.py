@@ -15,7 +15,7 @@ from jplephem.spk import SPK
 class CelestialObject(object):
     """Determine ECI positions of various celestial objects.
 
-    The CelestialObject class allows one to gain the ECI position data of
+    The `CelestialObject` class allows one to gain the ECI position data of
     various celestial objects using JPL's de421 ephemeris.
 
     Attributes
