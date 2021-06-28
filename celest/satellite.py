@@ -123,7 +123,7 @@ class Satellite(object):
                     self.times[i] = julian.to_jd(datetime.strptime(
                         timeData[i], "%Y-%m-%d %H:%M:%S"))
 
-    def position_data(self, posData: np.array, type: str) -> None:
+    def position_data(self, posData: np.array, type: str, factor: int=0, timeData: np.array=None, jul: bool=False, julOffset: float=0) -> None:
         """Instantiate orbital position data.
 
         Parameters
@@ -132,9 +132,19 @@ class Satellite(object):
             If `type="ECI"` or `type="ECEF", input will be an array of shape
             (n,3) with columns of X, Y, Z position data. If `type="GEO"`, input
             can be of shape (n, 2) with columns of latitude, longitude data or
-            of shape (n, 3) with the last column being a radius component.
+            of shape (n, 3) with the last column being a radius component. Note
+            that angular data must be passed in as decimal degrees.
         type : {"GEO", "ECI", "ECEF"}
             Specifies posData as either "GEO", "ECI" or "ECEF".
+        factor : int, optional
+            Interpolate the inputted data by the factor `factor`.
+        timeData : np.array
+            Array of shape (n,) containing time data.
+        jul : bool, optional
+            Indicates the input times are Julian dates if True or UTC datetime
+            strings if False.
+        julOffset : float, optional
+            Offset to be added to the inputed Julian dates.
 
         Notes
         -----
@@ -145,6 +155,9 @@ class Satellite(object):
         will be filled with the Earths radius at the corresponding lattitude,
         longitude position.
 
+        To interpolate the position data upon input, the `timeData` attribute
+        must be instantiated or passed in as a parameter.
+
         Examples
         --------
         >>> finch = Satellite()
@@ -152,15 +165,30 @@ class Satellite(object):
         ...                    [2.73e+03, 2.08e+03, -6.02e+03]])
         >>> finch.position_data(posData=ECIvec, type="ECI")
         """
+        if type(self.timeData) == type(None) and type(timeData) != type(None):
+            self.time_data(timeData=timeData, jul=jul, julOffset=julOffset)
+    
+        if type == "GEO" and posData.shape[1] == 2:
+            radius = self._WGS84_radius(posData[:, 0])
+            posData = np.concatenate((posData, radius), axis=1)
+
+        if factor > 0:
+            times = self.timeData
+            timesP = np.linspace(min(times), max(times), factor * times.shape[0])
+            self.time_data(timeData=timesP)
+            newData = np.zeros((factor * self.length, 3))
+            for i in range(3):
+                func = interp1d(times, posData[:, i])
+                newData[:, i] = func(self.timeData)
+        else:
+            newData = timeData
+
         if type == "GEO":
-            if posData.shape[1] == 2:
-                radius = self._WGS84_radius(posData[:, 0])
-                posData = np.concatenate((posData, radius), axis=1)
-            self.GEOdata = posData
+            self.GEOdata = newData
         elif type == "ECI":
-            self.ECIdata = posData
+            self.ECIdata = newData
         elif type == "ECEF":
-            self.ECEFdata = posData
+            self.ECEFdata = newData
 
     def ERA(self, timeData: np.array=None, **kwargs:
             Union[bool, float]) -> np.array:
@@ -239,7 +267,7 @@ class Satellite(object):
         lat = 90 - theta
         lon = phi
         lon[np.where(lon < 180)[0]] = phi[np.where(lon < 180)[0]] + 360
-        lon[np.where(lon > 180)[0]] = phi[np.where(lon > 180)[0]] - 360
+        lon[np.where(lon >= 180)[0]] = phi[np.where(lon >= 180)[0]] - 360
 
         # Fomulate output array.
         lat = lat.reshape(-1, 1)
@@ -271,7 +299,7 @@ class Satellite(object):
         # Convert geographical to spherical.
         theta = geoPos[:, 1]
         negLon = np.where(theta < 0)
-        posLon = np.where(theta > 0)
+        posLon = np.where(theta >= 0)
         theta[negLon] = np.radians(theta[negLon] + 360)
         theta[posLon] = np.radians(theta[posLon])
         phi = np.radians(90 - geoPos[:, 0])
@@ -469,7 +497,7 @@ class Satellite(object):
 
     def horizontal(self, groundPos: GroundPosition, posData: np.array=None,
                    timeData: np.array=None, **kwargs:
-                   Union[bool, float]) -> np.array:
+                   Union[bool, float]) -> Tuple[np.array, np.array]:
         """Instantiate GroundPositions .alt and .az attributes.
 
         This method takes in a GroundPosition object and instantiates its .alt
@@ -492,7 +520,7 @@ class Satellite(object):
 
         Returns
         -------
-        tuple
+        Tuple
             The altitude/azimuth data is returned in a tuple where both the
             altitude and azimuth are arrays of shape (n,).
 
@@ -1076,6 +1104,75 @@ class Satellite(object):
             altitudeP = altitudeInterp(timesP)
 
         return altitudeP, times
+    
+    def _GEO_to_sexagesimal(self) -> np.array:
+        """Present geographical coordinates in sexagesimal format.
+
+        This method takes geographical coordinates in decimal degrees and km
+        and returns strings for each coordinate following the ISO 6709:2008
+        sexagesimal format.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing sexagesimal angles as strings.
+        """
+        lat = self.GEOdata[:, 0]
+        long = self.GEOdata[:, 1]
+        alt = self.GEOdata[:, 2]
+        length = self.GEOdata.shape[0]
+        sexagesimalAng = np.empty((length, 3), dtype="<U32")
+        for i in range(length):
+            num = lat[i]
+            sign = "N" if num >= 0 else "S"
+            degrees = str(int(abs(num) - num % 1)).zfill(2)
+            minutes = str(int(60 * (num % 1) - (60 * (num % 1)) % 1)).zfill(2)
+            seconds = "{:.3f}".format(60 * ((60 * (num % 1)) % 1)).zfill(5)
+            degree_symbol = u"\u00B0"
+            minute_symbol = u"\u2032"
+            second_symbol = u"\u2033"
+            sexagesimalAng[i][0] = f"{degrees}{degree_symbol}{minutes}{minute_symbol}{seconds}{second_symbol}{sign}"
+
+            num = long[i]
+            sign = "E" if num >= 0 else "W"
+            degrees = str(int(abs(num) - num % 1)).zfill(2)
+            minutes = str(int(60 * (num % 1) - (60 * (num % 1)) % 1)).zfill(2)
+            seconds = "{:.3f}".format(60 * ((60 * (num % 1)) % 1)).zfill(5)
+            degree_symbol = u"\u00B0"
+            minute_symbol = u"\u2032"
+            second_symbol = u"\u2033"
+            sexagesimalAng[i][1] = f"{degrees}{degree_symbol}{minutes}{minute_symbol}{seconds}{second_symbol}{sign}"
+
+            sexagesimalAng[i][2] = f"{alt[i]:.3f}km"
+
+        return sexagesimalAng
+    
+    def _deg_to_sexagesimal(self, angles: np.array) -> np.array:
+        """Convert decimal angles into sexagesimal angles.
+
+        Parameters
+        ----------
+        angles : np.array
+            Array of shape (n,) containing float angles.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing sexagesimal angles as strings.
+        """
+        length = angles.shape[0]
+        sexagesimalAng = np.empty((length,), dtype="<U32")
+        for i in range(length):
+            num = angles[i]
+            sign = "+" if num >= 0 else "-"
+            degrees = str(int(abs(num) - num % 1)).zfill(2)
+            minutes = str(int(60 * (num % 1) - (60 * (num % 1)) % 1)).zfill(2)
+            seconds = "{:.3f}".format(60 * ((60 * (num % 1)) % 1)).zfill(5)
+            degree_symbol = u"\u00B0"
+            minute_symbol = u"\u2032"
+            second_symbol = u"\u2033"
+            sexagesimalAng[i] = f"{sign}{degrees}{degree_symbol}{minutes}{minute_symbol}{seconds}{second_symbol}"
+        return sexagesimalAng
 
     def save_data(self, fileName: str, delimiter: str) -> None:
         """Save satellite data to local directory.
