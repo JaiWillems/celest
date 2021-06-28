@@ -6,12 +6,9 @@ store, and schedule Earth-satellite encounters.
 
 
 import numpy as np
-from scipy.interpolate import interp1d
 import pandas as pd
-import pkg_resources
 import julian
 from datetime import datetime
-from jplephem.spk import SPK
 from typing import Tuple
 from celest.satellite import Satellite
 from celest.groundposition import GroundPosition
