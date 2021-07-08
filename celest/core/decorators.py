@@ -2,7 +2,7 @@
 
 
 def set_module(module):
-    """Specify a class or functions module."""
+    """Override the module of a class or function."""
 
     def decorator(func):
 
