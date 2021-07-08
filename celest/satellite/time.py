@@ -15,14 +15,7 @@ class Time(object):
                  int=0) -> None:
 
         self._equation_of_time = None
-        self._true_hour_angle = None
-        self._mean_hour_angle = None
-        self._true_solar_time = None
-        self._mean_solar_time = None
-        self._UT0 = None
         self._UT1 = None
-        self._LMST = None
-        self._LAST = None
         self._GMST = None
         self._GAST = None
 
@@ -56,11 +49,11 @@ class Time(object):
 
         .. math:: EoT = 9.87\sin(2B) - 7.53\cos(B) - 1.5\sin(B)
 
-        where :math:`B = \frac{360}{365}(d - 81)` and :math:`b` is the number
+        where :math:`B = \\frac{360}{365}(d - 81)` and :math:`b` is the number
         of days since the start of the year.
         """
 
-        if type(self._equation_of_time) is not None:
+        if type(self._equation_of_time) != type(None):
             if kwargs:
                 return self.interp(self._equation_of_time)
             else:
@@ -99,12 +92,6 @@ class Time(object):
             degrees.
         """
 
-        if type(self._true_hour_angle) != type(None):
-            if kwargs:
-                return self.interp(self._true_hour_angle)
-            else:
-                return self._true_hour_angle
-
         theta = np.radians(longitude)
 
         sun_position = Sun().position(self).ITRS(self)
@@ -130,8 +117,6 @@ class Time(object):
 
         HRA[pos_ind] = -HRA[pos_ind]
 
-        self._true_hour_angle = HRA
-
         if kwargs:
             HRA = self.interp(HRA, **kwargs)
 
@@ -155,14 +140,10 @@ class Time(object):
             degrees.
         """
 
-        if type(self._true_hour_angle) == type(None):
-            self.true_hour_angle(longitude)
-
         if type(self._equation_of_time) == type(None):
             self.equation_of_time()
 
-        HRA = self._true_hour_angle - self._equation_of_time
-        self._mean_hour_angle = HRA
+        HRA = self.true_hour_angle(longitude) - self._equation_of_time
 
         if kwargs:
             HRA = self.interp(HRA, **kwargs)
@@ -186,18 +167,16 @@ class Time(object):
             Array of shape (n,) containing true solar time in decimal hours.
         """
 
-        if type(self._true_hour_angle) == type(None):
-            self._true_hour_angle = self.true_hour_angle(longitude=longitude)
-
-        hour_angle = self._true_hour_angle
+        hour_angle = self.true_hour_angle(longitude)
+        TST = (hour_angle / 15 + 12) % 24
 
         if kwargs:
-            hour_angle = self.interp(hour_angle, **kwargs)
+            TST = self.interp(TST, **kwargs)
 
-        return (hour_angle / 15 + 12) % 24
+        return TST
 
     def mean_solar_time(self, longitude: np.array, **kwargs) -> np.array:
-        """Get the true solar time.
+        """Get the mean solar time.
 
         Parameters
         ----------
@@ -213,20 +192,18 @@ class Time(object):
             Array of shape (n,) containing mean solar time in decimal hours.
         """
 
-        if type(self._mean_hour_angle) == type(None):
-            self._mean_hour_angle = self.mean_hour_angle(longitude=longitude)
-
-        hour_angle = self._mean_hour_angle
+        hour_angle = self.mean_hour_angle(longitude)
+        MST = (hour_angle / 15 + 12) % 24
 
         if kwargs:
-            hour_angle = self.interp(hour_angle, **kwargs)
+            MST = self.interp(MST, **kwargs)
 
-        return (hour_angle / 15 + 12) % 24
+        return MST
 
     def UT0(self, longitude: np.array, **kwargs) -> np.array:
         pass
 
-    def UT1(self, longitude: np.array, **kwargs) -> np.array:
+    def UT1(self, **kwargs) -> np.array:
         pass
 
     def datetime_UTC(self, **kwargs) -> np.array:
@@ -249,9 +226,11 @@ class Time(object):
         else:
             jul_data = self.julian
 
-        jul_data = julian.from_jd(jul_data)
+        datetime = np.zeros((jul_data.size,))
+        for i, time in enumerate(jul_data):
+            datetime[i] = julian.from_jd(time)
 
-        return jul_data
+        return datetime
 
     def LMST(self, longitude: np.array, **kwargs) -> np.array:
         pass
