@@ -1,3 +1,5 @@
+"""
+"""
 
 
 from celest.core.decorators import set_module
@@ -10,9 +12,13 @@ import julian
 
 @set_module('celest.satellite')
 class Time(object):
+    """
+    """
 
     def __init__(self, julian: Union[float, np.array], offset: float=0, factor:
                  int=0) -> None:
+        """
+        """
 
         self._equation_of_time = None
         self._UT1 = None
@@ -106,12 +112,12 @@ class Time(object):
         denom = np.linalg.norm(norm_a, axis=1) * np.linalg.norm(norm_b, axis=1)
         HRA = np.degrees(np.arccos(na_dot_nb / denom))
 
-        sun_dot_nb = np.diag(np.matmul(sun_position, norm_b.T))
+        sun_dot_nb = np.sum(sun_position * norm_b, axis=1)
         denom = np.linalg.norm(norm_b, axis=1) ** 2
         scale_arr = np.repeat((sun_dot_nb / denom).reshape((-1, 1)), 3, axis=1)
         proj_v4_on_nb = scale_arr * norm_b
 
-        test = np.diag(np.matmul(proj_v4_on_nb, norm_b.T))
+        test = np.sum(proj_v4_on_nb * norm_b, axis=1)
 
         pos_ind = np.where(test >= 0)[0]
 
@@ -176,7 +182,7 @@ class Time(object):
         return TST
 
     def mean_solar_time(self, longitude: np.array, **kwargs) -> np.array:
-        """Get the mean solar time.
+        """Get the mean solar time (same as LMT).
 
         Parameters
         ----------
@@ -199,12 +205,54 @@ class Time(object):
             MST = self.interp(MST, **kwargs)
 
         return MST
+    
+    def _alpha_mean_sun(self) -> np.array:
+        """Get the right ascension of the mean sun position.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing the right ascension of the mean sun
+            in decimal degrees.
+        """
+
+        d_U = np.abs(self.julian - 2451545)
+        t_U = d_U / 36525
+        alpha = 67310.54841 + 8640184.812866 * t_U + 0.093104 * t_U ** 2 - 0.0000062 * t_U ** 3
+
+        return alpha / 3600
 
     def UT0(self, longitude: np.array, **kwargs) -> np.array:
         pass
 
     def UT1(self, **kwargs) -> np.array:
-        pass
+        """Get the universal time (same as GMT).
+
+        Parameters
+        ----------
+        kwargs : dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing universal time in decimal hours.
+        """
+
+        if type(self._UT1) != type(None):
+            if kwargs:
+                return self.interp(self._UT1, **kwargs)
+            else:
+                return self._UT1
+
+        hour_angle = self.mean_hour_angle(0)
+        UT1 = (hour_angle / 15 + 12) % 24
+
+        if kwargs:
+            UT1 = self.interp(UT1, **kwargs)
+
+        return UT1
 
     def datetime_UTC(self, **kwargs) -> np.array:
         """Get `datetime.datetime` UTC strings
@@ -233,13 +281,67 @@ class Time(object):
         return datetime
 
     def LMST(self, longitude: np.array, **kwargs) -> np.array:
-        pass
+        """Get local mean sidereal time.
+
+        Parameters
+        ----------
+        longitude : np.array
+            Array of shape (n,) containing longitude in decimal degrees.
+        kwargs : dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing local mean sideral time in decimal
+            hours.
+        """
+
+        hour_angle = self._mean_hour_angle(longitude) / 15
+        alpha = self._alpha_mean_sun()
+
+        LMST = hour_angle + alpha
+
+        if kwargs:
+            LMST = self.interp(LMST, **kwargs)
+        
+        return LMST
 
     def LAST(self, longitude: np.array, **kwargs) -> np.array:
         pass
 
     def GMST(self, **kwargs) -> np.array:
-        pass
+        """Get Greenwhich mean sidereal time.
+
+        Parameters
+        ----------
+        kwargs : dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing greenwhich mean sideral time in
+            decimal hours.
+        """
+
+        if type(self._GMST) != type(None):
+            if kwargs:
+                return self.interp(self._GMST, **kwargs)
+            else:
+                return self._GMST
+        
+        hour_angle = self._mean_hour_angle(0) / 15
+        alpha = self._alpha_mean_sun()
+
+        GMST = hour_angle + alpha
+
+        if kwargs:
+            GMST = self.interp(GMST, **kwargs)
+        
+        return GMST
 
     def GAST(self, **kwargs) -> np.array:
         pass
