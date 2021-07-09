@@ -2,6 +2,7 @@
 """
 
 
+from datetime import time
 from celest.core.decorators import set_module
 from celest.satellite import Time, Interpolation
 from celest.encounter import GroundPosition
@@ -24,10 +25,7 @@ class Coordinate(object):
         self._GCRS = None
         self._ITRS = None
         self._CIRS = None
-        self._horizontal = None
-        self._off_nadir = None
         self._altitude = None
-        self._distance = None
         self._equatorial = None
         self._ecliptic = None
         self._galactic = None
@@ -150,7 +148,39 @@ class Coordinate(object):
         return altitude
     
     def distance(self, groundPos: GroundPosition, **kwargs) -> np.array:
-        pass
+        """Get distance to a ground location.
+
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            `GroundPosition` object instantiated as per its documentation.
+        kwargs : dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing time varying distances between to a
+            ground location.
+        """
+
+        if type(self._ITRS) == type(None):
+            self.ITRS()
+
+        ITRSdata = self._ITRS
+        groundGEO = np.repeat(np.array(list(groundPos.coor)), self.length, axis=0)
+        position = Coordinate(basePos=groundGEO, type="GEO", timeData=self.time)
+        groundITRS = np.repeat(position.ITRS, self.length)
+
+        # Find LOS vector norm.
+        LOSvec = ITRSdata - groundITRS
+        distances = np.linalg.norm(LOSvec, axis=1)
+
+        if kwargs:
+            distances = self.interp(distances, **kwargs)
+
+        return distances
     
     def equatorial(self, **kwargs) -> np.array:
         pass
