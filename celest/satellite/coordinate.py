@@ -64,6 +64,43 @@ class Coordinate(object):
     
     def off_nadir(self, groundPos: GroundPosition, **kwargs) -> np.array:
         pass
+
+    def _WGS84_radius(self, lattitude: np.array) -> np.array:
+        """Calculate the Earth's radius using WGS84.
+
+        Parameters
+        ----------
+        latitude : np.array
+            Array of shape (n,) representing the lattitude of a ground
+            location.
+
+        Returns
+        -------
+        np.array
+            Earth's radius at each row in `lattitude` using WGS84.
+
+        Notes
+        -----
+        The Earth can be modeled as an ellipsoid given by the following
+        equation:
+
+        .. math:: r = \sqrt{\\frac{(6378.14)^2(6356.75)^2}{(6378.14)^2\sin{\phi}^2+(6356.75)^2\cos{\phi}^2}}
+
+        where :math:`\phi` is the observers lattitude.
+        """
+
+        # Get lattidue parameter.
+        phi = np.radians(lattitude)
+
+        # Define WGS84 Parameters.
+        semiMajor = 6378.137**2
+        semiMinor = 6356.752314245**2
+
+        numerator = semiMajor * semiMinor
+        denominator = semiMajor * np.sin(phi)**2 + semiMinor * np.cos(phi)**2
+        radius = np.sqrt(numerator / denominator)
+
+        return radius
     
     def altitude(self, **kwargs) -> np.array:
         """Get the altitude above Earth's surface.
