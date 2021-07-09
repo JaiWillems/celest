@@ -1,34 +1,70 @@
-"""
-"""
+"""Time representations."""
 
 
 from celest.core.decorators import set_module
 from celest.satellite import Interpolation
 from celest.astronomy import Sun
-from typing import Union
 import numpy as np
 import julian
 
 
 @set_module('celest.satellite')
 class Time(object):
-    """
+    """Time representations.
+    
+    The `Time` class allows a user to input an array of times in julian days
+    and convert to various time representations.
+
+    Parameters
+    ----------
+    julian : np.array
+        Array of shape (n,) containing julian dates.
+    offset : float, optional
+        Offset to convert inputted julian dates to the J2000 epoch.
+    factor : int, optional
+        Interpolate the inputted time data by `factor` times.
+    
+    Attributes
+    ----------
+    julian : np.array
+        Array of julian dates interpolated by `factor` times.
+    length : int
+        Length of the `julian` attribute.
+    
+    Methods
+    -------
+    equation_of_time(**kwargs)
+        Calculate the equation of time.
+    true_hour_angle(longitude, **kwargs)
+        Calculate the true hour angle.
+    mean_hour_angle(longitude, **kwargs)
+        Calculate the mean hour angle.
+    true_solar_time(longitude, **kwargs)
+        Calculate the true solar time.
+    mean_solar_time(longitude, **kwargs)
+        Calculate the mean solar time.
+    UT1(**kwargs)
+        Calculate the universal time.
+    datetime_UTC(**kwargs)
+        Convert the julian times to datetime strings in UTC.
+    LMST(longitude, **kwargs)
+        Calculate the local mean sidereal time.
+    GMST(longitude, **kwargs)
+        Calculate the Greenwhich mean sidereal time.
     """
 
-    def __init__(self, julian: Union[float, np.array], offset: float=0, factor:
-                 int=0) -> None:
-        """
-        """
+    def __init__(self, julian: np.array, offset: float=0, factor: int=0) -> None:
+        """Initialize attributes."""
 
         self._equation_of_time = None
         self._UT1 = None
         self._GMST = None
         self._GAST = None
 
-        self.interp = Interpolation()
+        self._interp = Interpolation()
 
         if factor > 0:
-            julian = self.interp(data=julian, factor=factor)
+            julian = self._interp(data=julian, factor=factor)
 
         self.julian = julian + offset
         self.length = self.julian.size
@@ -61,7 +97,7 @@ class Time(object):
 
         if type(self._equation_of_time) != type(None):
             if kwargs:
-                return self.interp(self._equation_of_time)
+                return self._interp(self._equation_of_time)
             else:
                 return self._equation_of_time
 
@@ -76,7 +112,7 @@ class Time(object):
         self._equation_of_time = EoT
 
         if kwargs:
-            EoT = self.interp(EoT, **kwargs)
+            EoT = self._interp(EoT, **kwargs)
 
         return EoT
 
@@ -96,6 +132,10 @@ class Time(object):
         np.array
             Array of shape (n,) containing true solar hour angles in decimal
             degrees.
+        
+        See Also
+        --------
+        mean_hour_angle
         """
 
         theta = np.radians(longitude)
@@ -124,7 +164,7 @@ class Time(object):
         HRA[pos_ind] = -HRA[pos_ind]
 
         if kwargs:
-            HRA = self.interp(HRA, **kwargs)
+            HRA = self._interp(HRA, **kwargs)
 
         return HRA
 
@@ -144,6 +184,20 @@ class Time(object):
         np.array
             Array of shape (n,) containing mean solar hour angles in decimal
             degrees.
+        
+        See Also
+        --------
+        true_hour_angle
+
+        Notes
+        -----
+        The mean solar hour angle, :math:`h_{mSun}`, is found from the
+        following:
+
+        .. math:: h_{mSun} = h_{Sun} - Eq.T.
+
+        where :math:`h_{Sun}` is the true solar hour angle at the observer's
+        longitude and :math:`Eq.T.` is the equation of time.
         """
 
         if type(self._equation_of_time) == type(None):
@@ -152,12 +206,12 @@ class Time(object):
         HRA = self.true_hour_angle(longitude) - self._equation_of_time
 
         if kwargs:
-            HRA = self.interp(HRA, **kwargs)
+            HRA = self._interp(HRA, **kwargs)
 
         return HRA
 
     def true_solar_time(self, longitude: np.array, **kwargs) -> np.array:
-        """Get the true solar time.
+        """Get the true solar time (TTs).
 
         Parameters
         ----------
@@ -171,18 +225,31 @@ class Time(object):
         -------
         np.array
             Array of shape (n,) containing true solar time in decimal hours.
+        
+        See Also
+        --------
+        mean_solar_time
+
+        Notes
+        -----
+        The true solar time, :math:`TTs`, is given by
+
+        .. math:: TTs = h_{Sun} + 12^h
+
+        where :math:`h_{Sun}` is the true solar hour angle of the at the
+        observer's longitude.
         """
 
         hour_angle = self.true_hour_angle(longitude)
         TST = (hour_angle / 15 + 12) % 24
 
         if kwargs:
-            TST = self.interp(TST, **kwargs)
+            TST = self._interp(TST, **kwargs)
 
         return TST
 
     def mean_solar_time(self, longitude: np.array, **kwargs) -> np.array:
-        """Get the mean solar time (same as LMT).
+        """Get the mean solar time (MTs, same as LMT).
 
         Parameters
         ----------
@@ -196,13 +263,26 @@ class Time(object):
         -------
         np.array
             Array of shape (n,) containing mean solar time in decimal hours.
+        
+        See Also
+        --------
+        true_solar_time
+
+        Notes
+        -----
+        The mean solar time, :math:`MTs`, is given by
+
+        .. math:: MTs = h_{mSun} + 12^h
+
+        where :math:`h_{mSun}` is the mean solar hour angle of the at the
+        observer's longitude.
         """
 
         hour_angle = self.mean_hour_angle(longitude)
         MST = (hour_angle / 15 + 12) % 24
 
         if kwargs:
-            MST = self.interp(MST, **kwargs)
+            MST = self._interp(MST, **kwargs)
 
         return MST
     
@@ -238,11 +318,20 @@ class Time(object):
         -------
         np.array
             Array of shape (n,) containing universal time in decimal hours.
+
+        Notes
+        -----
+        The universal time, :math:`UTs` is given by
+
+        .. math:: UTs = h_{mSun}(Gr) + 12^h
+
+        where :math:`h_{mSun}(Gr)` is the mean solar hour angle at
+        `longitude=0`.
         """
 
         if type(self._UT1) != type(None):
             if kwargs:
-                return self.interp(self._UT1, **kwargs)
+                return self._interp(self._UT1, **kwargs)
             else:
                 return self._UT1
 
@@ -250,7 +339,7 @@ class Time(object):
         UT1 = (hour_angle / 15 + 12) % 24
 
         if kwargs:
-            UT1 = self.interp(UT1, **kwargs)
+            UT1 = self._interp(UT1, **kwargs)
 
         return UT1
 
@@ -270,7 +359,7 @@ class Time(object):
         """
 
         if kwargs:
-            jul_data = self.interp(self.julian, **kwargs)
+            jul_data = self._interp(self.julian, **kwargs)
         else:
             jul_data = self.julian
 
@@ -296,6 +385,15 @@ class Time(object):
         np.array
             Array of shape (n,) containing local mean sideral time in decimal
             hours.
+        
+        Notes
+        -----
+        The local mean sidereal time can be calculated from the mean solar
+        hour angle at the observer's longitude, :math:`h_{mSun}`, and the
+        right ascension of the mean Sun position, :math:`\\alpha_{mSun}`, as
+        follows:
+
+        .. math:: LMST = h_{mSun} + \\alpha_{mSun}
         """
 
         hour_angle = self._mean_hour_angle(longitude) / 15
@@ -304,7 +402,7 @@ class Time(object):
         LMST = hour_angle + alpha
 
         if kwargs:
-            LMST = self.interp(LMST, **kwargs)
+            LMST = self._interp(LMST, **kwargs)
         
         return LMST
 
@@ -325,11 +423,19 @@ class Time(object):
         np.array
             Array of shape (n,) containing greenwhich mean sideral time in
             decimal hours.
+        
+        Notes
+        -----
+        The Greenwhich mean sidereal time can be calculated from the mean
+        solar hour angle at `longitude=0`, :math:`h_{mSun}(Gr)`, and the right
+        ascension of the mean Sun position, :math:`\\alpha_{mSun}`, as follows:
+
+        .. math:: GMST = h_{mSun}(Gr) + \\alpha_{mSun}
         """
 
         if type(self._GMST) != type(None):
             if kwargs:
-                return self.interp(self._GMST, **kwargs)
+                return self._interp(self._GMST, **kwargs)
             else:
                 return self._GMST
         
@@ -339,7 +445,7 @@ class Time(object):
         GMST = hour_angle + alpha
 
         if kwargs:
-            GMST = self.interp(GMST, **kwargs)
+            GMST = self._interp(GMST, **kwargs)
         
         return GMST
 
