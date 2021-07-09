@@ -39,6 +39,23 @@ class Coordinate(object):
     def _set_base_position(self, basePos: np.array, type: str, factor: int) -> None:
         pass
     
+    def _GEO_to_ITRS(self, geoPos: np.array) -> np.array:
+        """Convert from geographical to ECEF coordinates.
+
+        Parameters
+        ----------
+        geoPos : np.array
+            Array of shape (n, 3) containing Geodetic coordinates for a
+            location with columns of lattitude, longitude, radius given in
+            decimal degrees and km.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n, 3) containing the X, Y, Z ITRS position data.
+        """
+        pass
+
     def GEO(self, **kwargs) -> np.array:
         pass
     
@@ -61,7 +78,42 @@ class Coordinate(object):
         pass
     
     def off_nadir(self, groundPos: GroundPosition, **kwargs) -> np.array:
-        pass
+        """Get the off-nadir angle to the `GroundPosition`.
+
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            `GroundPosition` object instantiated as per its documentation.
+        kwargs : dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) with off-nadir angle data in decimal degrees.
+        """
+
+        if type(self._ITRS) == type(None):
+            self.ITRS()
+
+
+        obsCoor = groundPos.coor
+        radius = groundPos.radius
+
+        geoPos = self._geo_to_ITRS(np.array(list(obsCoor).append(radius)))[0]
+
+        xyzObs = np.repeat(geoPos, self.length, 0)
+
+        ITRSvec = self._ITRS
+        xyzLOS = np.subtract(ITRSvec, xyzObs)
+
+        ang = self._get_ang(xyzLOS, ITRSvec)
+
+        if kwargs:
+            ang = self.interp(ang, **kwargs)
+
+        return ang
 
     def _WGS84_radius(self, lattitude: np.array) -> np.array:
         """Calculate the Earth's radius using WGS84.
