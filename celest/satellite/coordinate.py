@@ -6,6 +6,7 @@ from datetime import time
 from celest.core.decorators import set_module
 from celest.satellite import Time, Interpolation
 from celest.encounter import GroundPosition
+from typing import Dict, Any
 import numpy as np
 
 
@@ -56,28 +57,28 @@ class Coordinate(object):
         """
         pass
 
-    def GEO(self, **kwargs) -> np.array:
+    def GEO(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def ERA(self, **kwargs) -> np.array:
+    def ERA(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def ICRS(self, **kwargs) -> np.array:
+    def ICRS(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def GCRS(self, **kwargs) -> np.array:
+    def GCRS(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def ITRS(self, **kwargs) -> np.array:
+    def ITRS(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def CIRS(self, **kwargs) -> np.array:
+    def CIRS(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def horizontal(self, goundPos: GroundPosition, **kwargs) -> np.array:
+    def horizontal(self, goundPos: GroundPosition, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def off_nadir(self, groundPos: GroundPosition, **kwargs) -> np.array:
+    def off_nadir(self, groundPos: GroundPosition, **kwargs: Dict[str, Any]) -> np.array:
         """Get the off-nadir angle to the `GroundPosition`.
 
         Parameters
@@ -152,7 +153,7 @@ class Coordinate(object):
 
         return radius
     
-    def altitude(self, **kwargs) -> np.array:
+    def altitude(self, **kwargs: Dict[str, Any]) -> np.array:
         """Get the altitude above Earth's surface.
 
         Parameters
@@ -199,7 +200,7 @@ class Coordinate(object):
 
         return altitude
     
-    def distance(self, groundPos: GroundPosition, **kwargs) -> np.array:
+    def distance(self, groundPos: GroundPosition, **kwargs: Dict[str, Any]) -> np.array:
         """Get distance to a ground location.
 
         Parameters
@@ -234,16 +235,16 @@ class Coordinate(object):
 
         return distances
     
-    def equatorial(self, **kwargs) -> np.array:
+    def equatorial(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def ecliptic(self, **kwargs) -> np.array:
+    def ecliptic(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def galactic(self, **kwargs) -> np.array:
+    def galactic(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
-    def super_galactic(self, **kwargs) -> np.array:
+    def super_galactic(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
     
     def sexagesimal(self, angles: np.array) -> np.array:

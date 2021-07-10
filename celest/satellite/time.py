@@ -4,6 +4,7 @@
 from celest.core.decorators import set_module
 from celest.satellite import Interpolation
 from celest.astronomy import Sun
+from typing import Dict, Any
 import numpy as np
 import julian
 
@@ -69,7 +70,7 @@ class Time(object):
         self.julian = julian + offset
         self.length = self.julian.size
 
-    def equation_of_time(self, **kwargs) -> np.array:
+    def equation_of_time(self, **kwargs: Dict[str, Any]) -> np.array:
         """Calculate the equation of time.
 
         Parameters
@@ -116,7 +117,7 @@ class Time(object):
 
         return EoT
 
-    def true_hour_angle(self, longitude: np.array, **kwargs) -> np.array:
+    def true_hour_angle(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         """Calculate the solar hour angle using the true sun position.
 
         Parameters
@@ -168,7 +169,7 @@ class Time(object):
 
         return HRA
 
-    def mean_hour_angle(self, longitude: np.array, **kwargs) -> np.array:
+    def mean_hour_angle(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         """Calculate the hour angle of the mean solar position.
 
         Parameters
@@ -210,7 +211,7 @@ class Time(object):
 
         return HRA
 
-    def true_solar_time(self, longitude: np.array, **kwargs) -> np.array:
+    def true_solar_time(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         """Get the true solar time (TTs).
 
         Parameters
@@ -248,7 +249,7 @@ class Time(object):
 
         return TST
 
-    def mean_solar_time(self, longitude: np.array, **kwargs) -> np.array:
+    def mean_solar_time(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         """Get the mean solar time (MTs, same as LMT).
 
         Parameters
@@ -302,10 +303,10 @@ class Time(object):
 
         return alpha / 3600
 
-    def UT0(self, longitude: np.array, **kwargs) -> np.array:
+    def UT0(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         pass
 
-    def UT1(self, **kwargs) -> np.array:
+    def UT1(self, **kwargs: Dict[str, Any]) -> np.array:
         """Get the universal time (same as GMT).
 
         Parameters
@@ -344,7 +345,7 @@ class Time(object):
 
         return UT1
 
-    def datetime_UTC(self, **kwargs) -> np.array:
+    def datetime_UTC(self, **kwargs: Dict[str, Any]) -> np.array:
         """Get `datetime.datetime` UTC strings
 
         Parameters
@@ -370,7 +371,7 @@ class Time(object):
 
         return datetime
 
-    def LMST(self, longitude: np.array, **kwargs) -> np.array:
+    def LMST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         """Get local mean sidereal time.
 
         Parameters
@@ -407,10 +408,10 @@ class Time(object):
         
         return LMST
 
-    def LAST(self, longitude: np.array, **kwargs) -> np.array:
+    def LAST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         pass
 
-    def GMST(self, **kwargs) -> np.array:
+    def GMST(self, **kwargs: Dict[str, Any]) -> np.array:
         """Get Greenwhich mean sidereal time.
 
         Parameters
@@ -451,5 +452,5 @@ class Time(object):
         
         return GMST
 
-    def GAST(self, **kwargs) -> np.array:
+    def GAST(self, **kwargs: Dict[str, Any]) -> np.array:
         pass
