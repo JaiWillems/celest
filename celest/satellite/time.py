@@ -35,30 +35,34 @@ class Time(object):
     Methods
     -------
     equation_of_time(**kwargs)
-        Calculate the equation of time.
+        Calculate the Equation of Time.
     true_hour_angle(longitude, **kwargs)
         Calculate the true hour angle.
     mean_hour_angle(longitude, **kwargs)
         Calculate the mean hour angle.
     true_solar_time(longitude, **kwargs)
-        Calculate the true solar time.
+        Calculate the true tolar time.
     mean_solar_time(longitude, **kwargs)
         Calculate the mean solar time.
     UT1(**kwargs)
         Calculate the universal time.
     datetime_UTC(**kwargs)
-        Convert the julian times to datetime strings in UTC.
+        Convert the Julian times to `datetime` strings in UTC.
     LMST(longitude, **kwargs)
-        Calculate the local mean sidereal time.
+        Calculate the Local Mean Sidereal Time.
     GMST(longitude, **kwargs)
-        Calculate the Greenwhich mean sidereal time.
+        Calculate the Greenwhich Mean Sidereal Time.
+    GAST(longitude, **kwargs)
+        Calculate the Greenwhich Apparent Sidereal Time.
     """
 
     def __init__(self, julian: np.array, offset: float=0, factor: int=0) -> None:
         """Initialize attributes."""
 
         self._equation_of_time = None
+        self._alpha_mean_sun = None
         self._UT1 = None
+        self._equation_of_equinoxes = None
         self._GMST = None
         self._GAST = None
 
@@ -71,7 +75,7 @@ class Time(object):
         self.length = self.julian.size
 
     def equation_of_time(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Calculate the equation of time.
+        """Calculate the Equation of Time.
 
         Parameters
         ----------
@@ -82,13 +86,13 @@ class Time(object):
         Returns
         -------
         np.array
-            Array of shape (n,) containing the equation of time in decimal
+            Array of shape (n,) containing the Equation of Time in decimal
             minutes.
 
         Notes
         -----
-        This method uses an empirical equation to approximate the equation of
-        time within an accuracy of 0.5 minutes.
+        This method uses an empirical equation to approximate the Equation of
+        Time within an accuracy of 0.5 minutes.
 
         .. math:: EoT = 9.87\sin(2B) - 7.53\cos(B) - 1.5\sin(B)
 
@@ -118,7 +122,7 @@ class Time(object):
         return EoT
 
     def true_hour_angle(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Calculate the solar hour angle using the true sun position.
+        """Calculate the hour angle using the true sun position.
 
         Parameters
         ----------
@@ -170,7 +174,7 @@ class Time(object):
         return HRA
 
     def mean_hour_angle(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Calculate the hour angle of the mean solar position.
+        """Calculate the hour angle of the mean sun position.
 
         Parameters
         ----------
@@ -287,7 +291,7 @@ class Time(object):
 
         return MST
     
-    def _alpha_mean_sun(self) -> np.array:
+    def alpha_mean_sun(self) -> np.array:
         """Get the right ascension of the mean sun position.
 
         Returns
@@ -299,9 +303,11 @@ class Time(object):
 
         d_U = np.abs(self.julian - 2451545)
         t_U = d_U / 36525
-        alpha = 67310.54841 + 8640184.812866 * t_U + 0.093104 * t_U ** 2 - 0.0000062 * t_U ** 3
+        alpha = (67310.54841 + 8640184.812866 * t_U + 0.093104 * t_U ** 2 - 0.0000062 * t_U ** 3) / 3600
 
-        return alpha / 3600
+        self._alpha_mean_sun = alpha
+
+        return alpha
 
     def UT0(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         pass
@@ -372,7 +378,7 @@ class Time(object):
         return datetime
 
     def LMST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Get local mean sidereal time.
+        """Get Local Mean Sidereal Time.
 
         Parameters
         ----------
@@ -385,12 +391,12 @@ class Time(object):
         Returns
         -------
         np.array
-            Array of shape (n,) containing local mean sideral time in decimal
+            Array of shape (n,) containing Local Mean Sideral Time in decimal
             hours.
         
         Notes
         -----
-        The local mean sidereal time can be calculated from the mean solar
+        The Local Mean Sidereal Time can be calculated from the mean solar
         hour angle at the observer's longitude, :math:`h_{mSun}`, and the
         right ascension of the mean Sun position, :math:`\\alpha_{mSun}`, as
         follows:
@@ -398,8 +404,11 @@ class Time(object):
         .. math:: LMST = h_{mSun} + \\alpha_{mSun}
         """
 
+        if type(self._alpha_mean_sun) == type(None):
+            self.alpha_mean_sun()
+
         hour_angle = self._mean_hour_angle(longitude) / 15
-        alpha = self._alpha_mean_sun()
+        alpha = self._alpha_mean_sun
 
         LMST = hour_angle + alpha
 
@@ -407,12 +416,9 @@ class Time(object):
             LMST = self._interp(LMST, **kwargs)
         
         return LMST
-
-    def LAST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        pass
-
+    
     def GMST(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Get Greenwhich mean sidereal time.
+        """Get Greenwhich Mean Sidereal Time.
 
         Parameters
         ----------
@@ -428,7 +434,7 @@ class Time(object):
         
         Notes
         -----
-        The Greenwhich mean sidereal time can be calculated from the mean
+        The Greenwhich Mean Sidereal Time can be calculated from the mean
         solar hour angle at `longitude=0`, :math:`h_{mSun}(Gr)`, and the right
         ascension of the mean Sun position, :math:`\\alpha_{mSun}`, as follows:
 
@@ -441,8 +447,11 @@ class Time(object):
             else:
                 return self._GMST
         
+        if type(self._alpha_mean_sun) == type(None):
+            self.alpha_mean_sun()
+        
         hour_angle = self._mean_hour_angle(0) / 15
-        alpha = self._alpha_mean_sun()
+        alpha = self._alpha_mean_sun
 
         GMST = hour_angle + alpha
         self._GMST = GMST
@@ -451,6 +460,46 @@ class Time(object):
             GMST = self._interp(GMST, **kwargs)
         
         return GMST
+    
+    def equation_of_equinoxes(self) -> np.array:
+        pass
+
+    def LAST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
+        pass
 
     def GAST(self, **kwargs: Dict[str, Any]) -> np.array:
-        pass
+        """Compute Greenwhich Apparent Sidereal Time.
+
+        Parameters
+        ----------
+        kwargs : dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing Greenwhich Apparent Sideral Time in
+            decimal hours.
+        """
+
+        if type(self._UT1) == type(None):
+            self.UT1()
+
+        if type(self._equation_of_equinoxes) == type(None):
+            self.equation_of_equinoxes()
+        
+        if type(self._alpha_mean_sun) == type(None):
+            self.alpha_mean_sun()
+
+        UT1 = self._UT1
+        alpha_sun = self._alpha_mean_sun
+        EoE = self._equation_of_equinoxes
+        
+        GAST = UT1 - 12 + alpha_sun + EoE
+        self._GAST = GAST
+
+        if kwargs:
+            GAST = self._interp(GAST, **kwargs)
+        
+        return GAST
