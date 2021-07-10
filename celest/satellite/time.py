@@ -337,6 +337,7 @@ class Time(object):
 
         hour_angle = self.mean_hour_angle(0)
         UT1 = (hour_angle / 15 + 12) % 24
+        self._UT1 = UT1
 
         if kwargs:
             UT1 = self._interp(UT1, **kwargs)
@@ -443,6 +444,7 @@ class Time(object):
         alpha = self._alpha_mean_sun()
 
         GMST = hour_angle + alpha
+        self._GMST = GMST
 
         if kwargs:
             GMST = self._interp(GMST, **kwargs)

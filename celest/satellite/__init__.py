@@ -1,3 +1,4 @@
 from .satellite import Satellite
-from .interpolation import Interpolation
+from ._interpolation import Interpolation
 from .time import Time
+from .coordinate import Coordinate

@@ -1,6 +1,9 @@
+"""General interpolation functionality."""
+
+
 from celest.core.decorators import set_module
-import numpy as np
 from scipy.interpolate import interp1d
+import numpy as np
 
 
 @set_module('celest.satellite')
