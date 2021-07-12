@@ -55,6 +55,8 @@ class EncounterSpec(object):
         Array of shape (n,3) of window start, end, and elapsed seconds data.
     length : int
         Length, n, of data attributes.
+    encounter_indices : np.array
+        Array containing arrays of encounter indices.
     """
     
     def __init__(self, name: str, encType: Literal["I", "T"], ang: float,
@@ -69,6 +71,8 @@ class EncounterSpec(object):
         self.maxAng = maxAng
         self.solar = solar
         self.windows = None
+        self.length = None
+        self.encounter_indices = None
     
     def __str__(self) -> str:
         """Defines EncounterSpec informaiton string."""

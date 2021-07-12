@@ -133,3 +133,5 @@ class GroundPosition(object):
 
         encounter_object = EncounterSpec(name, encType, ang, angType, maxAng, solar)
         self.encounters[name] = encounter_object
+
+
