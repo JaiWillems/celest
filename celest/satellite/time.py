@@ -1,4 +1,8 @@
-"""Time representations."""
+"""Time representations.
+
+The time module contains the `Time` class to allow users to input an array of
+times in julian days and convert to various time representations.
+"""
 
 
 from celest.core.decorators import set_module
@@ -35,32 +39,32 @@ class Time(object):
     Methods
     -------
     equation_of_time(**kwargs)
-        Calculate the Equation of Time.
+        Return the Equation of Time.
     true_hour_angle(longitude, **kwargs)
-        Calculate the true hour angle.
+        Return the hour angle using the true sun position.
     mean_hour_angle(longitude, **kwargs)
-        Calculate the mean hour angle.
+        Return the hour angle of the mean sun position.
     true_solar_time(longitude, **kwargs)
-        Calculate the true tolar time.
+        Return the true solar time (TTs).
     mean_solar_time(longitude, **kwargs)
-        Calculate the mean solar time.
+        Return the mean solar time (MTs, same as LMT).
+    sun_right_ascension()
+        Return the right ascension of the mean sun position.
     UT1(**kwargs)
-        Calculate the universal time.
+        Return the universal time (same as GMT).
     datetime_UTC(**kwargs)
-        Convert the Julian times to `datetime` strings in UTC.
+        Return `datetime.datetime` UTC strings.
     LMST(longitude, **kwargs)
-        Calculate the Local Mean Sidereal Time.
+        Return Local Mean Sidereal Time.
     GMST(longitude, **kwargs)
-        Calculate the Greenwhich Mean Sidereal Time.
-    GAST(longitude, **kwargs)
-        Calculate the Greenwhich Apparent Sidereal Time.
+        Return Greenwhich Mean Sidereal Time.
     """
 
     def __init__(self, julian: np.array, offset: float=0, factor: int=0) -> None:
         """Initialize attributes."""
 
         self._equation_of_time = None
-        self._alpha_mean_sun = None
+        self._sun_right_ascension = None
         self._UT1 = None
         self._equation_of_equinoxes = None
         self._GMST = None
@@ -75,7 +79,7 @@ class Time(object):
         self.length = self.julian.size
 
     def equation_of_time(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Calculate the Equation of Time.
+        """Return the Equation of Time.
 
         Parameters
         ----------
@@ -122,7 +126,7 @@ class Time(object):
         return EoT
 
     def true_hour_angle(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Calculate the hour angle using the true sun position.
+        """Return the hour angle using the true sun position.
 
         Parameters
         ----------
@@ -174,7 +178,7 @@ class Time(object):
         return HRA
 
     def mean_hour_angle(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Calculate the hour angle of the mean sun position.
+        """Return the hour angle of the mean sun position.
 
         Parameters
         ----------
@@ -216,7 +220,7 @@ class Time(object):
         return HRA
 
     def true_solar_time(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Get the true solar time (TTs).
+        """Return the true solar time (TTs).
 
         Parameters
         ----------
@@ -254,7 +258,7 @@ class Time(object):
         return TST
 
     def mean_solar_time(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Get the mean solar time (MTs, same as LMT).
+        """Return the mean solar time (MTs, same as LMT).
 
         Parameters
         ----------
@@ -291,8 +295,8 @@ class Time(object):
 
         return MST
     
-    def alpha_mean_sun(self) -> np.array:
-        """Get the right ascension of the mean sun position.
+    def sun_right_ascension(self) -> np.array:
+        """Return the right ascension of the mean sun position.
 
         Returns
         -------
@@ -305,15 +309,12 @@ class Time(object):
         t_U = d_U / 36525
         alpha = (67310.54841 + 8640184.812866 * t_U + 0.093104 * t_U ** 2 - 0.0000062 * t_U ** 3) / 3600
 
-        self._alpha_mean_sun = alpha
+        self._sun_right_ascension = alpha
 
         return alpha
 
-    def UT0(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        pass
-
     def UT1(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Get the universal time (same as GMT).
+        """Return the universal time (same as GMT).
 
         Parameters
         ----------
@@ -352,7 +353,7 @@ class Time(object):
         return UT1
 
     def datetime_UTC(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Get `datetime.datetime` UTC strings
+        """Return `datetime.datetime` UTC strings.
 
         Parameters
         ----------
@@ -378,7 +379,7 @@ class Time(object):
         return datetime
 
     def LMST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        """Get Local Mean Sidereal Time.
+        """Return Local Mean Sidereal Time.
 
         Parameters
         ----------
@@ -404,11 +405,11 @@ class Time(object):
         .. math:: LMST = h_{mSun} + \\alpha_{mSun}
         """
 
-        if type(self._alpha_mean_sun) == type(None):
-            self.alpha_mean_sun()
+        if type(self._sun_right_ascension) == type(None):
+            self.sun_right_ascension()
 
         hour_angle = self._mean_hour_angle(longitude) / 15
-        alpha = self._alpha_mean_sun
+        alpha = self._sun_right_ascension
 
         LMST = hour_angle + alpha
 
@@ -418,7 +419,7 @@ class Time(object):
         return LMST
     
     def GMST(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Get Greenwhich Mean Sidereal Time.
+        """Return Greenwhich Mean Sidereal Time.
 
         Parameters
         ----------
@@ -447,11 +448,11 @@ class Time(object):
             else:
                 return self._GMST
         
-        if type(self._alpha_mean_sun) == type(None):
-            self.alpha_mean_sun()
+        if type(self._sun_right_ascension) == type(None):
+            self.sun_right_ascension()
         
         hour_angle = self._mean_hour_angle(0) / 15
-        alpha = self._alpha_mean_sun
+        alpha = self._sun_right_ascension
 
         GMST = hour_angle + alpha
         self._GMST = GMST
@@ -460,46 +461,3 @@ class Time(object):
             GMST = self._interp(GMST, **kwargs)
         
         return GMST
-    
-    def equation_of_equinoxes(self) -> np.array:
-        pass
-
-    def LAST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
-        pass
-
-    def GAST(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Compute Greenwhich Apparent Sidereal Time.
-
-        Parameters
-        ----------
-        kwargs : dict, optional
-            Optional keyword arguments passed into the `Interpolation()`
-            callable.
-
-        Returns
-        -------
-        np.array
-            Array of shape (n,) containing Greenwhich Apparent Sideral Time in
-            decimal hours.
-        """
-
-        if type(self._UT1) == type(None):
-            self.UT1()
-
-        if type(self._equation_of_equinoxes) == type(None):
-            self.equation_of_equinoxes()
-        
-        if type(self._alpha_mean_sun) == type(None):
-            self.alpha_mean_sun()
-
-        UT1 = self._UT1
-        alpha_sun = self._alpha_mean_sun
-        EoE = self._equation_of_equinoxes
-        
-        GAST = UT1 - 12 + alpha_sun + EoE
-        self._GAST = GAST
-
-        if kwargs:
-            GAST = self._interp(GAST, **kwargs)
-        
-        return GAST
