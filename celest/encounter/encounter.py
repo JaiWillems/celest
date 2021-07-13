@@ -23,10 +23,33 @@ class Encounter(object):
     The `Encounter` class extends off the information stored in `Satellite` and
     `GroundPosition` objects to compute, store, and schedule Earth-Satellite
     encounters.
+
+    Parameters
+    ----------
+    satellite : Satellite
+        Satellite of interest for ground based encounters.
+
+    Attributes
+    ----------
+    gs : dict
+        Dictionary of `GroundPosition` objects with encounters initialized.
+
+    Methods
+    -------
+    add_position(groundPos)
+        Add a grouns position for encounter calculations.
+    windows(interp=True, factor=5, buffer=10, dt=1)
+        Initialize the `GroundPosition.encounters.windows` attribute.
+    window_encounter_indices(buffer=0)
+        Initialize `GroundPosition.encounters.encounter_indices` attributes.
+    encounter_stats()
+        Return encounter statistics.
+    save_windows(fileName, delimiter)
+        Save window data to local directory.
     """
     
     def __init__(self, satellite: Satellite) -> None:
-        """Initialize attrobites."""
+        """Initialize attribites."""
 
         self._satellite = satellite
         self._sun_position = None
@@ -34,6 +57,11 @@ class Encounter(object):
     
     def add_position(self, groundPos: GroundPosition) -> None:
         """Add a ground position for encounter calculations.
+
+        This function adds `groundPos` to the `gs` attribute dictionary where
+        the key is `groundPos.name` and the key is `groundPos` itself. The
+        `gs` attribute will be sifted through when determining encounter
+        windows.
 
         Parameters
         ----------
@@ -44,10 +72,11 @@ class Encounter(object):
         self.gs[groundPos.name, groundPos]
 
     def windows(self, interp: bool=True, factor: int=5, buffer: float=10, dt: int=1) -> None:
-        """Instantiates windows attribute of EncounterSpec objects.
+        """Initialize the `GroundPosition.encounters.windows` attribute.
 
-        This method determines determines the windows for each EncounterSpec
-        object specified in the encounters attribute.
+        This function iterates through all `gs` values (`GroundPosition`
+        objects`) and the values in their `encounters` attributes
+        (`EncounterSpec` objects) and initializes the `windows` attribute.
 
         Parameters
         ----------
@@ -137,11 +166,14 @@ class Encounter(object):
                 enc.windows = windowTimes
                 enc.length = windowTimes.shape[0]
     
-    def schedule(self) -> np.array:
-        pass
-    
     def window_encounter_indices(self, buffer: float=0) -> None:
-        """instantiate all encounter `encounter_indices` attributes.
+        """Initialize `GroundPosition.encounters.encounter_indices` attributes.
+
+        The encounter indices are the indices of position and time data that
+        are involved within an encounter. This function iterates through all
+        `gs` values (`GroundPosition` objects`) and the values in their
+        `encounters` attributes (`EncounterSpec` objects) and initializes the
+        `encounter_indices` attribute.
         
         Parameters
         ----------
@@ -176,23 +208,15 @@ class Encounter(object):
                 regions = np.split(regions, np.where(np.diff(regions) != 1)[0] + 1)
 
                 self.gs[pos].encounters[enc].encounter_indices = regions
-
-    def schedule_encounter_indices(self) -> np.array:
-        pass
-    
-    def window_pointing_profiles(self) -> np.array:
-        pass
-
-    def schedule_pointing_profiles(self) -> np.array:
-        pass
     
     def encounter_stats(self) -> pd.DataFrame:
-        """Generate encounter statistics.
+        """Return encounter statistics.
 
-        This method produces various statistics for each encounterSpec object
-        Statistics include the raw number of viable passes, cumulative
-        encounter time, daily average counts, and the daily average time for
-        each encounter and encounter type.
+        This method produces various statistics for each `EncounterSpec` object
+        located within each `GroundPosition.encounters` dictionary of the
+        `Encounter.gs` attribute. Statistics include the raw number of viable
+        passes, cumulative encounter time, daily average counts, and the daily
+        average time for each encounter and encounter type.
 
         Returns
         -------
@@ -309,6 +333,3 @@ class Encounter(object):
 
         df = pd.DataFrame(data)
         df.to_csv(fileName, sep=delimiter)
-    
-    def save_schedule(self, fileName: str, delimiter: Literal[",", "\t"]) -> None:
-        pass

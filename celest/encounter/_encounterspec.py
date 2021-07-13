@@ -1,4 +1,8 @@
-"""Localize encounter information."""
+"""Localize encounter information.
+
+The _encounterspec module contains the `EncounterSpec` object to localize
+encounter information specific to a `GroundPosition` Object.
+"""
 
 
 from celest.core.decorators import set_module
@@ -75,7 +79,7 @@ class EncounterSpec(object):
         self.encounter_indices = None
     
     def __str__(self) -> str:
-        """Defines EncounterSpec informaiton string."""
+        """Define `EncounterSpec` informaiton string."""
 
         data = np.array([self.name, self.type, self.ang, self.angType,
                          self.maxAng, self.solar])

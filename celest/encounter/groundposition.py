@@ -1,4 +1,9 @@
-"""Localize ground position information."""
+"""Localize ground position information.
+
+The groundposition module contains the `GoundPosition` class to store ground
+location data and is used in the `Encounter` class' to manage the
+groundposition-encounter relationship.
+"""
 
 
 from celest.core.decorators import set_module
@@ -12,8 +17,7 @@ class GroundPosition(object):
     """Localize ground position based information.
 
     The `GoundPosition` class stores ground location data and is used in the
-    `Satellite` and `Encounter` class' to manage the groundposition-encounter
-    relationship.
+    `Encounter` class' to manage the groundposition-encounter relationship.
 
     Parameters
     ----------
@@ -32,8 +36,6 @@ class GroundPosition(object):
         degrees in the (latitude, longitude) format.
     radius : float
         Radius of earths surface at the given coordinates using WGS84.
-    position : Coordinate
-        Coordinate object containing the ground position coordinates.
     encounters : dict
         Dictionary where the keys are the encounter names and the values are
         the corresponding `EncounterSpec` objects.
@@ -41,17 +43,19 @@ class GroundPosition(object):
     Methods
     -------
     _radius(obsCoor)
-        Used to instantiate the radius attribute.
+        Return Earth's radius at `obsCoor`.
     add_encounter(name, encType, ang, angType, maxAng, solar)
-        Define a ground position specific encounter.
+        Define an encounter for the `GroundPosition` object.
 
     Examples
     --------
     >>> toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
+    >>> toronto.add_encounter(name="CYYZ IMG", encType="I", ang=30,
+    ...                       angType="N", maxAng=True, solar=1)
     """
     
     def __init__(self, name: str, coor: Tuple[float, float]) -> None:
-        """Initialize instance variables."""
+        """Initialize attributes."""
 
         self.name = name
         self.coor = coor
@@ -59,7 +63,7 @@ class GroundPosition(object):
         self.encounters = {}
     
     def __str__(self) -> str:
-        """Defines GroundPosition information string."""
+        """Define `GroundPosition` information string."""
 
         title = 'Celest.GoundPosition Object\n'
         name = f'Name: {self.name}\t'
@@ -69,7 +73,7 @@ class GroundPosition(object):
         return title + name + coor + radius
     
     def _radius(self, obsCoor: Tuple[float, float]) -> float:
-        """Instantiates radius attribute.
+        """Return Earth's radius at `obsCoor`.
 
         This method uses the World Geodetic System, WGS84, to calculate the
         Earth's radius at the given coordinates.
@@ -109,7 +113,7 @@ class GroundPosition(object):
     def add_encounter(self, name: str, encType: Literal["I", "T"], ang: float,
                       angType: Literal["A", "N"], maxAng: bool, solar:
                       Literal[-1, 0, 1]=0) -> None:
-        """Define an encounter for the current ground position.
+        """Define an encounter for the `GroundPosition` object.
 
         Parameters
         ----------
