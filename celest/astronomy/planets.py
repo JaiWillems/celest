@@ -29,66 +29,257 @@ class Planets(CelestialObject):
     Methods
     -------
     mercury_position(timeData)
-        Get Mercury's position in the ECI frame.
+        Return Mercury's position.
     venus_position(timeData)
-        Get Venus' position in the ECI frame.
+        Return Venus' position.
     mars_position(timeData)
-        Get Mars' position in the ECI frame.
+        Return Mars' position.
     jupiter_position(timeData)
-        Get Jupiter's position in the ECI frame.
+        Return Jupiter's barycenter position.
     saturn_position(timeData)
-        Get Saturn's position in the ECI frame.
+        Return Saturn's barycenter position.
     uranus_position(timeData)
-        Get Uranus' position in the ECI frame.
-    neptunr_position(timeData)
-        Get Neptune's position in the ECI frame.
+        Return Uranus's barycenter position.
+    neptune_position(timeData)
+        Return Neptune's barycenter position.
     pluto_position(timeData)
-        Get Pluto's position in the ECI frame.
+        Return Pluto's barycenter position.
+    rise(object, timeData, groundPos)
+        Return the rise times for a celestial object.
+    set(object, timeData, groundPos)
+        Return the set times for a celestial object.
+    peak(object, timeData, groundPos)
+        Return the peak times for a celestial object.
     """
 
     def __init__(self):
+        """Initialize attributes."""
         super().__init__()
-
-        self._mercury_pos_data = None
-        self._venus_pos_data = None
-        self._mars_pos_data = None
-        self._jupiter_pos_data = None
-        self._saturn_pos_data = None
-        self._uranus_pos_data = None
-        self._neptun_pos_data = None
-        self._pluto_pos_data = None
-
-        pass
     
     def mercury_position(self, timeData: Time) -> Coordinate:
-        return self._find_position(bcCode=1, pCode=199)
+        """Return Mercury's position.
+
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_position(timeData, bcCode=1, pCode=199)
     
     def venus_position(self, timeData: Time) -> Coordinate:
-        return self._find_position(bcCode=2, pCode=299)
+        """Return Venus' position.
+
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_position(timeData, bcCode=2, pCode=299)
     
     def mars_position(self, timeData: Time) -> Coordinate:
-        return self._find_position(bcCode=4, pCode=499)
+        """Return Mars' position.
+
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_position(timeData, bcCode=4, pCode=499)
     
     def jupiter_position(self, timeData: Time) -> Coordinate:
-        return self._find_bc_position(bcCode=5)
+        """Return Jupiter's barycenter position.
+
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_bc_position(timeData, bcCode=5)
     
     def saturn_position(self, timeData: Time) -> Coordinate:
-        return self._find_bc_position(bcCode=6)
+        """Return Saturn's barycenter position.
+
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_bc_position(timeData, bcCode=6)
     
     def uranus_position(self, timeData: Time) -> Coordinate:
-        return self._find_bc_position(bcCode=7)
+        """Return Uranus's barycenter position.
+
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_bc_position(timeData, bcCode=7)
     
-    def neptun_position(self, timeData: Time) -> Coordinate:
-        return self._find_bc_position(bcCode=8)
+    def neptune_position(self, timeData: Time) -> Coordinate:
+        """Return Neptune's barycenter position.
+
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_bc_position(timeData, bcCode=8)
     
     def pluto_position(self, timeData: Time) -> Coordinate:
-        return self._find_bc_position(bcCode=9)
+        """Return Pluto's barycenter position.
 
-    def rise(self, object: str, groundPos: GroundPosition) -> np.array:
+        Parameters
+        ----------
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+
+        return self._find_bc_position(timeData, bcCode=9)
+    
+    def _get_pos_data(self, object: int, timeData: Time) -> np.array:
+        """Return the object's position data.
+
+        Parameters
+        ----------
+        object : int
+            The planets are defined by an integer identifier given by the
+            following mapping: (0) Mercury, (1) Venus, (2) Mars, (3) Jupiter,
+            (4) Saturn, (5) Uranus, (6) Neptune, and (7) Pluto.
+        timeData : Time
+            Find the positions corresponding to the imputted times.
+        
+        Returns
+        -------
+        Coordinate
+            Position of Mercury at times, `timeData`, as a `Coordinate` object.
+        """
+        
+        planet = {
+            0: self.mercury_position,
+            1: self.venus_position,
+            2: self.mars_position,
+            3: self.jupiter_position,
+            4: self.saturn_position,
+            5: self.uranus_position,
+            6: self.neptune_position,
+            7: self.pluto_position
+        }
+
+        return planet[object](timeData)
+
+    def rise(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
+        """Return the rise times for a celestial object.
+
+        Parameters
+        ----------
+        object : int
+            The planets are defined by an integer identifier given by the
+            following mapping: (0) Mercury, (1) Venus, (2) Mars, (3) Jupiter,
+            (4) Saturn, (5) Uranus, (6) Neptune, and (7) Pluto.
+        timeData : Time
+            Find the rise times encapsulated within the imputted times.
+        groundPos : GroundPosition
+            Position of the observer.
+        
+        Returns
+        -------
+        Time
+            `Time` object containing rise times.
+        """
+
+        posData = self._get_pos_data(self, object, timeData)
         return self._find_rise(posData, timeData, groundPos)
     
-    def set(self, object: str, groundPos: GroundPosition) -> np.array:
+    def set(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
+        """Return the set times for a celestial object.
+
+        Parameters
+        ----------
+        object : int
+            The planets are defined by an integer identifier given by the
+            following mapping: (0) Mercury, (1) Venus, (2) Mars, (3) Jupiter,
+            (4) Saturn, (5) Uranus, (6) Neptune, and (7) Pluto.
+        timeData : Time
+            Find the set times encapsulated within the imputted times.
+        groundPos : GroundPosition
+            Position of the observer.
+        
+        Returns
+        -------
+        Time
+            `Time` object containing set times.
+        """
+
+        posData = self._get_pos_data(self, object, timeData)
         return self._find_set(posData, timeData, groundPos)
     
-    def peak(self, object: str, groundPos: GroundPosition) -> np.array:
+    def peak(self, object: int, timeData: Time, groundPos: GroundPosition) -> np.array:
+        """Return the peak times for a celestial object.
+
+        Parameters
+        ----------
+        object : int
+            The planets are defined by an integer identifier given by the
+            following mapping: (0) Mercury, (1) Venus, (2) Mars, (3) Jupiter,
+            (4) Saturn, (5) Uranus, (6) Neptune, and (7) Pluto.
+        timeData : Time
+            Find the peak times encapsulated within the imputted times.
+        groundPos : GroundPosition
+            Position of the observer.
+        
+        Returns
+        -------
+        Time
+            `Time` object containing peak times.
+        """
+
+        posData = self._get_pos_data(self, object, timeData)
         return self._find_peak(posData, timeData, groundPos)
