@@ -1,4 +1,9 @@
-"""
+"""Determine celestial object positional information.
+
+The astronomy module contains the `CelestialObject` class to access positional
+information. All time and position representations are returned as `Time` and
+`Coordinate` objects to provide the flexibility of different data
+representations.
 """
 
 
@@ -12,7 +17,10 @@ import numpy as np
 
 @set_module('celest.astronomy')
 class CelestialObject(object):
-    """
+    """Celestial object positional information class.
+
+    The `CelestialObject` class is a parent class for the `Planets`, `Sun`, and
+    `Moon` classes to provide certain general positional information.
     """
 
     def __init__(self) -> None:
@@ -45,7 +53,7 @@ class CelestialObject(object):
         eb2e = self.kernal[3, 399].compute(timeData.julian)
         e2pos = (ssb2posb + posb2pos - ssb2eb - eb2e).T
 
-        return Coordinate(basePos=e2pos, type="GCRS", timeData=timeData)
+        return Coordinate(basePos=e2pos, type="ECI", timeData=timeData)
     
     def _find_bc_position(self, timeData: Time, bcCode: int) -> Coordinate:
         """Calculate celestial object barycenter position.
@@ -68,13 +76,95 @@ class CelestialObject(object):
         eb2e = self.kernal[3, 399].compute(timeData.julian)
         e2pos = (ssb2posb - ssb2eb - eb2e).T
 
-        return Coordinate(basePos=e2pos, type="GCRS", timeData=timeData)
+        return Coordinate(basePos=e2pos, type="ECI", timeData=timeData)
     
-    def _find_rise(self, posData: Coordinate, timeData: Time, groundPos: GroundPosition) -> np.array:
-        pass
+    def _find_rise(self, posData: Coordinate, groundPos: GroundPosition) -> Time:
+        """Return rise times.
+
+        Return the rise times of an object with the time evolving position,
+        `posData`, from the ground location, `groundPos`. All rise times
+        encapsulated in the given position data will be returned.
+
+        Parameters
+        ----------
+        posData : Coordinate
+            Position data of the rising object.
+        groundPos : GroundPosition
+            Ground location of observer.
+        
+        Returns
+        -------
+        Time
+            The objects rise times as seen from `groundPos`.
+        """
+
+        alt = posData.horizontal(groundPos)[:, 0]
+        time = posData.time.julian
+
+        ind_1 = np.where(np.diff(np.sign(alt)) == 2)[0]
+        ind_2 = ind_1 + 1
+
+        m = (time[ind_2] - time[ind_1]) / (alt[ind_2] - alt[ind_1])
+        rise_times = - m * alt[ind_1] + time[ind_1]
+
+        return Time(rise_times)
+
     
-    def _find_set(self, posData: Coordinate, timeData: Time, groundPos: GroundPosition) -> np.array:
-        pass
+    def _find_set(self, posData: Coordinate, groundPos: GroundPosition) -> Time:
+        """Return set times.
+
+        Return the set times of an object with the time evolving position,
+        `posData`, from the ground location, `groundPos`. All set times
+        encapsulated in the given position data will be returned.
+
+        Parameters
+        ----------
+        posData : Coordinate
+            Position data of the rising object.
+        groundPos : GroundPosition
+            Ground location of observer.
+        
+        Returns
+        -------
+        Time
+            The objects set times as seen from `groundPos`.
+        """
+
+        alt = posData.horizontal(groundPos)[:, 0]
+        time = posData.time.julian
+
+        ind_1 = np.where(np.diff(np.sign(alt)) == -2)[0]
+        ind_2 = ind_1 + 1
+
+        m = (time[ind_2] - time[ind_1]) / (alt[ind_2] - alt[ind_1])
+        set_times = - m * alt[ind_1] + time[ind_1]
+
+        return Time(set_times)
     
-    def _find_peak(self, posData: Coordinate, timeData: Time, groundPos: GroundPosition) -> np.array:
-        pass
+    def _find_peak(self, posData: Coordinate, groundPos: GroundPosition) -> Time:
+        """Return peak times.
+
+        Return the peak times of an object with the time evolving position,
+        `posData`, from the ground location, `groundPos`. All peak times
+        encapsulated in the given position data will be returned.
+
+        Parameters
+        ----------
+        posData : Coordinate
+            Position data of the orbiting object.
+        groundPos : GroundPosition
+            Ground location of observer.
+        
+        Returns
+        -------
+        Time
+            The objects peak times as seen from `groundPos`.
+        """
+        alt = posData.horizontal(groundPos, factor=5)[:, 0]
+        time = posData.time.julian
+
+        ind = np.where(np.diff(np.sign(np.diff(alt))) == -2)[0] + 1
+
+        peak_times = time[ind]
+
+        return Time(peak_times)
