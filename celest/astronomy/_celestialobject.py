@@ -11,6 +11,7 @@ from celest.core.decorators import set_module
 from celest.satellite import Coordinate, Time
 from celest.encounter import GroundPosition
 from jplephem import SPK
+from typing import Literal
 import pkg_resources
 import numpy as np
 
@@ -78,6 +79,41 @@ class CelestialObject(object):
 
         return Coordinate(basePos=e2pos, type="ECI", timeData=timeData)
     
+    def _find_altitude_zeros(self, posData: Coordinate, groundPos: GroundPosition, slope: Literal[-1, 1], shift: int=0) -> Time:
+        """Find times corresponding to zero altitude angles.
+
+        Parameters
+        ----------
+        posData : Coordinate
+            Position data of a space bound body.
+        groundPos : GroundPosition
+            Observer position.
+        slope : {-1, 1}
+            If `slope=-1`, find the zero positions where the derivative is
+            negative. If `slope=1`, find the zero positions where the
+            derivative is positive.
+        shift : int, optional
+            The inputted shift, is the desired "zero" position to find the
+            altitude zeros, essentially acting as the vertical shift of the
+            altitude vs time plot.
+        
+        Returns
+        -------
+        Time
+            The times coresponding to zero altitude angles.
+        """
+
+        alt = posData.horizontal(groundPos)[:, 0] - shift
+        time = posData.time.julian
+
+        ind_1 = np.where(np.diff(np.sign(alt)) == slope * 2)[0]
+        ind_2 = ind_1 + 1
+
+        m = (time[ind_2] - time[ind_1]) / (alt[ind_2] - alt[ind_1])
+        rise_times = - m * alt[ind_1] + time[ind_1]
+
+        return Time(rise_times)
+    
     def _find_rise(self, posData: Coordinate, groundPos: GroundPosition) -> Time:
         """Return rise times.
 
@@ -98,17 +134,7 @@ class CelestialObject(object):
             The objects rise times as seen from `groundPos`.
         """
 
-        alt = posData.horizontal(groundPos)[:, 0]
-        time = posData.time.julian
-
-        ind_1 = np.where(np.diff(np.sign(alt)) == 2)[0]
-        ind_2 = ind_1 + 1
-
-        m = (time[ind_2] - time[ind_1]) / (alt[ind_2] - alt[ind_1])
-        rise_times = - m * alt[ind_1] + time[ind_1]
-
-        return Time(rise_times)
-
+        return self._find_altitude_zeros(posData, groundPos, slope=1)
     
     def _find_set(self, posData: Coordinate, groundPos: GroundPosition) -> Time:
         """Return set times.
@@ -130,16 +156,7 @@ class CelestialObject(object):
             The objects set times as seen from `groundPos`.
         """
 
-        alt = posData.horizontal(groundPos)[:, 0]
-        time = posData.time.julian
-
-        ind_1 = np.where(np.diff(np.sign(alt)) == -2)[0]
-        ind_2 = ind_1 + 1
-
-        m = (time[ind_2] - time[ind_1]) / (alt[ind_2] - alt[ind_1])
-        set_times = - m * alt[ind_1] + time[ind_1]
-
-        return Time(set_times)
+        return self._find_altitude_zeros(posData, groundPos, slope=-1)
     
     def _find_peak(self, posData: Coordinate, groundPos: GroundPosition) -> Time:
         """Return peak times.

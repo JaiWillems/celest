@@ -10,7 +10,6 @@ from celest.core.decorators import set_module
 from celest.satellite import Coordinate, Time
 from celest.astronomy import CelestialObject
 from celest.encounter import GroundPosition
-import numpy as np
 
 
 @set_module('celest.astronomy')
@@ -54,7 +53,7 @@ class Moon(CelestialObject):
 
         return Coordinate(basePos=e2m, type="ECI", timeData=timeData)
     
-    def rise(self, timeData: Time, groundPos: GroundPosition) -> np.array:
+    def rise(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the lunar rise times.
 
         Parameters
@@ -71,9 +70,9 @@ class Moon(CelestialObject):
         """
         
         posData = self.position(timeData)
-        return self._find_rise(posData, timeData, groundPos)
+        return self._find_rise(posData, groundPos)
     
-    def set(self, timeData: Time, groundPos: GroundPosition) -> np.array:
+    def set(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the lunar set times.
 
         Parameters
@@ -90,9 +89,9 @@ class Moon(CelestialObject):
         """
         
         posData = self.position(timeData)
-        return self._find_set(posData, timeData, groundPos)
+        return self._find_set(posData, groundPos)
     
-    def peak(self, timeData: Time, groundPos: GroundPosition) -> np.array:
+    def peak(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the lunar peak times.
 
         Parameters
@@ -109,4 +108,4 @@ class Moon(CelestialObject):
         """
         
         posData = self.position(timeData)
-        return self._find_peak(posData, timeData, groundPos)
+        return self._find_peak(posData, groundPos)

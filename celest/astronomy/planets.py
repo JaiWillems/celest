@@ -1,9 +1,9 @@
 """Determine the position of celestial objects.
 
-The astronomy module was created to allow easy access to positions of various
-celestial objects for all times from the present to 2050. It can be used
-with the `Satellite` class to provide an observer centric coordinate system
-such as the horizontal system for easy navigation of the night sky.
+The astronomy module contains the `Planets` class to access position
+information for local planets. All time and positional representations are
+returned as `Time` and `Coordinate` objects to provide the flexibility of
+different data representaitons.
 """
 
 
@@ -54,6 +54,7 @@ class Planets(CelestialObject):
 
     def __init__(self):
         """Initialize attributes."""
+
         super().__init__()
     
     def mercury_position(self, timeData: Time) -> Coordinate:
@@ -236,7 +237,7 @@ class Planets(CelestialObject):
         """
 
         posData = self._get_pos_data(self, object, timeData)
-        return self._find_rise(posData, timeData, groundPos)
+        return self._find_rise(posData, groundPos)
     
     def set(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the set times for a celestial object.
@@ -259,9 +260,9 @@ class Planets(CelestialObject):
         """
 
         posData = self._get_pos_data(self, object, timeData)
-        return self._find_set(posData, timeData, groundPos)
+        return self._find_set(posData, groundPos)
     
-    def peak(self, object: int, timeData: Time, groundPos: GroundPosition) -> np.array:
+    def peak(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the peak times for a celestial object.
 
         Parameters
@@ -282,4 +283,4 @@ class Planets(CelestialObject):
         """
 
         posData = self._get_pos_data(self, object, timeData)
-        return self._find_peak(posData, timeData, groundPos)
+        return self._find_peak(posData, groundPos)
