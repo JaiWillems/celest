@@ -82,7 +82,6 @@ class Sun(CelestialObject):
         """
 
         shift = {"C": -6, "N": -12, "A": -18}
-
         sunPos = self.position(timeData)
 
         return self._find_altitude_zeros(sunPos, groundPos, slope=1, shift=shift[type])

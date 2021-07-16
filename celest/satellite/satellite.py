@@ -8,8 +8,8 @@ planning.
 
 from celest.core.decorators import set_module
 from celest.satellite import Coordinate
-from typing import Literal
-import numpy as np
+from typing import List, Literal
+import pandas as pd
 
 
 @set_module('celest.satellite')
@@ -47,15 +47,54 @@ class Satellite(object):
     def __init__(self, coordinates: Coordinate) -> None:
         """Initialize attributes."""
 
-        self.time = Coordinate.timeData
-        self.position = Coordinate
+        self.time = coordinates.timeData
+        self.position = coordinates
     
-    def solar_power(self, pointProfiles: np.array=None) -> float:
-        pass
-    
-    def solar_radiation_pressure(self, pointProfiles: np.array=None) -> float:
-        pass
-    
-    def save_data(self, fileName: str, delimiter: Literal[",", "\t"]) -> None:
-        pass
+    def save_data(self, fileName: str, delimiter: Literal[",", "\t"], posTypes: List) -> None:
+        """Save satellite data to local directory.
 
+        Parameters
+        ----------
+        fileName : str
+            File name of the output file as wither a .txt or .csv file.
+        delimiter : str
+            String of length 1 representing the feild delimiter for the output
+            file.
+        posTypes : List
+            List containing the types of position data to store. Possible
+            list values include "GEO", "ECI", "ECEF", and "Altitude".
+
+        Notes
+        -----
+        It is recommended to use a tab delimiter for .txt files and comma
+        delimiters for .csv files. The method will return an error if the
+        fileName already exists in the current working directory.
+
+        Examples
+        --------
+        >>> posTypes = ["ECI", "ECEF"]
+        >>> finch.save_data(fileName="data.csv", delimiter=",", posTypes=posTypes)
+        """
+
+        data = {}
+        data["Time (julian)"] = pd.Series(self.time)
+        if "GEO" in posTypes:
+            GEOpos = self.position.GEO()
+            data["GEO.lat"] = pd.Series(GEOpos[:, 0])
+            data["GEO.lon"] = pd.Series(GEOpos[:, 1])
+            data["GEO.radius"] = pd.Series(GEOpos[:, 2])
+        if "ECI" in posTypes:
+            ECIpos = self.position.ECI()
+            data["ECI.X"] = pd.Series(ECIpos[:, 0])
+            data["ECI.y"] = pd.Series(ECIpos[:, 1])
+            data["ECI.z"] = pd.Series(ECIpos[:, 2])
+        if "ECEF" in posTypes:
+            ECEFpos = self.position.ECEF()
+            data["ECEF.X"] = pd.Series(ECEFpos[:, 0])
+            data["ECEF.y"] = pd.Series(ECEFpos[:, 1])
+            data["ECEF.z"] = pd.Series(ECEFpos[:, 2])
+        if "Altitude" in posTypes:
+            data["Altitude"] = pd.Series(self.position.altitude())
+
+        df = pd.DataFrame(data)
+        df.to_csv(fileName, sep=delimiter)

@@ -59,7 +59,7 @@ class Coordinate(object):
         Return the off-nadir angle to a ground location.
     altitude(**kwargs)
         Return the altitude above Earth's surface.
-    distance(**kwargs)
+    distance(groundPos, **kwargs)
         Return the distance to a ground location.
     sexagesimal(angles)
         Convert decimal angles into sexagesimal angles.

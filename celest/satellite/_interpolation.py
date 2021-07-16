@@ -62,7 +62,6 @@ class Interpolation(object):
 
         if type(indices) == type(None):
 
-            j_new = j * factor
             indep_new = np.linspace(0, j - 1, j * factor)
 
         else:
