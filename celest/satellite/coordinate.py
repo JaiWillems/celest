@@ -8,9 +8,9 @@ The class is also used for position inputs and outputs for various other
 
 
 from celest.core.decorators import set_module
-from celest.satellite import Time, Interpolation
 from celest.encounter import GroundPosition
-from typing import Dict, Any, Literal
+from celest.satellite import Interpolation, Time
+from typing import Any, Dict, Literal
 import numpy as np
 
 
@@ -86,14 +86,14 @@ class Coordinate(object):
         self.length = None
         self._set_base_position(basePos, type, factor)
     
-    def _set_base_position(self, basePos: np.array, type: Literal["GEO", "ECEF", "ECI"], factor: int) -> None:
+    def _set_base_position(self, basePos: np.array, type: Literal["ECEF", "ECI","GEO"], factor: int) -> None:
         """Initialize the base position.
 
         Parameters
         ----------
         basePos : np.array
             Array containing the inputted position data.
-        type : {"GEO", "ECEF", "ECI"}
+        type : {"ECEF", "ECI", "GEO"}
             String identifier of the type of inputted position data.
         factor : int
             Interpolation factor used to interpolate inputed data.

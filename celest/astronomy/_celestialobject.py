@@ -8,12 +8,12 @@ representations.
 
 
 from celest.core.decorators import set_module
-from celest.satellite import Coordinate, Time
 from celest.encounter import GroundPosition
+from celest.satellite import Coordinate, Time
 from jplephem import SPK
 from typing import Literal
-import pkg_resources
 import numpy as np
+import pkg_resources
 
 
 @set_module('celest.astronomy')

@@ -7,10 +7,10 @@ representaitons.
 """
 
 
-from celest.core.decorators import set_module
-from celest.satellite import Coordinate, Time
 from celest.astronomy import CelestialObject
+from celest.core.decorators import set_module
 from celest.encounter import GroundPosition
+from celest.satellite import Coordinate, Time
 from typing import Literal
 
 
@@ -55,7 +55,7 @@ class Sun(CelestialObject):
         
         return self._find_bc_position(timeData, bcCode=10)
 
-    def dawn_times(self, timeData: Time, type: Literal["C", "N", "A"], groundPos: GroundPosition) -> Time:
+    def dawn_times(self, timeData: Time, type: Literal["A", "C", "N"], groundPos: GroundPosition) -> Time:
         """Return dawn times.
 
         Return the civil, nautical, or astonomical dawn times encapsulated
@@ -65,7 +65,7 @@ class Sun(CelestialObject):
         ----------
         timeData : Time
             Time data encapsulating the desired dawn times.
-        type : {"C", "N", "A"}
+        type : {"A", "C", "N"}
             String specifying the dawn times corresponding to civil, nautical,
             or astronomical dawn using "C", "N", and "A", respectively.
         groundPos : GroundPosition
@@ -86,7 +86,7 @@ class Sun(CelestialObject):
 
         return self._find_altitude_zeros(sunPos, groundPos, slope=1, shift=shift[type])
     
-    def dusk_times(self, timeData: Time, type: Literal["C", "N", "A"], groundPos: GroundPosition) -> Time:
+    def dusk_times(self, timeData: Time, type: Literal["A", "C", "N"], groundPos: GroundPosition) -> Time:
         """Return dusk times.
 
         Return the civil, nautical, or astonomical dusk times encapsulated
@@ -96,7 +96,7 @@ class Sun(CelestialObject):
         ----------
         timeData : Time
             Time data encapsulating the desired dusk times.
-        type : {"C", "N", "A"}
+        type : {"A", "C", "N"}
             String specifying the dusk times corresponding to civil, nautical,
             or astronomical dusk using "C", "N", and "A", respectively.
         groundPos : GroundPosition

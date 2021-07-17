@@ -56,7 +56,7 @@ class EncounterSpec(object):
         Defines sunlight constraint where -1 gets windows at night, 0 gets
         windows at day or night, and 1 gets windows at day.
     windows : np.array
-        Array of shape (n,3) of window start, end, and elapsed seconds data.
+        Array of shape (n, 3) of window start, end, and elapsed seconds data.
     length : int
         Length, n, of data attributes.
     encounter_indices : np.array

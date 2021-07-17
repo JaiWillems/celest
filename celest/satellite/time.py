@@ -5,12 +5,12 @@ times in julian days and convert to various time representations.
 """
 
 
+from celest.astronomy import Sun
 from celest.core.decorators import set_module
 from celest.satellite import Interpolation
-from celest.astronomy import Sun
-from typing import Dict, Any
-import numpy as np
+from typing import Any, Dict
 import julian
+import numpy as np
 
 
 @set_module('celest.satellite')

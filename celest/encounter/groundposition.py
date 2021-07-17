@@ -8,7 +8,7 @@ groundposition-encounter relationship.
 
 from celest.core.decorators import set_module
 from celest.encounter import EncounterSpec
-from typing import Tuple, Literal
+from typing import Literal, Tuple
 import numpy as np
 
 

@@ -6,10 +6,10 @@ event information. All time and positional representations are returned as
 representaitons.
 """
 
-from celest.core.decorators import set_module
-from celest.satellite import Coordinate, Time
 from celest.astronomy import CelestialObject
+from celest.core.decorators import set_module
 from celest.encounter import GroundPosition
+from celest.satellite import Coordinate, Time
 
 
 @set_module('celest.astronomy')

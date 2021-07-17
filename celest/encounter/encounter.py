@@ -5,15 +5,15 @@ store, and schedule Earth-satellite encounters.
 """
 
 
-from celest.core.decorators import set_module
-from celest.satellite import Satellite
-from celest.encounter import GroundPosition
 from celest.astronomy import Sun
+from celest.core.decorators import set_module
+from celest.encounter import GroundPosition
+from celest.satellite import Satellite
 from datetime import datetime
 from typing import Literal
+import julian
 import numpy as np
 import pandas as pd
-import julian
 
 
 @set_module('celest.encounter')
@@ -286,7 +286,7 @@ class Encounter(object):
 
         return df
     
-    def save_windows(self, fileName: str, delimiter: Literal[",", "\t"]) -> None:
+    def save_windows(self, fileName: str, delimiter: Literal[",", "\\t"]) -> None:
         """Save window data to local directory.
 
         Parameters
@@ -333,3 +333,5 @@ class Encounter(object):
 
         df = pd.DataFrame(data)
         df.to_csv(fileName, sep=delimiter)
+
+        return df

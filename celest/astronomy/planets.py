@@ -7,10 +7,10 @@ different data representaitons.
 """
 
 
-from celest.core.decorators import set_module
-from celest.satellite import Coordinate, Time
 from celest.astronomy import CelestialObject
+from celest.core.decorators import set_module
 from celest.encounter import GroundPosition
+from celest.satellite import Coordinate, Time
 import numpy as np
 
 

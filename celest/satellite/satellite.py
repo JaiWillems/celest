@@ -39,9 +39,8 @@ class Satellite(object):
         Calculate the solar power generated from the satellite solar cells.
     solar_radiation_pressure(pointProfiles)
         Calculate the solar radiation pressure experienced by the satellite.
-    save_data(fileName, delimiter)
+    save_data(fileName, delimiter, posTypes)
         Save the time and position data of the satellite.
-
     """
     
     def __init__(self, coordinates: Coordinate) -> None:
@@ -50,7 +49,7 @@ class Satellite(object):
         self.time = coordinates.timeData
         self.position = coordinates
     
-    def save_data(self, fileName: str, delimiter: Literal[",", "\t"], posTypes: List) -> None:
+    def save_data(self, fileName: str, delimiter: Literal[",", "\\t"], posTypes: List) -> None:
         """Save satellite data to local directory.
 
         Parameters
