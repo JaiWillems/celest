@@ -254,7 +254,7 @@ class Coordinate(object):
         angArr = (360.9856123035484 * dJulian + 280.46) % 360
 
         angArr = np.radians(angArr)
-        self.ERAdata = angArr
+        self._ERA = angArr
 
         if kwargs:
             angArr = self.interp(angArr, **kwargs)
@@ -278,24 +278,26 @@ class Coordinate(object):
             Array of shape (n, 3) representing the output data as XYZ cartesian
             data.
         """
+
+        if type(self._ERA) == type(None):
+            self.ERA()
+
         if type == "ECI":
             theta = -self._ERA
         else:
             theta = self._ERA
         
         # Construct rotational matrix.
-        outVec = np.zeros((self.length, 3))
         A11 = np.cos(theta)
         A12 = -np.sin(theta)
         A21 = np.sin(theta)
         A22 = np.cos(theta)
 
         # Rotate position data around z-axis by ERA.
-        outVec[:, 0] = np.add(np.multiply(A11, self.posData[:, 0]),
-                              np.multiply(A12, self.posData[:, 1]))
-        outVec[:, 1] = np.add(np.multiply(A21, self.posData[:, 0]),
-                              np.multiply(A22, self.posData[:, 1]))
-        outVec[:, 2] = self.posData[:, 2]
+        outVec = np.zeros((self.length, 3))
+        outVec[:, 0] = A11 * posData[:, 0] + A12 * posData[:, 1]
+        outVec[:, 1] = A21 * posData[:, 0] + A22 * posData[:, 1]
+        outVec[:, 2] = posData[:, 2]
 
         return outVec
     
@@ -318,8 +320,6 @@ class Coordinate(object):
         ECEF : Return ECEF position data.
         """
 
-        if type(self._ERA) == type(None):
-            self.ERA()
         if type(self._ECEF) == type(None):
             self.ECEF()
 
@@ -361,8 +361,6 @@ class Coordinate(object):
             ECEFdata = self._GEO_to_ECEF(posData=self._GEO)
 
         elif type(self._ECI) != type(None):
-            if type(self._ERA) == type(None):
-                self.ERA()
             ECEFdata = self._ECI_and_ECEF(posData=self.ECIdata, type="ECI")
 
         if kwargs:
