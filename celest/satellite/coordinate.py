@@ -385,8 +385,7 @@ class Coordinate(object):
         """
         # Use simple linalg formula.
         dividend = np.einsum("ij, ij->i", vecOne, vecTwo)
-        divisor = np.multiply(np.linalg.norm(
-            vecOne, axis=1), np.linalg.norm(vecTwo, axis=1))
+        divisor = np.linalg.norm(vecOne, axis=1) * np.linalg.norm(vecTwo, axis=1)
         arg = np.divide(dividend, divisor)
         ang = np.degrees(np.arccos(arg))
 
@@ -413,41 +412,29 @@ class Coordinate(object):
         if type(self._ECEF) == type(None):
             self.ECEF()
 
-        # Convert observer position into spherical then cartesian.
-        obsCoor = groundPos.coor
-        radius = groundPos.radius
-        xyzObs = np.full((self.length, 3), self._geo_to_ECEF(obsCoor, radius))
+        # Convert observer position into cartesian coordinates.
+        obsCoor, radius = groundPos.coor, groundPos.radius
+        GEOpos = np.array([obsCoor[0], obsCoor[1], radius]).reshape((1, -1))
+        obs = np.repeat(self._GEO_to_ECEF(GEOpos), self.length, axis=0)
 
         # Determine line of sight vector then altitude.
-        ECEFvec = self.ECEFdata
-        xyzLOS = np.subtract(ECEFvec, xyzObs)
-        Alt = 90 - self._get_ang(xyzLOS, xyzObs)
+        LOS = self._ECEF - obs
+        Alt = 90 - self._get_ang(LOS, obs)
 
         # Find surface tangent vector passing through z-axis.
-        kHat = np.full((self.length, 3), np.array([0, 0, 1]))
-        beta = np.pi/2 - np.radians(90 - obsCoor[0])
-        tangentVec = np.subtract((kHat.T * radius/np.sin(beta)).T, xyzObs)
+        kHat = np.repeat(np.array([[0, 0, 1]]), self.length, axis=0)
+        beta = np.radians(obsCoor[0])
+        tangentVec = (kHat.T * radius / np.sin(beta)).T - obs
 
         # Find LOS projection on tangent plane.
-        coeff = np.einsum("ij, ij->i", xyzLOS, xyzObs)/radius**2
-        normProj = (xyzObs.T * coeff).T
-        projLOS = np.subtract(xyzLOS, normProj)
+        coeff = np.sum(LOS * obs, axis=1) / radius ** 2
+        normProj = (obs.T * coeff).T
+        projLOS = LOS - normProj
 
         # Determing azimuth.
-        vecOne = np.cross(tangentVec, xyzObs)
-        normOne = 1/np.linalg.norm(vecOne, axis=1).reshape((self.length, 1))
-        vecOneUnit = normOne*vecOne
-        vecTwo = (vecOneUnit.T * np.einsum("ij, ij->i", projLOS, vecOneUnit)).T
-        normTwo = 1/np.linalg.norm(vecTwo, axis=1).reshape((self.length, 1))
-        vecTwoUnit = normTwo*vecTwo
-
-        posEq = np.isclose(vecOneUnit, vecTwoUnit, atol=0.01)
-        negEq = np.isclose(vecOneUnit, -vecTwoUnit, atol=0.01)
-        posInd = np.where(np.all(posEq, axis=1))[0]
-        negInd = np.where(np.all(negEq, axis=1))[0]
-
-        Az = np.zeros((self.length,))
-        Az[posInd] = self._get_ang(tangentVec[posInd], projLOS[posInd])
+        refVec = np.cross(tangentVec, obs)
+        negInd = np.where(np.sum(projLOS * refVec, axis=1) < 0)[0]
+        Az = self._get_ang(tangentVec, projLOS)
         Az[negInd] = 360 - self._get_ang(tangentVec[negInd], projLOS[negInd])
 
         if kwargs:
@@ -479,7 +466,7 @@ class Coordinate(object):
         obsCoor = groundPos.coor
         radius = groundPos.radius
 
-        geoPos = self._geo_to_ECEF(np.array(list(obsCoor).append(radius)))[0]
+        geoPos = self._GEO_to_ECEF(np.array(list(obsCoor).append(radius)))[0]
 
         xyzObs = np.repeat(geoPos, self.length, 0)
 
