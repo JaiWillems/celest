@@ -82,9 +82,9 @@ class Sun(CelestialObject):
         """
 
         shift = {"C": -6, "N": -12, "A": -18}
-        sunPos = self.position(timeData)
+        sun_pos = self.position(timeData)
 
-        return self._find_altitude_zeros(sunPos, groundPos, slope=1, shift=shift[type])
+        return self._find_altitude_zeros(sun_pos, groundPos, slope=1, shift=shift[type])
     
     def dusk_times(self, timeData: Time, type: Literal["A", "C", "N"], groundPos: GroundPosition) -> Time:
         """Return dusk times.
@@ -113,9 +113,9 @@ class Sun(CelestialObject):
         """
         
         shift = {"C": -6, "N": -12, "A": -18}
-        sunPos = self.position(timeData)
+        sun_pos = self.position(timeData)
 
-        return self._find_altitude_zeros(sunPos, groundPos, slope=-1, shift=shift[type])
+        return self._find_altitude_zeros(sun_pos, groundPos, slope=-1, shift=shift[type])
 
     
     def rise(self, timeData: Time, groundPos: GroundPosition) -> Time:
@@ -138,8 +138,8 @@ class Sun(CelestialObject):
         set : Return the solar set times.
         """
         
-        posData = self.position(timeData)
-        return self._find_rise(posData, groundPos)
+        pos_data = self.position(timeData)
+        return self._find_rise(pos_data, groundPos)
     
     def set(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the solar set times.
@@ -161,8 +161,8 @@ class Sun(CelestialObject):
         rise : Return the solar rise times.
         """
         
-        posData = self.position(timeData)
-        return self._find_set(posData, groundPos)
+        pos_data = self.position(timeData)
+        return self._find_set(pos_data, groundPos)
     
     def peak(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the solar peak times.
@@ -180,5 +180,5 @@ class Sun(CelestialObject):
             `Time` object containing peak times.
         """
         
-        posData = self.position(timeData)
-        return self._find_peak(posData, groundPos)
+        pos_data = self.position(timeData)
+        return self._find_peak(pos_data, groundPos)

@@ -78,20 +78,20 @@ class Satellite(object):
         data = {}
         data["Time (julian)"] = pd.Series(self.time)
         if "GEO" in posTypes:
-            GEOpos = self.position.GEO()
-            data["GEO.lat"] = pd.Series(GEOpos[:, 0])
-            data["GEO.lon"] = pd.Series(GEOpos[:, 1])
-            data["GEO.radius"] = pd.Series(GEOpos[:, 2])
+            GEO_pos = self.position.GEO()
+            data["GEO.lat"] = pd.Series(GEO_pos[:, 0])
+            data["GEO.lon"] = pd.Series(GEO_pos[:, 1])
+            data["GEO.radius"] = pd.Series(GEO_pos[:, 2])
         if "ECI" in posTypes:
-            ECIpos = self.position.ECI()
-            data["ECI.X"] = pd.Series(ECIpos[:, 0])
-            data["ECI.y"] = pd.Series(ECIpos[:, 1])
-            data["ECI.z"] = pd.Series(ECIpos[:, 2])
+            ECI_pos = self.position.ECI()
+            data["ECI.X"] = pd.Series(ECI_pos[:, 0])
+            data["ECI.y"] = pd.Series(ECI_pos[:, 1])
+            data["ECI.z"] = pd.Series(ECI_pos[:, 2])
         if "ECEF" in posTypes:
-            ECEFpos = self.position.ECEF()
-            data["ECEF.X"] = pd.Series(ECEFpos[:, 0])
-            data["ECEF.y"] = pd.Series(ECEFpos[:, 1])
-            data["ECEF.z"] = pd.Series(ECEFpos[:, 2])
+            ECEF_pos = self.position.ECEF()
+            data["ECEF.X"] = pd.Series(ECEF_pos[:, 0])
+            data["ECEF.y"] = pd.Series(ECEF_pos[:, 1])
+            data["ECEF.z"] = pd.Series(ECEF_pos[:, 2])
         if "Altitude" in posTypes:
             data["Altitude"] = pd.Series(self.position.altitude())
 

@@ -83,7 +83,7 @@ class Time(object):
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -132,7 +132,7 @@ class Time(object):
         ----------
         longitude : np.array
             Array of shape (n,) containing longitude in decimal degrees.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -184,7 +184,7 @@ class Time(object):
         ----------
         longitude : np.array
             Array of shape (n,) containing longitude in decimal degrees.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -226,7 +226,7 @@ class Time(object):
         ----------
         longitude : np.array
             Array of shape (n,) containing longitude in decimal degrees.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -264,7 +264,7 @@ class Time(object):
         ----------
         longitude : np.array
             Array of shape (n,) containing longitude in decimal degrees.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -318,7 +318,7 @@ class Time(object):
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -357,7 +357,7 @@ class Time(object):
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -385,7 +385,7 @@ class Time(object):
         ----------
         longitude : np.array
             Array of shape (n,) containing longitude in decimal degrees.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -423,7 +423,7 @@ class Time(object):
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 

@@ -36,7 +36,7 @@ class GroundPosition(object):
         degrees in the (latitude, longitude) format.
     radius : float
         Radius of earths surface at the given coordinates using WGS84.
-    encounters : dict
+    encounters : Dict
         Dictionary where the keys are the encounter names and the values are
         the corresponding `EncounterSpec` objects.
 
@@ -65,10 +65,10 @@ class GroundPosition(object):
     def __str__(self) -> str:
         """Define `GroundPosition` information string."""
 
-        title = 'Celest.GoundPosition Object\n'
-        name = f'Name: {self.name}\t'
-        coor = f'Coordinates: {self.coor}\t'
-        radius = f'Radius: {self.radius}'
+        title = "Celest.GoundPosition Object\n"
+        name = f"Name: {self.name}\t"
+        coor = f"Coordinates: {self.coor}\t"
+        radius = f"Radius: {self.radius}"
 
         return title + name + coor + radius
     
@@ -102,11 +102,11 @@ class GroundPosition(object):
         phi = np.radians(obsCoor[0])
 
         # Define WGS84 Parameters.
-        semiMajor = 6378.137**2
-        semiMinor = 6356.752314245**2
+        semi_major = 6378.137**2
+        semi_minor = 6356.752314245**2
 
-        numerator = semiMajor * semiMinor
-        denominator = semiMajor * np.sin(phi)**2 + semiMinor * np.cos(phi)**2
+        numerator = semi_major * semi_minor
+        denominator = semi_major * np.sin(phi)**2 + semi_minor * np.cos(phi)**2
 
         return np.sqrt(numerator / denominator)
     
@@ -137,5 +137,3 @@ class GroundPosition(object):
 
         encounter_object = EncounterSpec(name, encType, ang, angType, maxAng, solar)
         self.encounters[name] = encounter_object
-
-

@@ -45,10 +45,10 @@ class EncounterSpec(object):
         Specifies encounter category as either imaging or transmission.
     ang : float
         Angluar constraint for the encounter in degrees.
-    angType : {"A", "N"}
+    ang_type : {"A", "N"}
         String specifying the constraint angle as either the altitude, or the
         off-nadir angle type.
-    maxAng : bool
+    max_ang : bool
         Defines the contraint angle as a maximum constraint if True or as
         minimum constraint if False. Note that the off-nadir angle is
         measured to increase away from nadir.
@@ -71,8 +71,8 @@ class EncounterSpec(object):
         self.name = name
         self.type = encType
         self.ang = ang
-        self.angType = angType
-        self.maxAng = maxAng
+        self.ang_type = angType
+        self.max_ang = maxAng
         self.solar = solar
         self.windows = None
         self.length = None
@@ -81,8 +81,8 @@ class EncounterSpec(object):
     def __str__(self) -> str:
         """Define `EncounterSpec` informaiton string."""
 
-        data = np.array([self.name, self.type, self.ang, self.angType,
-                         self.maxAng, self.solar])
+        data = np.array([self.name, self.type, self.ang, self.ang_type,
+                         self.max_ang, self.solar])
         index = np.array(["Name:", "Encounter Type:", "Constraint Angle:",
                           "Angle Type:", "Is Max:", "Solar Constraint:"])
 

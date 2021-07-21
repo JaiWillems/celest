@@ -69,8 +69,8 @@ class Moon(CelestialObject):
             `Time` object containing rise times.
         """
         
-        posData = self.position(timeData)
-        return self._find_rise(posData, groundPos)
+        pos_data = self.position(timeData)
+        return self._find_rise(pos_data, groundPos)
     
     def set(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the lunar set times.
@@ -88,8 +88,8 @@ class Moon(CelestialObject):
             `Time` object containing set times.
         """
         
-        posData = self.position(timeData)
-        return self._find_set(posData, groundPos)
+        pos_data = self.position(timeData)
+        return self._find_set(pos_data, groundPos)
     
     def peak(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the lunar peak times.
@@ -107,5 +107,5 @@ class Moon(CelestialObject):
             `Time` object containing peak times.
         """
         
-        posData = self.position(timeData)
-        return self._find_peak(posData, groundPos)
+        pos_data = self.position(timeData)
+        return self._find_peak(pos_data, groundPos)

@@ -236,8 +236,8 @@ class Planets(CelestialObject):
             `Time` object containing rise times.
         """
 
-        posData = self._get_pos_data(self, object, timeData)
-        return self._find_rise(posData, groundPos)
+        pos_data = self._get_pos_data(self, object, timeData)
+        return self._find_rise(pos_data, groundPos)
     
     def set(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the set times for a celestial object.
@@ -259,8 +259,8 @@ class Planets(CelestialObject):
             `Time` object containing set times.
         """
 
-        posData = self._get_pos_data(self, object, timeData)
-        return self._find_set(posData, groundPos)
+        pos_data = self._get_pos_data(self, object, timeData)
+        return self._find_set(pos_data, groundPos)
     
     def peak(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the peak times for a celestial object.
@@ -282,5 +282,5 @@ class Planets(CelestialObject):
             `Time` object containing peak times.
         """
 
-        posData = self._get_pos_data(self, object, timeData)
-        return self._find_peak(posData, groundPos)
+        pos_data = self._get_pos_data(self, object, timeData)
+        return self._find_peak(pos_data, groundPos)

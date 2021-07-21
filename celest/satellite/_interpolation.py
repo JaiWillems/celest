@@ -54,7 +54,7 @@ class Interpolation(object):
                [ 4.57142857,  9.57142857],
                [ 5.        , 10.        ]])
         """
-        i = data.shape[0]
+
         j = data.shape[0]
 
         indep = np.linspace(0, j - 1, j)
@@ -74,11 +74,11 @@ class Interpolation(object):
                 reg = np.append(reg, extension)
                 reg = np.insert(reg, 0, np.arange(reg[0] - dt, reg[0], 1))
 
-                minI, maxI = reg[0], reg[-1]
+                min_I, max_I = reg[0], reg[-1]
 
-                if minI != maxI:
-                    num_ind = int(factor * (maxI - minI + 1))
-                    reg_indep_new = np.linspace(minI, maxI, num_ind)
+                if min_I != max_I:
+                    num_ind = int(factor * (max_I - min_I + 1))
+                    reg_indep_new = np.linspace(min_I, max_I, num_ind)
                 else:
                     reg_indep_new = reg
 
@@ -86,7 +86,7 @@ class Interpolation(object):
                 indep_new = np.delete(indep_new, delete_ind)
 
                 insert_vals = reg_indep_new[np.where(reg_indep_new <= j - 1)[0]]
-                indep_new = np.insert(indep_new, minI, insert_vals)
+                indep_new = np.insert(indep_new, min_I, insert_vals)
 
         data_new = interp(indep_new)
 

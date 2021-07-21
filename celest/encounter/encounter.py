@@ -31,7 +31,7 @@ class Encounter(object):
 
     Attributes
     ----------
-    gs : dict
+    gs : Dict
         Dictionary of `GroundPosition` objects with encounters initialized.
 
     Methods
@@ -102,73 +102,73 @@ class Encounter(object):
         for pos in self.gs:
             for enc in self.gs[pos].encounters:
 
-                groundPos = self.gs[pos]
+                ground_pos = self.gs[pos]
                 enc = self.gs[pos].encounters[enc]
                 ang = enc.ang
-                angType = enc.angType
-                maxAng = enc.maxAng
+                ang_type = enc.ang_type
+                max_ang = enc.max_ang
                 solar = enc.solar
 
                 if interp:
                     encounter_ind = self.window_encounter_indices(buffer=buffer)
                     times = self._satellite.times
-                    alt = self._satellite.position.horizontal(groundPos, factor=factor, dt=dt)[:, 0]
-                    nadir = self._satellite.position.off_nadir(groundPos, factor=factor, dt=dt)
+                    alt = self._satellite.position.horizontal(ground_pos, factor=factor, dt=dt)[:, 0]
+                    nadir = self._satellite.position.off_nadir(ground_pos, factor=factor, dt=dt)
                 else:
                     times = self._satellite.times
-                    alt = self._satellite.position.horizontal(groundPos)[:, 0]
-                    nadir = self._satellite.position.off_nadir(groundPos)
+                    alt = self._satellite.position.horizontal(ground_pos)[:, 0]
+                    nadir = self._satellite.position.off_nadir(ground_pos)
 
-                if not angType and maxAng:
-                    winInd = np.where((0 < alt) & (alt < ang))[0]
-                elif not angType and not maxAng:
-                    winInd = np.where(alt > ang)[0]
-                elif angType and maxAng:
-                    winInd = np.where((nadir < ang) & (alt >= 0))[0]
-                elif angType and not maxAng:
-                    winInd = np.where((nadir > ang) & (alt >= 0))[0]
+                if not ang_type and max_ang:
+                    win_ind = np.where((0 < alt) & (alt < ang))[0]
+                elif not ang_type and not max_ang:
+                    win_ind = np.where(alt > ang)[0]
+                elif ang_type and max_ang:
+                    win_ind = np.where((nadir < ang) & (alt >= 0))[0]
+                elif ang_type and not max_ang:
+                    win_ind = np.where((nadir > ang) & (alt >= 0))[0]
 
                 # Get sun position vector.
                 if solar != 0:
-                    sunECEFpos = Sun().position(timeData=times).ECEF()
-                    gndECEFpos = np.concatenate(np.array(list(groundPos.coor), np.array(groundPos.radius)))
-                    gndECEFpos = np.full((sunECEFpos.shape[0], 3), gndECEFpos)
-                    dividend = np.einsum("ij, ij->i", sunECEFpos, gndECEFpos)
-                    divisor = np.multiply(np.linalg.norm(sunECEFpos, axis=1), np.linalg.norm(gndECEFpos, axis=1))
+                    sun_ECEF = Sun().position(timeData=times).ECEF()
+                    gnd_ECEF = np.concatenate(np.array(list(ground_pos.coor), np.array(ground_pos.radius)))
+                    gnd_ECEF = np.full((sun_ECEF.shape[0], 3), gnd_ECEF)
+                    dividend = np.einsum("ij, ij->i", sun_ECEF, gnd_ECEF)
+                    divisor = np.multiply(np.linalg.norm(sun_ECEF, axis=1), np.linalg.norm(gnd_ECEF, axis=1))
                     arg = np.divide(dividend, divisor)
                     ang = np.degrees(np.arccos(arg))
-
+            
                 # Find intersection of night indices and window indices.
                 if solar == -1:
-                    nightInd = np.where(ang >= 90)
-                    winInd = np.intersect1d(winInd, nightInd)
+                    night_ind = np.where(ang >= 90)
+                    win_ind = np.intersect1d(win_ind, night_ind)
 
                 # Find intersection of day indices and window indices.
                 if solar == 1:
-                    dayInd = np.where(ang < 90)
-                    winInd = np.intersect1d(winInd, dayInd)
+                    day_ind = np.where(ang < 90)
+                    win_ind = np.intersect1d(win_ind, day_ind)
 
-                winIndArr = np.split(winInd, np.where(np.diff(winInd) != 1)[0]+1)
-                windowTimes = np.empty((len(winIndArr), 5), dtype="U25")
+                win_ind_arr = np.split(win_ind, np.where(np.diff(win_ind) != 1)[0]+1)
+                windows = np.empty((len(win_ind_arr), 5), dtype="U25")
 
-                for j in range(len(winIndArr)):
+                for j in range(len(win_ind_arr)):
 
                     if j == 0:
                         break
 
-                    start = julian.from_jd(times[winIndArr[j][0]])
-                    end = julian.from_jd(times[winIndArr[j][-1]])
-                    maxAlt = np.max(alt[winIndArr[j]])
-                    minNadir = np.min(nadir[winIndArr[j]])
+                    start = julian.from_jd(times[win_ind_arr[j][0]])
+                    end = julian.from_jd(times[win_ind_arr[j][-1]])
+                    max_alt = np.max(alt[win_ind_arr[j]])
+                    min_nadir = np.min(nadir[win_ind_arr[j]])
 
-                    windowTimes[j, 0] = start
-                    windowTimes[j, 1] = end
-                    windowTimes[j, 2] = (end-start).total_seconds()
-                    windowTimes[j, 3] = maxAlt
-                    windowTimes[j, 4] = minNadir
+                    windows[j, 0] = start
+                    windows[j, 1] = end
+                    windows[j, 2] = (end-start).total_seconds()
+                    windows[j, 3] = max_alt
+                    windows[j, 4] = min_nadir
 
-                enc.windows = windowTimes
-                enc.length = windowTimes.shape[0]
+                enc.windows = windows
+                enc.length = windows.shape[0]
     
     def window_encounter_indices(self, buffer: float=0) -> None:
         """Initialize `GroundPosition.encounters.encounter_indices` attributes.
@@ -190,23 +190,23 @@ class Encounter(object):
             for enc in self.gs[pos].encounters:
 
                 # Get encounter information.
-                angType = self.gs[pos].encounters[enc].angType
+                ang_type = self.gs[pos].encounters[enc].ang_type
                 ang = self.gs[pos].encounters[enc].ang
-                isMax = self.gs[pos].encounters[enc].maxAng
-                groundPos = self.gs[pos].encounters[enc].groundPos
+                is_max = self.gs[pos].encounters[enc].max_ang
+                ground_pos = self.gs[pos]
 
                 # Get ground position information.
-                alt = groundPos.alt
-                nadir = groundPos.nadirAng
+                alt = ground_pos.alt
+                nadir = ground_pos.nadirAng
 
                 # Derive interpolation regions.
-                if not angType and isMax:
+                if not ang_type and is_max:
                     regions = np.where((alt < ang + buffer) & (alt > 0))[0]
-                elif not angType and not isMax:
+                elif not ang_type and not is_max:
                     regions = np.where(alt > ang - buffer)[0]
-                elif angType and isMax:
+                elif ang_type and is_max:
                     regions = np.where((nadir < ang + buffer) & (alt > 0))[0]
-                elif angType and not isMax:
+                elif ang_type and not is_max:
                     regions = np.where((nadir > ang - buffer) & (alt > 0))[0]
 
                 regions = np.split(regions, np.where(np.diff(regions) != 1)[0] + 1)
@@ -241,20 +241,20 @@ class Encounter(object):
 
         data = {}
 
-        numDL = 0
-        timeDL = 0
-        avgNumDL = 0
-        avgTimeDL = 0
+        num_DL = 0
+        time_DL = 0
+        avg_num_DL = 0
+        avg_time_DL = 0
 
-        numIMG = 0
-        timeIMG = 0
-        avgNumIMG = 0
-        avgTimeIMG = 0
+        num_IMG = 0
+        time_IMG = 0
+        avg_num_IMG = 0
+        avg_time_IMG = 0
 
         for pos in self.gs:
             for enc in self.gs[pos].encounters:
 
-                encType = self.gs[pos].encounters[enc].type
+                enc_type = self.gs[pos].encounters[enc].type
                 windows = self.gs[pos].encounters[enc].windows
                 length = round(self.gs[pos].encounters[enc].length, 2)
                 time = round(np.sum(windows[:, 2].astype(float)), 2)
@@ -263,25 +263,25 @@ class Encounter(object):
                 end = datetime.strptime(windows[-1, 1], "%Y-%m-%d %H:%M:%S.%f")
                 deltaT = (end-start).days
 
-                avgNum = round(length / deltaT, 2)
-                avgTime = round(time / length, 2)
+                avg_num = round(length / deltaT, 2)
+                avg_time = round(time / length, 2)
 
-                if encType == "DL":
-                    numDL += length
-                    timeDL += time
-                    avgNumDL += avgNum
-                    avgTimeDL += avgTime
+                if enc_type == "DL":
+                    num_DL += length
+                    time_DL += time
+                    avg_num_DL += avg_num
+                    avg_time_DL += avg_time
 
-                if encType == "IMG":
-                    numIMG += length
-                    timeIMG += time
-                    avgNumIMG += avgNum
-                    avgTimeIMG += avgTime
+                if enc_type == "IMG":
+                    num_IMG += length
+                    time_IMG += time
+                    avg_num_IMG += avg_num
+                    avg_time_IMG += avg_time
 
-                data[enc] = pd.Series([length, avgNum, time, avgTime])
+                data[enc] = pd.Series([length, avg_num, time, avg_time])
 
-        data["Total DL"] = pd.Series([numDL, avgNumDL, timeDL, avgTimeDL])
-        data["Total IMG"] = pd.Series([numIMG, avgNumIMG, timeIMG, avgTimeIMG])
+        data["Total DL"] = pd.Series([num_DL, avg_num_DL, time_DL, avg_time_DL])
+        data["Total IMG"] = pd.Series([num_IMG, avg_num_IMG, time_IMG, avg_time_IMG])
         df = pd.DataFrame.from_dict(data)
         df.index = ["Number of Viable Encounters",
                     "Average Encounters per Day",
@@ -315,31 +315,31 @@ class Encounter(object):
 
         See documentation for more detail on instantiated dependencies.
         """
-        encounterTypes = np.array([])
-        encounterStart = np.array([])
-        encounterEnd = np.array([])
-        elapsedSec = np.array([])
-        maxAlt = np.array([])
-        minNadir = np.array([])
+        encounter_types = np.array([])
+        encounter_start = np.array([])
+        encounter_end = np.array([])
+        elapsed_sec = np.array([])
+        max_alt = np.array([])
+        min_nadir = np.array([])
 
         for pos in self.gs:
             for enc in self.gs[pos].encounters:
 
                 enc = self.gs[pos].encounters[enc]
-                encounterTypes = np.append(encounterTypes, np.full((enc.length,), enc))
-                encounterStart = np.append(encounterStart, enc.windows[:, 0])
-                encounterEnd = np.append(encounterEnd, enc.windows[:, 1])
-                elapsedSec = np.append(elapsedSec, enc.windows[:, 2])
-                maxAlt = np.append(maxAlt, enc.windows[:, 3])
-                minNadir = np.append(minNadir, enc.windows[:, 4])
+                encounter_types = np.append(encounter_types, np.full((enc.length,), enc))
+                encounter_start = np.append(encounter_start, enc.windows[:, 0])
+                encounter_end = np.append(encounter_end, enc.windows[:, 1])
+                elapsed_sec = np.append(elapsed_sec, enc.windows[:, 2])
+                max_alt = np.append(max_alt, enc.windows[:, 3])
+                min_nadir = np.append(min_nadir, enc.windows[:, 4])
 
         data = {}
-        data["Encounter Start"] = pd.Series(encounterStart)
-        data["Encounter End"] = pd.Series(encounterEnd)
-        data["Elapsed Seconds"] = pd.Series(elapsedSec)
-        data["Maximum Altitude"] = pd.Series(maxAlt)
-        data["Minimum Nadir"] = pd.Series(minNadir)
-        data["Name"] = pd.Series(encounterTypes)
+        data["Encounter Start"] = pd.Series(encounter_start)
+        data["Encounter End"] = pd.Series(encounter_end)
+        data["Elapsed Seconds"] = pd.Series(elapsed_sec)
+        data["Maximum Altitude"] = pd.Series(max_alt)
+        data["Minimum Nadir"] = pd.Series(min_nadir)
+        data["Name"] = pd.Series(encounter_types)
 
         df = pd.DataFrame(data)
         df.to_csv(fileName, sep=delimiter)

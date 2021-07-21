@@ -135,10 +135,10 @@ class Coordinate(object):
         
         # Convert geographical to spherical.
         theta = geoPos[:, 1]
-        negLon = np.where(theta < 0)
-        posLon = np.where(theta > 0)
-        theta[negLon] = np.radians(theta[negLon] + 360)
-        theta[posLon] = np.radians(theta[posLon])
+        neg_lon = np.where(theta < 0)
+        pos_lon = np.where(theta > 0)
+        theta[neg_lon] = np.radians(theta[neg_lon] + 360)
+        theta[pos_lon] = np.radians(theta[pos_lon])
         phi = np.radians(90 - geoPos[:, 0])
 
         # Convert spherical to cartesian.
@@ -193,7 +193,7 @@ class Coordinate(object):
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
         
@@ -210,20 +210,20 @@ class Coordinate(object):
         if type(self._ECEF) == type(None):
             self.ECEF()
 
-        GEOdata = self._ECEF_to_GEO(ECEFpos=self._ECEF)
-        self._GEO = GEOdata
+        GEO_data = self._ECEF_to_GEO(ECEFpos=self._ECEF)
+        self._GEO = GEO_data
 
         if kwargs:
-            GEOdata = self.interp(GEOdata, **kwargs)
+            GEO_data = self.interp(GEO_data, **kwargs)
 
-        return GEOdata
+        return GEO_data
     
     def ERA(self, **kwargs: Dict[str, Any]) -> np.array:
         """Return the Earth Rotation Angles.
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -246,20 +246,20 @@ class Coordinate(object):
         >>> ERAangles = finch.ERA(timeData=UTCtimeData)
         """
 
-        angArr = np.zeros((self.length,))
+        ang = np.zeros((self.length,))
         Julian = self.time.julian
 
         # Multiply time elapsed since J2000 by ERA and add J2000 orientation.
         dJulian = Julian - 2451545
-        angArr = (360.9856123035484 * dJulian + 280.46) % 360
+        ang = (360.9856123035484 * dJulian + 280.46) % 360
 
-        angArr = np.radians(angArr)
-        self._ERA = angArr
+        ang = np.radians(ang)
+        self._ERA = ang
 
         if kwargs:
-            angArr = self.interp(angArr, **kwargs)
+            ang = self.interp(ang, **kwargs)
 
-        return angArr
+        return ang
     
     def _ECI_and_ECEF(self, posData: np.array, type: str) -> np.array:
         """Convert between ECI and ECEF positions.
@@ -294,19 +294,19 @@ class Coordinate(object):
         A22 = np.cos(theta)
 
         # Rotate position data around z-axis by ERA.
-        outVec = np.zeros((self.length, 3))
-        outVec[:, 0] = A11 * posData[:, 0] + A12 * posData[:, 1]
-        outVec[:, 1] = A21 * posData[:, 0] + A22 * posData[:, 1]
-        outVec[:, 2] = posData[:, 2]
+        output = np.zeros((self.length, 3))
+        output[:, 0] = A11 * posData[:, 0] + A12 * posData[:, 1]
+        output[:, 1] = A21 * posData[:, 0] + A22 * posData[:, 1]
+        output[:, 2] = posData[:, 2]
 
-        return outVec
+        return output
     
     def ECI(self, **kwargs: Dict[str, Any]) -> np.array:
         """Return ECI position data.
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -323,20 +323,20 @@ class Coordinate(object):
         if type(self._ECEF) == type(None):
             self.ECEF()
 
-        ECIdata = self._ECI_and_ECEF(posData=self._ECEF, type="ECEF")
-        self._ECI = ECIdata
+        ECI_data = self._ECI_and_ECEF(posData=self._ECEF, type="ECEF")
+        self._ECI = ECI_data
 
         if kwargs:
-            ECIdata = self.interp(ECIdata, **kwargs)
+            ECI_data = self.interp(ECI_data, **kwargs)
 
-        return ECIdata
+        return ECI_data
     
     def ECEF(self, **kwargs: Dict[str, Any]) -> np.array:
         """Return ECEF position data.
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -358,15 +358,15 @@ class Coordinate(object):
                 self.GEO()
 
         if type(self._GEO) != type(None):
-            ECEFdata = self._GEO_to_ECEF(posData=self._GEO)
+            ECEF_data = self._GEO_to_ECEF(posData=self._GEO)
 
         elif type(self._ECI) != type(None):
-            ECEFdata = self._ECI_and_ECEF(posData=self.ECIdata, type="ECI")
+            ECEF_data = self._ECI_and_ECEF(posData=self._ECI, type="ECI")
 
         if kwargs:
-            ECEFdata = self.interp(ECEFdata, **kwargs)
+            ECEF_data = self.interp(ECEF_data, **kwargs)
 
-        return self.ECEFdata
+        return self.ECEF_data
     
     def _get_ang(self, vecOne: np.array, vecTwo: np.array) -> float:
         """Calculate degree angle bewteen two vectors.
@@ -396,7 +396,7 @@ class Coordinate(object):
         ----------
         groundPos : GroundPosition object
             GroundPosition object instantiated as per its documentation.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -411,29 +411,29 @@ class Coordinate(object):
             self.ECEF()
 
         # Convert observer position into cartesian coordinates.
-        obsCoor, radius = groundPos.coor, groundPos.radius
-        GEOpos = np.array([obsCoor[0], obsCoor[1], radius]).reshape((1, -1))
-        obs = np.repeat(self._GEO_to_ECEF(GEOpos), self.length, axis=0)
+        obs_coor, radius = groundPos.coor, groundPos.radius
+        GEO_data = np.array([obs_coor[0], obs_coor[1], radius]).reshape((1, -1))
+        obs = np.repeat(self._GEO_to_ECEF(GEO_data), self.length, axis=0)
 
         # Determine line of sight vector then altitude.
         LOS = self._ECEF - obs
         Alt = 90 - self._get_ang(LOS, obs)
 
         # Find surface tangent vector passing through z-axis.
-        kHat = np.repeat(np.array([[0, 0, 1]]), self.length, axis=0)
-        beta = np.radians(obsCoor[0])
-        tangentVec = (kHat.T * radius / np.sin(beta)).T - obs
+        k_hat = np.repeat(np.array([[0, 0, 1]]), self.length, axis=0)
+        beta = np.radians(obs_coor[0])
+        tangent = (k_hat.T * radius / np.sin(beta)).T - obs
 
         # Find LOS projection on tangent plane.
-        coeff = np.sum(LOS * obs, axis=1) / radius ** 2
-        normProj = (obs.T * coeff).T
-        projLOS = LOS - normProj
+        coeff = np.sum(LOS * obs, axis=1) / radius**2
+        norm_proj = (obs.T * coeff).T
+        proj_LOS = LOS - norm_proj
 
         # Determing azimuth.
-        refVec = np.cross(tangentVec, obs)
-        negInd = np.where(np.sum(projLOS * refVec, axis=1) < 0)[0]
-        Az = self._get_ang(tangentVec, projLOS)
-        Az[negInd] = 360 - self._get_ang(tangentVec[negInd], projLOS[negInd])
+        reference = np.cross(tangent, obs)
+        neg_ind = np.where(np.sum(proj_LOS * reference, axis=1) < 0)[0]
+        Az = self._get_ang(tangent, proj_LOS)
+        Az[neg_ind] = 360 - self._get_ang(tangent[neg_ind], proj_LOS[neg_ind])
 
         if kwargs:
             Alt = self.interp(Alt, **kwargs)
@@ -448,7 +448,7 @@ class Coordinate(object):
         ----------
         groundPos : GroundPosition
             `GroundPosition` object instantiated as per its documentation.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -461,17 +461,16 @@ class Coordinate(object):
         if type(self._ECEF) == type(None):
             self.ECEF()
 
-        obsCoor = groundPos.coor
+        obs_coor = groundPos.coor
         radius = groundPos.radius
 
-        geoPos = self._GEO_to_ECEF(np.array(list(obsCoor).append(radius)))[0]
+        GEO_data = self._GEO_to_ECEF(np.array([obs_coor[0], obs_coor[1], radius]))
+        obs = np.repeat(GEO_data, self.length, 0)
 
-        xyzObs = np.repeat(geoPos, self.length, 0)
+        ECEF_data = self._ECEF
+        LOS = np.subtract(ECEF_data, obs)
 
-        ECEFvec = self._ECEF
-        xyzLOS = np.subtract(ECEFvec, xyzObs)
-
-        ang = self._get_ang(xyzLOS, ECEFvec)
+        ang = self._get_ang(LOS, ECEF_data)
 
         if kwargs:
             ang = self.interp(ang, **kwargs)
@@ -506,11 +505,11 @@ class Coordinate(object):
         phi = np.radians(lattitude)
 
         # Define WGS84 Parameters.
-        semiMajor = 6378.137**2
-        semiMinor = 6356.752314245**2
+        semi_major = 6378.137**2
+        semi_minor = 6356.752314245**2
 
-        numerator = semiMajor * semiMinor
-        denominator = semiMajor * np.sin(phi)**2 + semiMinor * np.cos(phi)**2
+        numerator = semi_major * semi_minor
+        denominator = semi_major * np.sin(phi)**2 + semi_minor * np.cos(phi)**2
         radius = np.sqrt(numerator / denominator)
 
         return radius
@@ -520,7 +519,7 @@ class Coordinate(object):
 
         Parameters
         ----------
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -544,17 +543,17 @@ class Coordinate(object):
         if type(self._ECEF) == type(None):
             self.ECEF()
 
-        ECEFdata = self._ECEF
-        x = ECEFdata[:, 0]
-        y = ECEFdata[:, 1]
-        z = ECEFdata[:, 2]
+        ECEF_data = self._ECEF
+        x = ECEF_data[:, 0]
+        y = ECEF_data[:, 1]
+        z = ECEF_data[:, 2]
         arg = np.sqrt(x**2 + y**2) / z
         lattitude = np.arctan(arg)
 
-        earthRadius = self._WGS84_radius(lattitude)
-        satRadius = np.linalg.norm(ECEFdata, axis=1)
+        earth_radius = self._WGS84_radius(lattitude)
+        sat_radius = np.linalg.norm(ECEF_data, axis=1)
 
-        altitude = satRadius - earthRadius
+        altitude = sat_radius - earth_radius
         self._altitude = altitude
 
         if kwargs:
@@ -569,7 +568,7 @@ class Coordinate(object):
         ----------
         groundPos : GroundPosition
             `GroundPosition` object instantiated as per its documentation.
-        kwargs : dict, optional
+        kwargs : Dict, optional
             Optional keyword arguments passed into the `Interpolation()`
             callable.
 
@@ -583,14 +582,14 @@ class Coordinate(object):
         if type(self._ECEF) == type(None):
             self.ECEF()
 
-        ECEFdata = self._ECEF
-        groundGEO = np.repeat(np.array(list(groundPos.coor)), self.length, axis=0)
-        position = Coordinate(basePos=groundGEO, type="GEO", timeData=self.time)
-        groundECEF = np.repeat(position.ECEF, self.length)
+        ECEF_data = self._ECEF
+        gnd_GEO = np.repeat(np.array(list(groundPos.coor)), self.length, axis=0)
+        position = Coordinate(basePos=gnd_GEO, type="GEO", timeData=self.time)
+        gnd_ECEF = np.repeat(position.ECEF, self.length)
 
         # Find LOS vector norm.
-        LOSvec = ECEFdata - groundECEF
-        distances = np.linalg.norm(LOSvec, axis=1)
+        LOS = ECEF_data - gnd_ECEF
+        distances = np.linalg.norm(LOS, axis=1)
 
         if kwargs:
             distances = self.interp(distances, **kwargs)
@@ -612,7 +611,7 @@ class Coordinate(object):
         """
 
         length = angles.shape[0]
-        sexagesimalAng = np.empty((length,), dtype="<U32")
+        sexagesimal_ang = np.empty((length,), dtype="<U32")
 
         for i in range(length):
 
@@ -624,6 +623,6 @@ class Coordinate(object):
             degree_symbol = u"\u00B0"
             minute_symbol = u"\u2032"
             second_symbol = u"\u2033"
-            sexagesimalAng[i] = f"{sign}{degrees}{degree_symbol}{minutes}{minute_symbol}{seconds}{second_symbol}"
+            sexagesimal_ang[i] = f"{sign}{degrees}{degree_symbol}{minutes}{minute_symbol}{seconds}{second_symbol}"
 
-        return sexagesimalAng
+        return sexagesimal_ang
