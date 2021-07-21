@@ -149,7 +149,7 @@ class Encounter(object):
                     winInd = np.intersect1d(winInd, dayInd)
 
                 winIndArr = np.split(winInd, np.where(np.diff(winInd) != 1)[0]+1)
-                windowTimes = np.empty((len(winIndArr), 3), dtype="U25")
+                windowTimes = np.empty((len(winIndArr), 5), dtype="U25")
 
                 for j in range(len(winIndArr)):
 
@@ -158,10 +158,14 @@ class Encounter(object):
 
                     start = julian.from_jd(times[winIndArr[j][0]])
                     end = julian.from_jd(times[winIndArr[j][-1]])
+                    maxAlt = np.max(alt[winIndArr[j]])
+                    minNadir = np.min(nadir[winIndArr[j]])
 
                     windowTimes[j, 0] = start
                     windowTimes[j, 1] = end
                     windowTimes[j, 2] = (end-start).total_seconds()
+                    windowTimes[j, 3] = maxAlt
+                    windowTimes[j, 4] = minNadir
 
                 enc.windows = windowTimes
                 enc.length = windowTimes.shape[0]
@@ -315,6 +319,8 @@ class Encounter(object):
         encounterStart = np.array([])
         encounterEnd = np.array([])
         elapsedSec = np.array([])
+        maxAlt = np.array([])
+        minNadir = np.array([])
 
         for pos in self.gs:
             for enc in self.gs[pos].encounters:
@@ -324,11 +330,15 @@ class Encounter(object):
                 encounterStart = np.append(encounterStart, enc.windows[:, 0])
                 encounterEnd = np.append(encounterEnd, enc.windows[:, 1])
                 elapsedSec = np.append(elapsedSec, enc.windows[:, 2])
+                maxAlt = np.append(maxAlt, enc.windows[:, 3])
+                minNadir = np.append(minNadir, enc.windows[:, 4])
 
         data = {}
         data["Encounter Start"] = pd.Series(encounterStart)
         data["Encounter End"] = pd.Series(encounterEnd)
         data["Elapsed Seconds"] = pd.Series(elapsedSec)
+        data["Maximum Altitude"] = pd.Series(maxAlt)
+        data["Minimum Nadir"] = pd.Series(minNadir)
         data["Name"] = pd.Series(encounterTypes)
 
         df = pd.DataFrame(data)
