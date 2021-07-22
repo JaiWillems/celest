@@ -5,6 +5,7 @@ store, and schedule Earth-satellite encounters.
 """
 
 
+from celest.satellite.coordinate import Coordinate
 from celest.astronomy import Sun
 from celest.core.decorators import set_module
 from celest.encounter import GroundPosition
@@ -47,14 +48,14 @@ class Encounter(object):
     save_windows(fileName, delimiter)
         Save window data to local directory.
     """
-    
+
     def __init__(self, satellite: Satellite) -> None:
         """Initialize attribites."""
 
         self._satellite = satellite
         self._sun_position = None
         self.gs = {}
-    
+
     def add_position(self, groundPos: GroundPosition) -> None:
         """Add a ground position for encounter calculations.
 
@@ -71,11 +72,43 @@ class Encounter(object):
 
         self.gs[groundPos.name, groundPos]
 
+    def _solar_angles(self, ECEFdata: np.array, timeData: np.array, groundPos: GroundPosition) -> np.array:
+        """Return solar angles.
+
+        Parameters
+        ----------
+        ECEFdata : np.array
+            Satellite ECEF position data.
+        timeData : np.array
+            Satellite julian time data.
+        groundPos : GroundPosition
+            Location of the communcations ground station.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing degree solar angles.
+        """
+
+        gnd_GEO = np.array([[groundPos.coor[0], groundPos.coor[1], groundPos.radius]])
+        gnd_GEO = np.repeat(gnd_GEO, timeData.size, axis=0)
+        gnd_ECEF = Coordinate(gnd_GEO, "GEO", timeData).ECEF()
+
+        LOS = ECEFdata - gnd_ECEF
+        sun_ECEF = Sun().position(timeData).ECEF()
+
+        dividend = np.sum(LOS, sun_ECEF, axis=1)
+        divisor = np.linalg.norm(LOS, axis=1) * np.linalg.norm(sun_ECEF, axis=1)
+        arg = np.divide(dividend, divisor)
+        ang = np.degrees(np.arccos(arg))
+
+        return ang
+
     def windows(self, interp: bool=True, factor: int=5, buffer: float=10, dt: int=1) -> None:
         """Initialize the `GroundPosition.encounters.windows` attribute.
 
         This function iterates through all `gs` values (`GroundPosition`
-        objects`) and the values in their `encounters` attributes
+        objects) and the values in their `encounters` attributes
         (`EncounterSpec` objects) and initializes the `windows` attribute.
 
         Parameters
@@ -103,30 +136,29 @@ class Encounter(object):
             for enc in self.gs[pos].encounters:
 
                 ground_pos = self.gs[pos]
-                enc = self.gs[pos].encounters[enc]
+                enc = ground_pos.encounters[enc]
                 ang = enc.ang
                 ang_type = enc.ang_type
-                max_ang = enc.max_ang
                 solar = enc.solar
+                SCA = enc.SCA
 
                 if interp:
                     encounter_ind = self.window_encounter_indices(buffer=buffer)
-                    times = self._satellite.times
-                    alt = self._satellite.position.horizontal(ground_pos, factor=factor, dt=dt)[:, 0]
-                    nadir = self._satellite.position.off_nadir(ground_pos, factor=factor, dt=dt)
+                    times = self._satellite.times.julian(factor=factor, dt=dt, indices=encounter_ind)
+                    ECEFdata = self._satellite.position.ECEF(factor=factor, dt=dt, indices=encounter_ind)
+                    alt = self._satellite.position.horizontal(ground_pos, factor=factor, dt=dt, indices=encounter_ind)[:, 0]
+                    nadir = self._satellite.position.off_nadir(ground_pos, factor=factor, dt=dt, indices=encounter_ind)
                 else:
-                    times = self._satellite.times
+                    times = self._satellite.times.julian()
+                    ECEFdata = self._satellite.position.ECEF()
                     alt = self._satellite.position.horizontal(ground_pos)[:, 0]
                     nadir = self._satellite.position.off_nadir(ground_pos)
 
-                if not ang_type and max_ang:
-                    win_ind = np.where((0 < alt) & (alt < ang))[0]
-                elif not ang_type and not max_ang:
-                    win_ind = np.where(alt > ang)[0]
-                elif ang_type and max_ang:
+                if not ang_type:
+                    sun_angs = self._solar_angles(ECEFdata, times, ground_pos)
+                    win_ind = np.where((alt > ang) & (sun_angs > SCA))[0]
+                elif ang_type:
                     win_ind = np.where((nadir < ang) & (alt >= 0))[0]
-                elif ang_type and not max_ang:
-                    win_ind = np.where((nadir > ang) & (alt >= 0))[0]
 
                 # Get sun position vector.
                 if solar != 0:
@@ -134,10 +166,10 @@ class Encounter(object):
                     gnd_ECEF = np.concatenate(np.array(list(ground_pos.coor), np.array(ground_pos.radius)))
                     gnd_ECEF = np.full((sun_ECEF.shape[0], 3), gnd_ECEF)
                     dividend = np.einsum("ij, ij->i", sun_ECEF, gnd_ECEF)
-                    divisor = np.multiply(np.linalg.norm(sun_ECEF, axis=1), np.linalg.norm(gnd_ECEF, axis=1))
+                    divisor = np.linalg.norm(sun_ECEF, axis=1) * np.linalg.norm(gnd_ECEF, axis=1)
                     arg = np.divide(dividend, divisor)
                     ang = np.degrees(np.arccos(arg))
-            
+
                 # Find intersection of night indices and window indices.
                 if solar == -1:
                     night_ind = np.where(ang >= 90)
@@ -169,7 +201,7 @@ class Encounter(object):
 
                 enc.windows = windows
                 enc.length = windows.shape[0]
-    
+
     def window_encounter_indices(self, buffer: float=0) -> None:
         """Initialize `GroundPosition.encounters.encounter_indices` attributes.
 
@@ -178,7 +210,7 @@ class Encounter(object):
         `gs` values (`GroundPosition` objects`) and the values in their
         `encounters` attributes (`EncounterSpec` objects) and initializes the
         `encounter_indices` attribute.
-        
+
         Parameters
         ----------
         buffer : float
@@ -212,7 +244,7 @@ class Encounter(object):
                 regions = np.split(regions, np.where(np.diff(regions) != 1)[0] + 1)
 
                 self.gs[pos].encounters[enc].encounter_indices = regions
-    
+
     def encounter_stats(self) -> pd.DataFrame:
         """Return encounter statistics.
 
@@ -289,7 +321,7 @@ class Encounter(object):
                     "Average Encounter Duration (s)"]
 
         return df
-    
+
     def save_windows(self, fileName: str, delimiter: Literal[",", "\\t"]) -> None:
         """Save window data to local directory.
 

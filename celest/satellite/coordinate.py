@@ -382,7 +382,7 @@ class Coordinate(object):
             Degree angle between the two arrays.
         """
         # Use simple linalg formula.
-        dividend = np.einsum("ij, ij->i", vecOne, vecTwo)
+        dividend = np.sum(vecOne, vecTwo, axis=1)
         divisor = np.linalg.norm(vecOne, axis=1) * np.linalg.norm(vecTwo, axis=1)
         arg = np.divide(dividend, divisor)
         ang = np.degrees(np.arccos(arg))
