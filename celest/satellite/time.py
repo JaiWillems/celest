@@ -52,6 +52,8 @@ class Time(object):
         Return the right ascension of the mean sun position.
     UT1(**kwargs)
         Return the universal time (same as GMT).
+    julian(**kwargs)
+        Return julian times.
     datetime_UTC(**kwargs)
         Return `datetime.datetime` UTC strings.
     LMST(longitude, **kwargs)
@@ -75,8 +77,8 @@ class Time(object):
         if factor > 0:
             julian = self._interp(data=julian, factor=factor)
 
-        self.julian = julian + offset
-        self.length = self.julian.size
+        self._julian = julian + offset
+        self.length = self._julian.size
 
     def equation_of_time(self, **kwargs: Dict[str, Any]) -> np.array:
         """Return the Equation of Time.
@@ -111,7 +113,7 @@ class Time(object):
                 return self._equation_of_time
 
         day_num = np.zeros((self.length,))
-        for i, time in enumerate(self.julian):
+        for i, time in enumerate(self._julian):
             day_num[i] = float(julian.from_jd(time).strftime("%j"))
 
         B = (day_num - 81) * 360 / 365
@@ -305,7 +307,7 @@ class Time(object):
             in decimal degrees.
         """
 
-        d_U = np.abs(self.julian - 2451545)
+        d_U = np.abs(self._julian - 2451545)
         t_U = d_U / 36525
         alpha = (67310.54841 + 8640184.812866 * t_U + 0.093104 * t_U ** 2 - 0.0000062 * t_U ** 3) / 3600
 
@@ -351,6 +353,28 @@ class Time(object):
             UT1 = self._interp(UT1, **kwargs)
 
         return UT1
+    
+    def julian(self, **kwargs: Dict[str, Any]) -> np.array:
+        """Return julian times.
+
+        Parameters
+        ----------
+        kwargs : Dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing the julian times in decimal days.
+        """
+
+        julian = self._julian
+
+        if kwargs:
+            julian = self.interp(julian, **kwargs)
+
+        return julian
 
     def datetime_UTC(self, **kwargs: Dict[str, Any]) -> np.array:
         """Return `datetime.datetime` UTC strings.
@@ -367,10 +391,10 @@ class Time(object):
             Array of shape (n,) containing `datetime.datetime` UTC strings.
         """
 
+        jul_data = self._julian
+
         if kwargs:
-            jul_data = self._interp(self.julian, **kwargs)
-        else:
-            jul_data = self.julian
+            jul_data = self._interp(jul_data, **kwargs)
 
         datetime = np.zeros((jul_data.size,))
         for i, time in enumerate(jul_data):
