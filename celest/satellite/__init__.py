@@ -1,3 +1,4 @@
+from ._astronomicalquantities import AstronomicalQuantities
 from ._interpolation import Interpolation
 from .coordinate import Coordinate
 from .satellite import Satellite
