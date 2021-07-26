@@ -7,14 +7,14 @@ times in julian days and convert to various time representations.
 
 from celest.astronomy import Sun
 from celest.core.decorators import set_module
-from celest.satellite import Interpolation
+from celest.satellite import AstronomicalQuantities, Interpolation
 from typing import Any, Dict
 import julian
 import numpy as np
 
 
 @set_module('celest.satellite')
-class Time(object):
+class Time(AstronomicalQuantities):
     """Time representations.
     
     The `Time` class allows a user to input an array of times in julian days
@@ -38,8 +38,6 @@ class Time(object):
     
     Methods
     -------
-    equation_of_time(**kwargs)
-        Return the Equation of Time.
     true_hour_angle(longitude, **kwargs)
         Return the hour angle using the true sun position.
     mean_hour_angle(longitude, **kwargs)
@@ -56,10 +54,10 @@ class Time(object):
         Return julian times.
     datetime_UTC(**kwargs)
         Return `datetime.datetime` UTC strings.
-    LMST(longitude, **kwargs)
-        Return Local Mean Sidereal Time.
     GMST(longitude, **kwargs)
         Return Greenwhich Mean Sidereal Time.
+    LMST(longitude, **kwargs)
+        Return Local Mean Sidereal Time.
     """
 
     def __init__(self, julian: np.array, offset: float=0, factor: int=0) -> None:
@@ -79,53 +77,6 @@ class Time(object):
 
         self._julian = julian + offset
         self.length = self._julian.size
-
-    def equation_of_time(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Return the Equation of Time.
-
-        Parameters
-        ----------
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the `Interpolation()`
-            callable.
-
-        Returns
-        -------
-        np.array
-            Array of shape (n,) containing the Equation of Time in decimal
-            minutes.
-
-        Notes
-        -----
-        This method uses an empirical equation to approximate the Equation of
-        Time within an accuracy of 0.5 minutes.
-
-        .. math:: EoT = 9.87\sin(2B) - 7.53\cos(B) - 1.5\sin(B)
-
-        where :math:`B = \\frac{360}{365}(d - 81)` and :math:`b` is the number
-        of days since the start of the year.
-        """
-
-        if type(self._equation_of_time) != type(None):
-            if kwargs:
-                return self._interp(self._equation_of_time)
-            else:
-                return self._equation_of_time
-
-        day_num = np.zeros((self.length,))
-        for i, time in enumerate(self._julian):
-            day_num[i] = float(julian.from_jd(time).strftime("%j"))
-
-        B = (day_num - 81) * 360 / 365
-        B_r, B2_r = np.radians(B), np.radians(2 * B)
-        EoT = 9.87 * np.sin(B2_r) - 7.53 * np.cos(B_r) - 1.5 * np.sin(B_r)
-
-        self._equation_of_time = EoT
-
-        if kwargs:
-            EoT = self._interp(EoT, **kwargs)
-
-        return EoT
 
     def true_hour_angle(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         """Return the hour angle using the true sun position.
@@ -212,7 +163,7 @@ class Time(object):
         """
 
         if type(self._equation_of_time) == type(None):
-            self.equation_of_time()
+            self.equation_of_time(self._julian)
 
         HRA = self.true_hour_angle(longitude) - self._equation_of_time
 
@@ -401,7 +352,51 @@ class Time(object):
             datetime[i] = julian.from_jd(time)
 
         return datetime
+    
+    def GMST(self, **kwargs: Dict[str, Any]) -> np.array:
+        """Return Greenwhich Mean Sidereal Time.
 
+        Parameters
+        ----------
+        kwargs : Dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing Greenwhich Mean Sideral Time in
+            decimal hours.
+        
+        Notes
+        -----
+        The Greenwhich Mean Sidereal Time can be calculated from the following
+        equation:
+
+        .. math:: GMST = \left(280.46061837 + 360.98564736629(j - 2451545) + 0.000387933T^2 - \\frac{T^3}{38710000}\\right) % 360 / 15
+
+        where
+
+        .. math:: T = \\frac{j - 2451545}{36525}
+
+        and :math:`j` is the current Julian day.
+        """
+
+        if type(self._GMST) != type(None):
+            if kwargs:
+                return self._interp(self._GMST, **kwargs)
+            else:
+                return self._GMST
+
+        julData = self._julian
+        T = (julData - 2451545) / 36525
+        GMST = (280.46061837 + 360.98564736629 * (julData - 2451545) + 0.000387933 * T **2 - T ** 3 / 38710000) % 360 / 15
+
+        if kwargs:
+            GMST = self._interp(GMST, **kwargs)
+        
+        return GMST
+    
     def LMST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
         """Return Local Mean Sidereal Time.
 
@@ -442,8 +437,8 @@ class Time(object):
         
         return LMST
     
-    def GMST(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Return Greenwhich Mean Sidereal Time.
+    def GAST(self, **kwargs: Dict[str, Any]) -> np.array:
+        """Return Greenwhich Apparent Sidereal Time.
 
         Parameters
         ----------
@@ -454,34 +449,58 @@ class Time(object):
         Returns
         -------
         np.array
-            Array of shape (n,) containing greenwhich mean sideral time in
+            Array of shape (n,) containing Greenwhich Apparent Sideral Time in
             decimal hours.
-        
-        Notes
-        -----
-        The Greenwhich Mean Sidereal Time can be calculated from the mean
-        solar hour angle at `longitude=0`, :math:`h_{mSun}(Gr)`, and the right
-        ascension of the mean Sun position, :math:`\\alpha_{mSun}`, as follows:
-
-        .. math:: GMST = h_{mSun}(Gr) + \\alpha_{mSun}
         """
 
-        if type(self._GMST) != type(None):
-            if kwargs:
-                return self._interp(self._GMST, **kwargs)
-            else:
-                return self._GMST
-        
+        if type(self._GMST) == type(None):
+            self.GMST()
+
+        GMST = self._GMST
+        EoE = self.equation_of_equinoxes(self._julian)
+
+        GAST = GMST + EoE / 3600
+
+        if kwargs:
+            GAST = self.interp(GAST, **kwargs)
+
+        return GAST
+
+    def LAST(self, longitude: np.array, **kwargs: Dict[str, Any]) -> np.array:
+        """Return Local Apparent Sidereal Time.
+
+        Parameters
+        ----------
+        longitude : np.array
+            Array of shape (n,) containing the actual astronomical longitude
+            in decimal degrees.
+        kwargs : Dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing Local Apparent Sideral Time in
+            decimal hours.
+        """
+
+        if type(self._UT1) == type(None):
+            self.UT1()
+
         if type(self._sun_right_ascension) == type(None):
             self.sun_right_ascension()
         
-        hour_angle = self._mean_hour_angle(0) / 15
-        alpha = self._sun_right_ascension
+        if type(self._equation_of_equinoxes) == type(None):
+            self.equation_of_equinoxes(self._julian)
 
-        GMST = hour_angle + alpha
-        self._GMST = GMST
+        UT1 = self._UT1
+        alpha_sun = self._sun_right_ascension
+        EoE = self._equation_of_equinoxes
+
+        LAST = UT1 - 12 + alpha_sun + EoE + longitude
 
         if kwargs:
-            GMST = self._interp(GMST, **kwargs)
-        
-        return GMST
+            LAST = self.interp(LAST, **kwargs)
+
+        return LAST
