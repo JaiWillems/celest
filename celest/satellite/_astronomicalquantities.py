@@ -7,7 +7,6 @@ class to allow for more advanced astronomical calculations.
 
 from typing import Tuple
 import numpy as np
-import julian
 
 
 class AstronomicalQuantities(object):
@@ -26,6 +25,10 @@ class AstronomicalQuantities(object):
         Return the mean obliquity of the ecliptic.
     apparent_obliquity(julData)
         Return the apparent obliquity of the ecliptic.
+    from_julian(julData)
+        Return day, month, and year from Julian data.
+    day_of_year(julData)
+        Return the day of the year.
     equation_of_time(julData)
         Return the Equation of Time.
     equation_of_equinoxes(julData)
@@ -151,6 +154,74 @@ class AstronomicalQuantities(object):
         epsilon = epsilon_0 + delta_epsilon / 3600
 
         return epsilon
+    
+    def from_julian(self, julData: np.array) -> np.array:
+        """Return day, month, and year from Julian data.
+
+        Parameters
+        ----------
+        julData : np.array
+            Array of shape (n,) containing Julian data in decimal degrees.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n, 3) containing columns of day, month, and year
+            information.
+        """
+
+        JD = julData + 0.5
+        Z, F = int(JD), JD % 1
+
+        if Z < 2299161:
+            A = Z
+        else:
+            alpha = int((Z - 1867216.25) / 36524.25)
+            A = Z + 1 + alpha - int(alpha / 4)
+        
+        B = A + 1524
+        C = int((B - 122.1) / 365.25)
+        D = int(365.25 * C)
+        E = int((B - D) / 30.6001)
+
+        day = B - D - int(30.6001 * E) + F
+
+        if E < 14:
+            month = E - 1
+        elif E == 14 or E == 15:
+            month = E - 13
+        
+        if month > 2:
+            year = C - 4716
+        elif month == 1 or month == 2:
+            year = C - 4715
+        
+        return day, month, year
+    
+    def day_of_year(self, julData: np.array) -> np.array:
+        """Return the day of the year.
+
+        Parameters
+        ----------
+        julData : np.array
+            Array of shape (n,) containing Julian data in decimal degrees.
+        
+        Returns
+        -------
+        np.array
+            Array of shape (n,) containing the day of the year.
+        """
+
+        day, month, year = self.from_julian(julData)
+
+        if year % 4 == 0:
+            K = 1
+        else:
+            K = 2
+
+        N = int(275 * month / 9) - K * int((month + 9) / 12) + day - 30
+
+        return N
 
     def equation_of_time(self, julData: np.array) -> np.array:
         """Return the Equation of Time.
@@ -178,9 +249,7 @@ class AstronomicalQuantities(object):
         of days since the start of the year.
         """
 
-        day_num = np.zeros((self.length,))
-        for i, time in enumerate(self._julian):
-            day_num[i] = float(julian.from_jd(time).strftime("%j"))
+        day_num = self.day_of_year(julData)
 
         B = (day_num - 81) * 360 / 365
         B_r, B2_r = np.radians(B), np.radians(2 * B)
