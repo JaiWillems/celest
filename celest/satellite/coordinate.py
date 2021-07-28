@@ -10,7 +10,7 @@ The class is also used for position inputs and outputs for various other
 from celest.core.decorators import set_module
 from celest.encounter import GroundPosition
 from celest.satellite import Interpolation, Time
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, Tuple
 import numpy as np
 
 
@@ -61,6 +61,8 @@ class Coordinate(object):
         Return the altitude above Earth's surface.
     distance(groundPos, **kwargs)
         Return the distance to a ground location.
+    equatorial(groundPos, **kwargs)
+        Return Equatorial coordinates.
     sexagesimal(angles)
         Convert decimal angles into sexagesimal angles.
 
@@ -595,6 +597,41 @@ class Coordinate(object):
             distances = self.interp(distances, **kwargs)
 
         return distances
+    
+    def equatorial(self, groundPos: GroundPosition, **kwargs: Dict[str, Any]) -> Tuple:
+        """Return Equatorial coordinates.
+
+        Parameters
+        ----------
+        groundPos : GroundPosition
+            `GroundPosition` object instantiated as per its documentation.
+        kwargs : Dict, optional
+            Optional keyword arguments passed into the `Interpolation()`
+            callable.
+        
+        Returns
+        -------
+        tuple
+            Return a tuple of Numpy arrays containing the right ascension and
+            declination of the coordinate object.
+        """
+
+        latitude, longitude = groundPos.coor[0], groundPos.coor[1]
+        alt, az = self.horizontal(groundPos)
+
+        latitude, alt, az = np.radians(latitude), np.radians(alt), np.radians(az + 180)
+
+        tanH = np.sin(az) / (np.cos(az) * np.sin(latitude) + np.tan(alt) * np.cos(latitude))
+        sinDelta = np.sin(latitude) * np.sin(alt) - np.cos(latitude) * np.cos(alt) * np.cos(az)
+
+        delta = np.arcsin(sinDelta)
+        alpha = self.time.LMST(longitude) - np.arctan(tanH)
+
+        if kwargs:
+            delta = self.interp(delta, **kwargs)
+            alpha = self.interp(alpha, **kwargs)
+
+        return alpha, delta
     
     def sexagesimal(self, angles: np.array) -> np.array:
         """Convert decimal angles into sexagesimal angles.
