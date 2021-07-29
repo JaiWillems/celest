@@ -101,7 +101,7 @@ class AstronomicalQuantities(object):
         return delta_psi, delta_epsilon
 
     def mean_obliquity(self, julData: np.array) -> np.array:
-        """Return the mean obliquity of the ecliptic.
+        """Return the mean obliquity of the ecliptic in the J2000 epoch.
 
         Parameters
         ----------
@@ -135,7 +135,7 @@ class AstronomicalQuantities(object):
         return epsilon_0
 
     def apparent_obliquity(self, julData: np.array) -> np.array:
-        """Return the apparent obliquity of the ecliptic.
+        """Return the apparent obliquity of the ecliptic in the J2000 epoch.
 
         Parameters
         ----------

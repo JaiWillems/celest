@@ -9,7 +9,6 @@ from celest.astronomy import Sun
 from celest.core.decorators import set_module
 from celest.satellite import AstronomicalQuantities, Interpolation
 from typing import Any, Dict
-import julian
 import numpy as np
 
 
@@ -58,6 +57,10 @@ class Time(AstronomicalQuantities):
         Return Greenwhich Mean Sidereal Time.
     LMST(longitude, **kwargs)
         Return Local Mean Sidereal Time.
+    GAST(longitude, **kwargs)
+        Return Greenwhich Apparent Sidereal Time.
+    LAST(longitude, **kwargs)
+        Return Local Apparent Sidereal Time.
     """
 
     def __init__(self, julian: np.array, offset: float=0, factor: int=0) -> None:
@@ -347,9 +350,10 @@ class Time(AstronomicalQuantities):
         if kwargs:
             jul_data = self._interp(jul_data, **kwargs)
 
+        day, month, year = self.from_julian(jul_data)
         datetime = np.zeros((jul_data.size,))
-        for i, time in enumerate(jul_data):
-            datetime[i] = julian.from_jd(time)
+        for i in range(jul_data.size):
+            datetime[i] = datetime(year=year[i], month=month[i], day=day[i])
 
         return datetime
     
