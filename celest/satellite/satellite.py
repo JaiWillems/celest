@@ -4,7 +4,7 @@ The `Satellite` object localizes satellite related information and
 functionality, and is passed into the `Encounter` class for encounter
 planning.
 """
-
+#NAT was here hehe :)
 
 from celest.core.decorators import set_module
 from celest.satellite import Coordinate, FlightStates, sat_rotation
