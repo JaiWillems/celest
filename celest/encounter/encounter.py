@@ -251,8 +251,9 @@ class Encounter(object):
         This method produces various statistics for each `EncounterSpec` object
         located within each `GroundPosition.encounters` dictionary of the
         `Encounter.gs` attribute. Statistics include the raw number of viable
-        passes, cumulative encounter time, daily average counts, and the daily
-        average time for each encounter and encounter type.
+        passes, cumulative encounter time, daily average counts, and the 5th,
+        50th, and 95th percentile encounter durations for each encounter and
+        encounter type.
 
         Returns
         -------
@@ -277,11 +278,13 @@ class Encounter(object):
         time_DL = 0
         avg_num_DL = 0
         avg_time_DL = 0
+        window_lengths_DL = []
 
         num_IMG = 0
         time_IMG = 0
         avg_num_IMG = 0
         avg_time_IMG = 0
+        window_lengths_IMG = []
 
         for pos in self.gs:
             for enc in self.gs[pos].encounters:
@@ -290,6 +293,8 @@ class Encounter(object):
                 windows = self.gs[pos].encounters[enc].windows
                 length = round(self.gs[pos].encounters[enc].length, 2)
                 time = round(np.sum(windows[:, 2].astype(float)), 2)
+                Q5 = np.percentile(windows[:, 2].astype(float), 5)
+                Q95 = np.percentile(windows[:, 2].astype(float), 95)
 
                 start = datetime.strptime(windows[0, 0], "%Y-%m-%d %H:%M:%S.%f")
                 end = datetime.strptime(windows[-1, 1], "%Y-%m-%d %H:%M:%S.%f")
@@ -304,21 +309,30 @@ class Encounter(object):
                     avg_num_DL += avg_num
                     avg_time_DL += avg_time
 
+                    window_lengths_DL.extend(windows[:, 2].astype(float).tolist())
+
                 if enc_type == "IMG":
                     num_IMG += length
                     time_IMG += time
                     avg_num_IMG += avg_num
                     avg_time_IMG += avg_time
 
-                data[enc] = pd.Series([length, avg_num, time, avg_time])
+                    window_lengths_IMG.extend(windows[:, 2].astype(float).tolist())
 
-        data["Total DL"] = pd.Series([num_DL, avg_num_DL, time_DL, avg_time_DL])
-        data["Total IMG"] = pd.Series([num_IMG, avg_num_IMG, time_IMG, avg_time_IMG])
+                data[enc] = pd.Series([length, avg_num, time, Q5, avg_time, Q95])
+
+        DL_Q5, DL_Q95 = np.percentile(window_lengths_DL, 5), np.percentile(window_lengths_DL, 95)
+        IMG_Q5, IMG_Q95 = np.percentile(window_lengths_IMG, 5), np.percentile(window_lengths_IMG, 95)
+    
+        data["Total DL"] = pd.Series([num_DL, avg_num_DL, time_DL, DL_Q5, avg_time_DL, DL_Q95])
+        data["Total IMG"] = pd.Series([num_IMG, avg_num_IMG, time_IMG, IMG_Q5, avg_time_IMG, IMG_Q95])
         df = pd.DataFrame.from_dict(data)
         df.index = ["Number of Viable Encounters",
                     "Average Encounters per Day",
                     "Viable Encounters Duration (s)",
-                    "Average Encounter Duration (s)"]
+                    "5th Percentile Encounter Duration (s)",
+                    "50th Percentile Encounter Duration (s)",
+                    "95th Percentile Encounter Duration (s)"]
 
         return df
 
