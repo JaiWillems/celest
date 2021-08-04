@@ -5,10 +5,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="Celest",  # Replace with your own username
-    version="0.1.9",
+    version="0.2.0",
     author="Jai Willems",
     author_email="jai52h@hotmail.com",
-    description="Satellite positional representation and encounter planning library.",
+    description="Satellite dynamics and pass analysis library.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/JaiWillems/Celest",
