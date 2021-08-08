@@ -71,7 +71,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_position(timeData, bcCode=1, pCode=199)
+        time_data = timeData.julian
+        mercury_pos = self._find_position(time_data, bcCode=1, pCode=199)
+
+        return Coordinate(basePos=mercury_pos, type="ECI", timeData=timeData)
     
     def venus_position(self, timeData: Time) -> Coordinate:
         """Return Venus' position.
@@ -87,7 +90,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_position(timeData, bcCode=2, pCode=299)
+        time_data = timeData.julian
+        venus_pos = self._find_position(time_data, bcCode=2, pCode=299)
+
+        return Coordinate(basePos=venus_pos, type="ECI", timeData=timeData)
     
     def mars_position(self, timeData: Time) -> Coordinate:
         """Return Mars' position.
@@ -103,7 +109,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_position(timeData, bcCode=4, pCode=499)
+        time_data = timeData.julian
+        mars_pos = self._find_position(time_data, bcCode=4, pCode=499)
+
+        return Coordinate(basePos=mars_pos, type="ECI", timeData=timeData)
     
     def jupiter_position(self, timeData: Time) -> Coordinate:
         """Return Jupiter's barycenter position.
@@ -119,7 +128,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_bc_position(timeData, bcCode=5)
+        time_data = timeData.julian
+        jupiter_pos = self._find_bc_position(time_data, bcCode=5)
+
+        return Coordinate(basePos=jupiter_pos, type="ECI", timeData=timeData)
     
     def saturn_position(self, timeData: Time) -> Coordinate:
         """Return Saturn's barycenter position.
@@ -135,7 +147,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_bc_position(timeData, bcCode=6)
+        time_data = timeData.julian
+        saturn_pos = self._find_bc_position(time_data, bcCode=6)
+
+        return Coordinate(basePos=saturn_pos, type="ECI", timeData=timeData)
     
     def uranus_position(self, timeData: Time) -> Coordinate:
         """Return Uranus's barycenter position.
@@ -151,7 +166,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_bc_position(timeData, bcCode=7)
+        time_data = timeData.julian
+        uranus_pos = self._find_bc_position(time_data, bcCode=7)
+
+        return Coordinate(basePos=uranus_pos, type="ECI", timeData=timeData)
     
     def neptune_position(self, timeData: Time) -> Coordinate:
         """Return Neptune's barycenter position.
@@ -167,7 +185,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_bc_position(timeData, bcCode=8)
+        time_data = timeData.julian
+        neptune_pos = self._find_bc_position(time_data, bcCode=8)
+
+        return Coordinate(basePos=neptune_pos, type="ECI", timeData=timeData)
     
     def pluto_position(self, timeData: Time) -> Coordinate:
         """Return Pluto's barycenter position.
@@ -183,7 +204,10 @@ class Planets(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
 
-        return self._find_bc_position(timeData, bcCode=9)
+        time_data = timeData.julian
+        pluto_pos = self._find_bc_position(time_data, bcCode=9)
+
+        return Coordinate(basePos=pluto_pos, type="ECI", timeData=timeData)
     
     def _get_pos_data(self, object: int, timeData: Time) -> np.array:
         """Return the object's position data.
@@ -236,8 +260,11 @@ class Planets(CelestialObject):
             `Time` object containing rise times.
         """
 
-        pos_data = self._get_pos_data(self, object, timeData)
-        return self._find_rise(pos_data, groundPos)
+        time_data = timeData.julian
+        pos_data = self._get_pos_data(self, object, timeData).horizontal(groundPos)[:, 0]
+        rise_times = self._find_rise(pos_data, time_data)
+
+        return Time(rise_times)
     
     def set(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the set times for a celestial object.
@@ -259,8 +286,11 @@ class Planets(CelestialObject):
             `Time` object containing set times.
         """
 
-        pos_data = self._get_pos_data(self, object, timeData)
-        return self._find_set(pos_data, groundPos)
+        time_data = timeData.julian
+        pos_data = self._get_pos_data(self, object, timeData).horizontal(groundPos)[:, 0]
+        set_times = self._find_set(pos_data, time_data)
+
+        return Time(set_times)
     
     def peak(self, object: int, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the peak times for a celestial object.
@@ -282,5 +312,8 @@ class Planets(CelestialObject):
             `Time` object containing peak times.
         """
 
-        pos_data = self._get_pos_data(self, object, timeData)
-        return self._find_peak(pos_data, groundPos)
+        time_data = timeData.julian
+        pos_data = self._get_pos_data(self, object, timeData).horizontal(groundPos)[:, 0]
+        peak_times = self._find_peak(pos_data, time_data)
+
+        return Time(peak_times)

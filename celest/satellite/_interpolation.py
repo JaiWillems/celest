@@ -12,9 +12,14 @@ class Interpolation(object):
 
     The `Interpolation` class allows for general interpolation without an
     independent data array.
+
+    Methods
+    -------
+    _interp(data, factor, dt, indices)
+        Interpolate `data` using the given parameters.
     """
 
-    def __call__(self, data: np.array, factor: int=0, dt: int=0, indices:
+    def _interp(self, data: np.array, factor: int=0, dt: int=0, indices:
                  np.array=None) -> np.array:
         """Interpolate `data` using the given parameters.
 

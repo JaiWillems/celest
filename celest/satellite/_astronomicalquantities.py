@@ -80,7 +80,7 @@ class AstronomicalQuantities(object):
 
         T = (julData - 2451545) / 36525
 
-        omega = np.radians(125.04452 - 1934.136261 * T + 0.0020708 * T ** 2 + T ** 3 / 450000) % 360)
+        omega = np.radians((125.04452 - 1934.136261 * T + 0.0020708 * T ** 2 + T ** 3 / 450000) % 360)
 
         L = np.radians(280.4665 + 36000.7698 * T)
         Lp = np.radians(218.3165 + 481267.8813 * T)

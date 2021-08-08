@@ -9,13 +9,15 @@ The class is also used for position inputs and outputs for various other
 
 from celest.core.decorators import set_module
 from celest.encounter import GroundPosition
-from celest.satellite import Interpolation, Time
-from typing import Any, Dict, Literal, Tuple
+from celest.satellite import Interpolation
+from typing import Any, Dict, Literal, Tuple, TYPE_CHECKING
 import numpy as np
 
+if TYPE_CHECKING:
+    from celest.satellite import Time
 
 @set_module('celest.satellite')
-class Coordinate(object):
+class Coordinate(Interpolation):
     """Localize position information representations.
 
     The `Coordinate` class provides a simple user interface into converting a
@@ -83,8 +85,6 @@ class Coordinate(object):
         self._ECEF = None
         self._altitude = None
 
-        self.interp = Interpolation()
-
         self.length = None
         self._set_base_position(basePos, type, factor)
     
@@ -102,7 +102,7 @@ class Coordinate(object):
         """
 
         if factor > 0:
-            basePos = self.interp(basePos, factor=factor)
+            basePos = self._interp(basePos, factor=factor)
 
         if type == "GEO":
             if basePos.shape[1] == 2:
@@ -207,7 +207,7 @@ class Coordinate(object):
         """
         if type(self._GEO) == type(None):
             if kwargs:
-                return self.interp(self._GEO, **kwargs)
+                return self._interp(self._GEO, **kwargs)
             return self._GEO
         if type(self._ECEF) == type(None):
             self.ECEF()
@@ -216,7 +216,7 @@ class Coordinate(object):
         self._GEO = GEO_data
 
         if kwargs:
-            GEO_data = self.interp(GEO_data, **kwargs)
+            GEO_data = self._interp(GEO_data, **kwargs)
 
         return GEO_data
     
@@ -259,7 +259,7 @@ class Coordinate(object):
         self._ERA = ang
 
         if kwargs:
-            ang = self.interp(ang, **kwargs)
+            ang = self._interp(ang, **kwargs)
 
         return ang
     
@@ -329,7 +329,7 @@ class Coordinate(object):
         self._ECI = ECI_data
 
         if kwargs:
-            ECI_data = self.interp(ECI_data, **kwargs)
+            ECI_data = self._interp(ECI_data, **kwargs)
 
         return ECI_data
     
@@ -366,7 +366,7 @@ class Coordinate(object):
             ECEF_data = self._ECI_and_ECEF(posData=self._ECI, type="ECI")
 
         if kwargs:
-            ECEF_data = self.interp(ECEF_data, **kwargs)
+            ECEF_data = self._interp(ECEF_data, **kwargs)
 
         return self.ECEF_data
     
@@ -438,8 +438,8 @@ class Coordinate(object):
         Az[neg_ind] = 360 - self._get_ang(tangent[neg_ind], proj_LOS[neg_ind])
 
         if kwargs:
-            Alt = self.interp(Alt, **kwargs)
-            Az = self.interp(Az, **kwargs)
+            Alt = self._interp(Alt, **kwargs)
+            Az = self._interp(Az, **kwargs)
 
         return Alt, Az
     
@@ -475,7 +475,7 @@ class Coordinate(object):
         ang = self._get_ang(LOS, ECEF_data)
 
         if kwargs:
-            ang = self.interp(ang, **kwargs)
+            ang = self._interp(ang, **kwargs)
 
         return ang
 
@@ -538,7 +538,7 @@ class Coordinate(object):
 
         if type(self._altitude) != type(None):
             if kwargs:
-                return self.interp(self._altitude)
+                return self._interp(self._altitude)
             else:
                 return self._altitude
 
@@ -559,7 +559,7 @@ class Coordinate(object):
         self._altitude = altitude
 
         if kwargs:
-            altitude = self.interp(altitude, **kwargs)
+            altitude = self._interp(altitude, **kwargs)
 
         return altitude
     
@@ -594,7 +594,7 @@ class Coordinate(object):
         distances = np.linalg.norm(LOS, axis=1)
 
         if kwargs:
-            distances = self.interp(distances, **kwargs)
+            distances = self._interp(distances, **kwargs)
 
         return distances
     
@@ -628,8 +628,8 @@ class Coordinate(object):
         alpha = self.time.LMST(longitude) - np.arctan(tanH)
 
         if kwargs:
-            delta = self.interp(delta, **kwargs)
-            alpha = self.interp(alpha, **kwargs)
+            delta = self._interp(delta, **kwargs)
+            alpha = self._interp(alpha, **kwargs)
 
         return alpha, delta
     

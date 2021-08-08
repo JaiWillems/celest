@@ -5,7 +5,6 @@ times in julian days and convert to various time representations.
 """
 
 
-from celest.astronomy import Sun
 from celest.core.decorators import set_module
 from celest.satellite import AstronomicalQuantities, Interpolation
 from typing import Any, Dict
@@ -13,7 +12,7 @@ import numpy as np
 
 
 @set_module('celest.satellite')
-class Time(AstronomicalQuantities):
+class Time(AstronomicalQuantities, Interpolation):
     """Time representations.
     
     The `Time` class allows a user to input an array of times in julian days
@@ -73,8 +72,6 @@ class Time(AstronomicalQuantities):
         self._GMST = None
         self._GAST = None
 
-        self._interp = Interpolation()
-
         if factor > 0:
             julian = self._interp(data=julian, factor=factor)
 
@@ -103,30 +100,14 @@ class Time(AstronomicalQuantities):
         mean_hour_angle
         """
 
-        theta = np.radians(longitude)
+        if type(self._equation_of_time) == type(None):
+            self.equation_of_time(julData=self._julian)
 
-        sun_position = Sun().position(self).ITRS(self)
-        obs_position = np.full((self.length, 3), [np.cos(theta), np.sin(theta), 0])
-        arb1 = np.full((self.length, 3), [0, 0, 100])
-        arb2 = np.full((self.length, 3), [0, 0, -100])
+        julian = self._julian
+        HRA = 15 * ((24 * (julian % 1) + self._equation_of_time + longitude / 15) % 24)
 
-        norm_a = np.cross(sun_position - arb2, sun_position - arb1)
-        norm_b = np.cross(obs_position - arb2, obs_position - arb1)
-
-        na_dot_nb = np.diag(np.matmul(norm_a, norm_b.T))
-        denom = np.linalg.norm(norm_a, axis=1) * np.linalg.norm(norm_b, axis=1)
-        HRA = np.degrees(np.arccos(na_dot_nb / denom))
-
-        sun_dot_nb = np.sum(sun_position * norm_b, axis=1)
-        denom = np.linalg.norm(norm_b, axis=1) ** 2
-        scale_arr = np.repeat((sun_dot_nb / denom).reshape((-1, 1)), 3, axis=1)
-        proj_v4_on_nb = scale_arr * norm_b
-
-        test = np.sum(proj_v4_on_nb * norm_b, axis=1)
-
-        pos_ind = np.where(test >= 0)[0]
-
-        HRA[pos_ind] = -HRA[pos_ind]
+        neg_ind = np.where(HRA > 180)[0]
+        HRA[neg_ind] = HRA[neg_ind] - 360
 
         if kwargs:
             HRA = self._interp(HRA, **kwargs)
@@ -153,22 +134,13 @@ class Time(AstronomicalQuantities):
         See Also
         --------
         true_hour_angle
-
-        Notes
-        -----
-        The mean solar hour angle, :math:`h_{mSun}`, is found from the
-        following:
-
-        .. math:: h_{mSun} = h_{Sun} - Eq.T.
-
-        where :math:`h_{Sun}` is the true solar hour angle at the observer's
-        longitude and :math:`Eq.T.` is the equation of time.
         """
 
-        if type(self._equation_of_time) == type(None):
-            self.equation_of_time(self._julian)
+        julian = self._julian
+        HRA = 15 * ((24 * (julian % 1) + longitude / 15) % 24)
 
-        HRA = self.true_hour_angle(longitude) - self._equation_of_time
+        neg_ind = np.where(HRA > 180)[0]
+        HRA[neg_ind] = HRA[neg_ind] - 360
 
         if kwargs:
             HRA = self._interp(HRA, **kwargs)
@@ -205,8 +177,11 @@ class Time(AstronomicalQuantities):
         observer's longitude.
         """
 
-        hour_angle = self.true_hour_angle(longitude)
-        TST = (hour_angle / 15 + 12) % 24
+        if type(self._equation_of_time) == type(None):
+            self.equation_of_time(julData=self._julian)
+
+        julian = self._julian
+        TST = (24 * (julian % 1) + 12 + self._equation_of_time + longitude / 15) % 24
 
         if kwargs:
             TST = self._interp(TST, **kwargs)
@@ -243,8 +218,8 @@ class Time(AstronomicalQuantities):
         observer's longitude.
         """
 
-        hour_angle = self.mean_hour_angle(longitude)
-        MST = (hour_angle / 15 + 12) % 24
+        julian = self._julian
+        MST = (24 * (julian % 1) + 12 + longitude / 15) % 24
 
         if kwargs:
             MST = self._interp(MST, **kwargs)

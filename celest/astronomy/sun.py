@@ -53,7 +53,10 @@ class Sun(CelestialObject):
             Position of Mercury at times, `timeData`, as a `Coordinate` object.
         """
         
-        return self._find_bc_position(timeData, bcCode=10)
+        time_data = timeData.julian
+        pos_data = self._find_bc_position(time_data, bcCode=10)
+
+        return Coordinate(basePos=pos_data, type="ECI", timeData=timeData)
 
     def dawn_times(self, timeData: Time, type: Literal["A", "C", "N"], groundPos: GroundPosition) -> Time:
         """Return dawn times.
@@ -83,8 +86,9 @@ class Sun(CelestialObject):
 
         shift = {"C": -6, "N": -12, "A": -18}
         sun_pos = self.position(timeData)
+        dawn_times = self._find_altitude_zeros(sun_pos, groundPos, slope=1, shift=shift[type])
 
-        return self._find_altitude_zeros(sun_pos, groundPos, slope=1, shift=shift[type])
+        return Time(dawn_times)
     
     def dusk_times(self, timeData: Time, type: Literal["A", "C", "N"], groundPos: GroundPosition) -> Time:
         """Return dusk times.
@@ -114,8 +118,9 @@ class Sun(CelestialObject):
         
         shift = {"C": -6, "N": -12, "A": -18}
         sun_pos = self.position(timeData)
+        dusk_times = self._find_altitude_zeros(sun_pos, groundPos, slope=-1, shift=shift[type])
 
-        return self._find_altitude_zeros(sun_pos, groundPos, slope=-1, shift=shift[type])
+        return Time(dusk_times)
 
     
     def rise(self, timeData: Time, groundPos: GroundPosition) -> Time:
@@ -137,9 +142,12 @@ class Sun(CelestialObject):
         --------
         set : Return the solar set times.
         """
-        
-        pos_data = self.position(timeData)
-        return self._find_rise(pos_data, groundPos)
+
+        time_data = timeData.julian
+        pos_data = self.position(timeData).horizontal(groundPos)[:, 0]
+        rise_times = self._find_rise(pos_data, time_data)
+
+        return Time(rise_times)
     
     def set(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the solar set times.
@@ -160,9 +168,12 @@ class Sun(CelestialObject):
         --------
         rise : Return the solar rise times.
         """
-        
-        pos_data = self.position(timeData)
-        return self._find_set(pos_data, groundPos)
+
+        time_data = timeData.julian
+        pos_data = self.position(timeData).horizontal(groundPos)[:, 0]
+        set_times = self._find_set(pos_data, time_data)
+
+        return Time(set_times)
     
     def peak(self, timeData: Time, groundPos: GroundPosition) -> Time:
         """Return the solar peak times.
@@ -179,6 +190,9 @@ class Sun(CelestialObject):
         Time
             `Time` object containing peak times.
         """
-        
-        pos_data = self.position(timeData)
-        return self._find_peak(pos_data, groundPos)
+
+        time_data = timeData.julian
+        pos_data = self.position(timeData).horizontal(groundPos)[:, 0]
+        peak_times = self._find_peak(pos_data, time_data)
+
+        return Time(peak_times)
