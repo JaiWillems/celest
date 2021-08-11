@@ -17,11 +17,11 @@ def cone_constraint(theta, U, X):
 
     Parameters
     ----------
-    theta: np.array
+    theta : np.array
         Array of size (n,) containing cone aperature angles in degrees.
-    U: np.array
+    U : np.array
         Array of shape (n, 3) containing the cartesian coordinates of the apex.
-    X: np.array
+    X : np.array
         Array of shape (n, 3) containing the cartesian coordinate points to
         check.
 
@@ -69,7 +69,7 @@ def plane_constraint(U, X):
 
     Parameters
     ----------
-    U, X: np.array
+    U, X : np.array
         Arrays of shape (n, 3) containing cartesian vectors defining a plane.
 
     Returns
@@ -103,16 +103,16 @@ def aperature_theta(ang, ang_type, n=None, U=None, X=None):
 
     Parameters
     ----------
-    ang: float
+    ang : float
         The constraint angle in degrees.
-    angType: {0, 1}
+    angType : {0, 1}
         Defines the angle as altitude if `angType=0` and off-nadir if
         `angType=1`.
-    n: int, optional
+    n : int, optional
         Length of returned theta array.
-    U: np.array, optional
+    U : np.array, optional
         Array of shape (n, 3) containing the cartesian coordinates of the apex.
-    X: np.array, optional
+    X : np.array, optional
         Array of shape (n, 3) containing the cartesian coordinate points to
         check.
 
@@ -141,7 +141,7 @@ def aperature_theta(ang, ang_type, n=None, U=None, X=None):
     where :math:`\gamma` is the off-nadir constraint angle.
     """
 
-    if ang_type:
+    if ang_type == "N":
         ang = np.radians(ang)
 
         num = np.linalg.norm(X - U, axis=1)
@@ -156,7 +156,7 @@ def aperature_theta(ang, ang_type, n=None, U=None, X=None):
     return theta
 
 
-def encounter_ind(satECEF, gndECEF, ang, angType):
+def analytical_encounter_ind(satECEF, gndECEF, ang, angType):
     """Return encounter indices.
 
     This method returns the encounter indices corresponding only to a valid
@@ -165,13 +165,13 @@ def encounter_ind(satECEF, gndECEF, ang, angType):
 
     Parameters
     ----------
-    satECEF: np.array
+    satECEF : np.array
         Array of shape (n, 3) containing satellite ECEF positions.
-    gndECEF: np.array
+    gndECEF : np.array
         Array of shape (n, 3) containing ground location ECEF positions.
-    ang: float
+    ang : float
         Constraint angle in degrees.
-    angType: {0, 1}
+    angType : {0, 1}
         Defines the angle as altitude if `angType=0` and off-nadir if
         `angType=1`.
 
