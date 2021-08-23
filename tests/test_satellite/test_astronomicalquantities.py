@@ -8,8 +8,38 @@ import unittest
 
 
 class TestAstronomicalQuantities(TestCase):
+    """Testing class for the `AstronomicalQuantities` class.
+
+    Attributes
+    ----------
+    AO : AstronomicalQuantities
+        Set up code for test methods.
+
+    Methods
+    -------
+    setUp()
+        Test fixure for test method execution.
+    test_nutation_angles(julData)
+        Test `AstronomicalQuantities.nutation_angles`.
+    test_nutation_components(julData)
+        Test `AstronomicalQuantities.nutation_components`.
+    test_mean_obliquity(julData)
+        Test `AstronomicalQuantities.mean_obliquity`.
+    test_apparent_obliquity(julData)
+        Test `AstronomicalQuantities.apparent_obliquity`.
+    test_from_julian(julData)
+        Test `AstronomicalQuantities.from_julian`.
+    test_day_of_year(julData)
+        Test `AstronomicalQuantities.day_of_year`.
+    test_equation_of_time(julData)
+        Test `AstronomicalQuantities.equation_of_time`.
+    test_equation_of_equinoxes(julData)
+        Test `AstronomicalQuantities.equation_of_equinoxes`.
+    """
 
     def setUp(self):
+        """Test fixure for test method execution."""
+
         self.AO = AstronomicalQuantities()
 
     def test_nutation_angles(self):
@@ -131,7 +161,7 @@ class TestAstronomicalQuantities(TestCase):
 
         Notes
         -----
-        Test cases taken from "Astronomical Algorithms` by Jean Meeus.[1]_
+        Test cases taken from "Astronomical Algorithms" by Jean Meeus.[1]_
 
         References
         ----------
@@ -149,6 +179,23 @@ class TestAstronomicalQuantities(TestCase):
                 self.assertEqual(day[i], true_day[i])
 
     def test_equation_of_time(self):
+        """Test `AstronomicalQuantities.equation_of_time`.
+
+        Notes
+        -----
+        Test cases taken from "Astronomical Algorithms" by Jean Meeus,
+        PLANETCALC, and the Global Monitoring Laboratory.[1]_[2]_[3]_
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 185. isbn: 9780943396613.
+        .. [2] Anton. Online calculator: Equation of time. url:
+           https://planetcalc.com/9235/.
+        .. [3] NOAA US Department of Commerce. ESRL Global Monitoring
+           Laboratory -Global Radiation and Aerosols. url:
+           https://gml.noaa.gov/grad/solcalc/.
+        """
 
         julData = np.array([2455368.75, 2448908.5, 2459448.5])
         true_EOT = np.array([-0.42657696, 3.427351, -0.710537])
@@ -160,7 +207,16 @@ class TestAstronomicalQuantities(TestCase):
                 self.assertAlmostEqual(EOT[i], true_EOT[i], delta=0.04)
 
     def test_equation_of_equinoxes(self):
-        """
+        """Test `AstronomicalQuantities.equation_of_equinoxes`.
+
+        Notes
+        -----
+        Test cases taken from "Astronomical Algorithms" by Jean Meeus.[1]_
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 88. isbn: 9780943396613.
         """
 
         julData = np.array([2446895.5])
