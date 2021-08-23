@@ -5,15 +5,17 @@ class to allow for more advanced astronomical calculations.
 """
 
 
+from celest.core.decorators import set_module
 from typing import Tuple
 import numpy as np
 
 
+@set_module('celest.satellite')
 class AstronomicalQuantities(object):
     """Astronomical quantities for astronomical calculations.
 
-    The `AstronomicalQuantities` class to allow for more advanced astronomical
-    calculations.
+    The `AstronomicalQuantities` class was designed to allow for more advanced
+    astronomical calculations.
 
     Methods
     -------
@@ -22,44 +24,80 @@ class AstronomicalQuantities(object):
     nutation_components(julData)
         Return the nutations in longitude and in obliquity.
     mean_obliquity(julData)
-        Return the mean obliquity of the ecliptic.
+        Return the mean obliquity of the ecliptic in the J2000 epoch.
     apparent_obliquity(julData)
-        Return the apparent obliquity of the ecliptic.
+        Return the apparent obliquity of the ecliptic in the J2000 epoch.
     from_julian(julData)
-        Return day, month, and year from Julian data.
+        Return year, month, and day from Julian day data.
     day_of_year(julData)
         Return the day of the year.
     equation_of_time(julData)
-        Return the Equation of Time.
+        Return the Equation of Time in degrees.
     equation_of_equinoxes(julData)
-        Return the equation of equinoxes.
+        Return the equation of equinoxes in arcseconds.
     """
 
     def nutation_angles(self, julData: np.array) -> Tuple:
         """Return the five Earth nutation angles.
 
+        This method takes a Julian day array and calculates the five nutation
+        angles at each time. The calculated angles include the mean elongation
+        of the Moon from the Sun (D), mean anomaly of the Sun (M), mean
+        anomaly of the Moon (N), Moon's argument of latitude (F), and the
+        longitude of the ascending node of the Moon's mean orbit on the
+        ecliptic measured from the mean equinox date (O).
+
         Parameters
         ----------
         julData : np.array
-            Times for the nutation angle calculations.
+            Array of shape (n,) containing Julian times in decimal days.
 
         Returns
         -------
         tuple
-            Returns a tuple of Numpy arrays of Earth nutation angles in the
-            order of: mean elongation of the Moon from the sun, mean anomoly
-            of the Sun, mean anomoly of the Moon, the Moon's argument of
-            lattitude, and the longitude of the ascending node of the Moon's
-            mean orbit on the ecliptic.
+            Returns a tuple, `(D, M, N, F, O)`, where the items are Numpy
+            arrays of shape (n,) containing the Earth nutation angles in
+            degrees and decimals.
+
+        Notes
+        -----
+        The time in Julian centeries since J2000, :math:`T`, can be calculated
+        from the Julian day, :math:`JD`, from the following:
+
+        .. math:: T = \\frac{JD - 2451545}{36525}
+
+        The nutation angles can then be calculated in degrees and decimals.[1]_
+
+        .. math:: D = 297.85036 + 445267.111480T - 0.0019142T^2 + T^3 / 189474
+
+        .. math:: M = 357.52772 + 35999.050340T - 0.0001603T^2 - T^3 / 300000
+
+        .. math:: N = 134.96298 + 477198.867398T + 0.0086972T^2 + T^3 / 56250
+
+        .. math:: F = 93.27191 + 483202.017538T - 0.0036825T^2 + T^3 / 327270
+
+        .. math:: O = 125.04452 - 1934.136261T + 0.0020708T^2 + T^3 / 450000
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 143–144. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2446895.5])
+        >>> AO = AstronomicalQuantities()
+        >>> D, M, N, F, O = AO.nutation_angles(julData=julData)
         """
 
         T = (julData - 2451545) / 36525
+        T2, T3 = T ** 2, T ** 3
 
-        D = (297.85036 + 445267.111480 * T - 0.0019142 * T ** 2 + T ** 3 / 189474) % 360
-        M = (357.52772 + 35999.050340 * T - 0.0001603 * T ** 2 - T ** 3 / 300000) % 360
-        N = (134.96298 + 477198.867398 * T + 0.0086972 * T ** 2 + T ** 3 / 56250) % 360
-        F = (93.27191 + 483202.017538 * T - 0.0036825 * T ** 2 + T ** 3 / 327270) % 360
-        O = (125.04452 - 1934.136261 * T + 0.0020708 * T ** 2 + T ** 3 / 450000) % 360
+        D = (297.85036 + 445267.111480 * T - 0.0019142 * T2 + T3 / 189474) % 360
+        M = (357.52772 + 35999.050340 * T - 0.0001603 * T2 - T3 / 300000) % 360
+        N = (134.96298 + 477198.867398 * T + 0.0086972 * T2 + T3 / 56250) % 360
+        F = (93.27191 + 483202.017538 * T - 0.0036825 * T2 + T3 / 327270) % 360
+        O = (125.04452 - 1934.136261 * T + 0.0020708 * T2 + T3 / 450000) % 360
 
         return D, M, N, F, O
 
@@ -69,34 +107,76 @@ class AstronomicalQuantities(object):
         Parameters
         ----------
         julData : np.array
-            Times for the nutation component calculations.
+            Array of shape (n,) containing Julian times in decimal days.
 
         Returns
         -------
         tuple
-            Returns a tuple of arrays containing the nutation of longitude and
-            nutation of obliquity.
+            Returns a tuple, `(longitude, obliquity)`, where the items are
+            Numpy arrays of shape (n,) containing the nutation components of
+            longitude and obliquity in seconds and decimals.
+
+        Notes
+        -----
+        The time in Julian centeries since J2000, :math:`T`, can be calculated
+        from the Julian day, :math:`JD`, from the following:
+
+        .. math:: T = \\frac{JD - 2451545}{36525}
+
+        The longitude of the ascending node of the Moon's orbit on the ecliptic
+        measured from the mean equinox can be calculated in decimal degrees
+        using the following:
+
+        .. math:: \Omega = 125.04452 - 1934.136261T + 0.0020708T^2 + T^3 / 450000
+
+        The mean longitudes of the Sun, :math:`L`, and Moon, :math:`L'`, can be
+        calculated in decimal degrees using the following:
+
+        .. math:: L = 280.4665 + 36000.7698 * T
+
+        .. math:: L' = 218.3165 + 481267.8813 * T
+
+        The nutation in longitude, :math:`\Delta\psi`, and nutation in
+        obliquity, :math:`\Delta\epsilon`, can then be calculated in decimal
+        minutes.[1]_
+
+        .. math:: \Delta\Psi = -17.20\sin\Omega - 1.32\sin 2L - 0.23\sin 2L' + 0.21\sin 2\Omega
+
+        .. math:: \Delta\epsilon = 9.20\cos\Omega + 0.57\cos 2L + 0.10\cos 2L' - 0.09\cos 2\Omega
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 143–144. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2446895.5])
+        >>> AO = AstronomicalQuantities()
+        >>> delta_psi, delta_epsilon = AO.nutation_componenets(julData=julData)
         """
 
         T = (julData - 2451545) / 36525
 
-        omega = np.radians((125.04452 - 1934.136261 * T + 0.0020708 * T ** 2 + T ** 3 / 450000) % 360)
+        omega = 125.04452 - 1934.136261 * T + 0.0020708 * T ** 2 + T ** 3 / 450000
+        omega = np.radians(omega)
+        omega_2 = 2 * omega
 
-        L = np.radians(280.4665 + 36000.7698 * T)
-        Lp = np.radians(218.3165 + 481267.8813 * T)
+        L = 2 * np.radians(280.4665 + 36000.7698 * T)
+        LP = 2 * np.radians(218.3165 + 481267.8813 * T)
 
-        p1 = -17.20 * np.sin(omega)
-        p2 = -1.32 * np.sin(2 * L)
-        p3 = -0.23 * np.sin(2 * Lp)
-        p4 = 0.21 * np.sin(2 * omega)
+        P1 = -17.20 * np.sin(omega)
+        P2 = -1.32 * np.sin(L)
+        P3 = -0.23 * np.sin(LP)
+        P4 = 0.21 * np.sin(omega_2)
 
-        e1 = 9.20 * np.cos(omega)
-        e2 = 0.57 * np.cos(2 * L)
-        e3 = 0.10 * np.cos(2 * Lp)
-        e4 = -0.09 * np.cos(2 * omega)
+        E1 = 9.20 * np.cos(omega)
+        E2 = 0.57 * np.cos(L)
+        E3 = 0.10 * np.cos(LP)
+        E4 = -0.09 * np.cos(omega_2)
 
-        delta_psi = p1 + p2 +p3 + p4
-        delta_epsilon = e1 + e2 + e3 + e4
+        delta_psi = P1 + P2 + P3 + P4
+        delta_epsilon = E1 + E2 + E3 + E4
 
         return delta_psi, delta_epsilon
 
@@ -106,31 +186,65 @@ class AstronomicalQuantities(object):
         Parameters
         ----------
         julData : np.array
-            Times for the obliquity angle calculations.
+            Array of shape (n,) containing Julian times in decimal days.
 
         Returns
         -------
         np.array
             Returns an array of shape (n,) containing the mean obliquity of
-            the ecliptic.
+            the ecliptic in degrees and decimals.
+
+        See Also
+        --------
+        apparent_obliquity :
+            Return the apparent obliquity of the ecliptic in the J2000 epoch.
+
+        Notes
+        -----
+        The time in Julian centeries since J2000, :math:`T`, can be calculated
+        from the Julian day, :math:`JD`, from the following:
+
+        .. math:: T = \\frac{JD - 2451545}{36525}
+
+        If we define :math:`U = T / 100`, then the mean obliquity of the
+        ecliptic. :math:`\epsilon_o` can be found by the following:
+
+        .. math:: \epsilon_0 = 84381.448 - 4680.93 * U - 1.55 * U ** 2 +
+            1999.25 * U ** 3 - 51.38 * U ** 4 - 249.67 * U ** 5 -
+            39.05 * U ** 6 + 7.12 * U ** 7 + 27.87 * U ** 8 + 5.79 * U ** 9 +
+            2.45 * U ** 10
+
+        The algorithm used is only valid for a period of 10000 years on either
+        side of J2000.[1]_
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 147. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2446895.5])
+        >>> AO = AstronomicalQuantities()
+        >>> epsilon_0 = AO.mean_obliquity(julData=julData)
         """
 
         T = (julData - 2451545) / 36525
         U = T / 100
 
-        e1 = 84381.448
-        e2 = -4680.93 * U
-        e3 = -1.55 * U ** 2
-        e4 = 1999.25 * U ** 3
-        e5 = -51.38 * U ** 4
-        e6 = -249.67 * U **5
-        e7 = -39.05 * U ** 6
-        e8 = 7.12 * U ** 7
-        e9 = 27.87 * U **8
-        e10 = 5.79 * U ** 9
-        e11 = 2.45 * U ** 10
+        epsilon_0 = 84381.448
+        epsilon_0 -= 4680.93 * U
+        epsilon_0 -= 1.55 * U ** 2
+        epsilon_0 += 1999.25 * U ** 3
+        epsilon_0 -= 51.38 * U ** 4
+        epsilon_0 -= 249.67 * U ** 5
+        epsilon_0 -= 39.05 * U ** 6
+        epsilon_0 += 7.12 * U ** 7
+        epsilon_0 += 27.87 * U ** 8
+        epsilon_0 += 5.79 * U ** 9
+        epsilon_0 += 2.45 * U ** 10
 
-        epsilon_0 = (e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8 + e9 + e10 + e11) / 3600
+        epsilon_0 = epsilon_0 / 3600
 
         return epsilon_0
 
@@ -140,13 +254,40 @@ class AstronomicalQuantities(object):
         Parameters
         ----------
         julData : np.array
-            Times for the obliquity angle calculations.
+            Array of shape (n,) containing Julian times in decimal days.
 
         Returns
         -------
         np.array
             Returns an array of shape (n,) containing the apparent obliquity of
-            the ecliptic.
+            the ecliptic in degrees and decimals.
+
+        See Also
+        --------
+        mean_obliquity :
+            Return the mean obliquity of the ecliptic in the J2000 epoch.
+
+        Notes
+        -----
+        The apparent obliquity of the ecliptic, :math:`\epsilon` can be
+        calculated as :math:`\epsilon = \epsilon_0 + \Delta\epsilon` where
+        :math:`\epsilon_0` is the mean obliquity of the ecliptic and
+        :math:`\Delta\epsilon` is the nutation of obliquity.[1]_
+
+        The due to the limitations of the algorithm used in the calculation of
+        :math:`\epsilon_0` is only valid for a period of 10000 years on either
+        side of J2000.
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 147. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2446895.5])
+        >>> AO = AstronomicalQuantities()
+        >>> epsilon = AO.apparent_obliquity(julData=julData)
         """
 
         epsilon_0 = self.mean_obliquity(julData)
@@ -154,121 +295,197 @@ class AstronomicalQuantities(object):
         epsilon = epsilon_0 + delta_epsilon / 3600
 
         return epsilon
-    
-    def from_julian(self, julData: np.array) -> np.array:
-        """Return day, month, and year from Julian data.
+
+    def from_julian(self, julData: np.array) -> Tuple:
+        """Return year, month, day from Julian day data.
 
         Parameters
         ----------
         julData : np.array
-            Array of shape (n,) containing Julian data in decimal degrees.
-        
+            Array of shape (n,) containing Julian times in decimal days.
+
         Returns
         -------
-        np.array
-            Array of shape (n, 3) containing columns of day, month, and year
-            information.
+        Tuple
+            Returns a tuple, `(year, month, day)`, where the items are
+            Numpy arrays of shape (n,) containing the year, month, and decimal
+            days of the inputed Julian data.
+
+        Notes
+        -----
+        Refer to page 63 of Astronomical Algorithms by Jean Meeus for a
+        detailed implementation of the algorithm.[1]_
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 63. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2436116.31])
+        >>> AstronomicalQuantities().apparent_obliquity(julData=julData)
+        (1957, 10, 4.81)
         """
 
         JD = julData + 0.5
-        Z, F = int(JD), JD % 1
+        A, F = JD.astype(int), JD % 1
 
-        if Z < 2299161:
-            A = Z
-        else:
-            alpha = int((Z - 1867216.25) / 36524.25)
-            A = Z + 1 + alpha - int(alpha / 4)
-        
+        ind = np.where(A >= 2291161)[0]
+        alpha = ((A[ind] - 1867216.25) / 36524.25).astype(int)
+        A[ind] = A + 1 + alpha - (alpha / 4).astype(int)
+
         B = A + 1524
-        C = int((B - 122.1) / 365.25)
-        D = int(365.25 * C)
-        E = int((B - D) / 30.6001)
+        C = ((B - 122.1) / 365.25).astype(int)
+        D = (365.25 * C).astype(int)
+        E = ((B - D) / 30.6001).astype(int)
 
-        day = B - D - int(30.6001 * E) + F
+        day = B - D - (30.6001 * E).astype(int) + F
 
-        if E < 14:
-            month = E - 1
-        elif E == 14 or E == 15:
-            month = E - 13
-        
-        if month > 2:
-            year = C - 4716
-        elif month == 1 or month == 2:
-            year = C - 4715
-        
-        return day, month, year
-    
+        month = E
+        ind_1 = np.where(month < 14)[0]
+        ind_2 = np.where((month == 14) | (month == 15))[0]
+        month[ind_1] = month[ind_1] - 1
+        month[ind_2] = month[ind_2] - 13
+
+        year = C
+        ind_1 = np.where(month > 2)[0]
+        ind_2 = np.where((month == 1) | (month == 2))[0]
+        year[ind_1] = year[ind_1] - 4716
+        year[ind_2] = year[ind_2] - 4715
+
+        return year, month, day
+
     def day_of_year(self, julData: np.array) -> np.array:
         """Return the day of the year.
 
         Parameters
         ----------
         julData : np.array
-            Array of shape (n,) containing Julian data in decimal degrees.
-        
+            Array of shape (n,) containing Julian times in decimal days.
+
         Returns
         -------
         np.array
             Array of shape (n,) containing the day of the year.
+
+        Notes
+        -----
+        The day of the year, :math:`N` can be calculated from the following:
+
+        .. math:: N = INT\left(\frac{275M}{9}\right) - K\times\left(\frac{M+9}{12}\right) + D - 30
+
+        where :math:`M` is the month number, :math:`D` is the day of the month,
+        and :math:`K=1` if the year is a leap year otherwise :math:`K=2`.[1]_
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 65. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2447273.5])
+        >>> AstronomicalQuantities().day_of_year(julData=julData)
+        113
         """
 
-        day, month, year = self.from_julian(julData)
+        year, month, day = self.from_julian(julData)
 
-        if year % 4 == 0:
-            K = 1
-        else:
-            K = 2
+        K = np.full(day.shape, 2)
+        K[np.where(year % 4 == 0)] = 1
 
-        N = int(275 * month / 9) - K * int((month + 9) / 12) + day - 30
+        N = (275 * month / 9).astype(int)
+        N = N - K * ((month + 9) / 12).astype(int) + day - 30
 
-        return N
+        return N.astype(int)
 
     def equation_of_time(self, julData: np.array) -> np.array:
-        """Return the Equation of Time.
+        """Return the Equation of Time in degrees.
 
         Parameters
         ----------
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the `Interpolation()`
-            callable.
+        julData : np.array
+            Array of shape (n,) containing Julian times in decimal days.
 
         Returns
         -------
         np.array
             Array of shape (n,) containing the Equation of Time in decimal
-            minutes.
+            degrees.
 
         Notes
         -----
-        This method uses an empirical equation to approximate the Equation of
-        Time within an accuracy of 0.5 minutes.
+        The equation of time in radians can be calculated from the following:
 
-        .. math:: EoT = 9.87\sin(2B) - 7.53\cos(B) - 1.5\sin(B)
+        .. math:: E = y\sin 2L_0 - 2e\sin M + 4ey\sin M\cos 2L_0 - \frac{1}{2}y^2\sin 4L_0 - \frac{5}{4}e^2\sin 2M
 
-        where :math:`B = \\frac{360}{365}(d - 81)` and :math:`b` is the number
-        of days since the start of the year.
+        where :math:`y=\tan^2\frac{\epsilon}{2}`, :math:`\epsilon` is the
+        apparent obliquity of the ecliptic, :math:`L_0` is the Sun's mean
+        longitude, :math:`e` is the eccentricity of the Earth's orbit, and
+        :math:`M` is the Sun's mean anomaly.[1]_
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 184 - 185. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2448908.5])
+        >>> AstronomicalQuantities().equation_of_time(julData=julData)
+        3.427351
         """
 
-        day_num = self.day_of_year(julData)
+        T = (julData - 2451545) / 36525
 
-        B = (day_num - 81) * 360 / 365
-        B_r, B2_r = np.radians(B), np.radians(2 * B)
-        EoT = 9.87 * np.sin(B2_r) - 7.53 * np.cos(B_r) - 1.5 * np.sin(B_r)
+        L0 = np.radians(280.46646 + 36000.76983 * T + 0.0003032 * T ** 2)
+        M = np.radians(357.52911 + 35999.05029 * T - 0.0001537 * T ** 2)
+        e = 0.016708634 - 0.000042037 * T - 0.0000001267 * T ** 2
 
-        return EoT
+        epsilon = self.apparent_obliquity(julData=julData)
+        y = np.tan(np.radians(epsilon / 2)) ** 2
+
+        EOT = y * np.sin(2 * L0)
+        EOT = EOT - 2 * e * np.sin(M)
+        EOT = EOT + 4 * e * y * np.sin(M) * np.cos(2 * L0)
+        EOT = EOT - 0.5 * y ** 2 * np.sin(4 * L0)
+        EOT = EOT - 1.25 * e ** 2 * np.sin(2 * M)
+        EOT = np.degrees(EOT)
+
+        return EOT
 
     def equation_of_equinoxes(self, julData: np.array) -> np.array:
-        """Return the equation of equinoxes.
+        """Return the equation of the equinoxes in arcseconds.
 
         Parameters
         ----------
         julData : np.array
-            Times for the equation of equinox calculations.
+            Array of shape (n,) containing Julian times in decimal days.
 
         Returns
         -------
         np.array
-            Returns an array of shape (n,) containing equation of equinoxes.
+            Array of shape (n,) containing the Equation of Equinoxes in decimal
+            arcseconds.
+
+        Notes
+        -----
+        The equation of the equinoxes is given by
+        :math:`\frac{1}{15}\Delta\psi\cos\epsilon` where :math:`\Delta\psi` is
+        the nutation in longitude represented in arcseconds and,
+        :math:`\epsilon` is the true obliquity of the ecliptic.[1]_
+
+        References
+        ----------
+        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+           1998, pp. 88. isbn: 9780943396613.
+
+        Examples
+        --------
+        >>> julData = np.array([2446895.5]])
+        >>> AstronomicalQuantities().equation_of_equinoxes(julData=julData)
+        -0.2317
         """
 
         delta_psi, _ = self.nutation_components(julData)
