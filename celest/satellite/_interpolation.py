@@ -8,56 +8,71 @@ import numpy as np
 
 @set_module('celest.satellite')
 class Interpolation(object):
-    """General interpolation object.
+    """Object for general interpolation of column data.
 
-    The `Interpolation` class allows for general interpolation without an
-    independent data array.
+    The `Interpolation` class allows for general interpolation of column data
+    without an independent data array.
 
     Methods
     -------
     _interp(data, factor, dt, indices)
-        Interpolate `data` using the given parameters.
+        Interpolate `data` per the given parameters.
     """
 
-    def _interp(self, data: np.array, factor: int=0, dt: int=0, indices:
-                 np.array=None) -> np.array:
-        """Interpolate `data` using the given parameters.
+    def _interp(self, data: np.array, factor: int=1, dt: int=0, indices:
+                np.array=None) -> np.array:
+        """Interpolate `data` per the given parameters.
+
+        This method takes a multicolumn data array and interpolates it along
+        each column, in the same manner, using the interpolation parameters.
 
         Parameters
         ----------
         data : np.array
-            Array of shape (i, j) containing columns of similar data.
-        factor : int
-            The factor increase in the number of sample points.
-        dt : int
-            The number of points laying beyond the `indices` range to
-            interpolate within.
-        indices : np.array
-            Array of array containing the interpolation indices.
+            Array of shape (i, j) containing columns of similar information.
+        factor : int, optional
+            The factor increase in the number of sample points of interpolated
+            regions.
+        dt : int, optional
+            A positive integer defining the number of points laying beyond the
+            `indices` range to interpolate within.
+        indices : np.array, optional
+            Array of non-empty arrays containing the interpolation indices in a
+            monotonically increasing fashion.
 
         Returns
         -------
         np.array
-            The `data` parameter interpolated with the provided parameters.
+            The `data` parameter interpolated per the given parameters.
 
         Note
         ----
-        The dt parameter is only relevent if an indices parameter is given.
+        The `_interp` method was designed to allow for greater precision data
+        in regions where it is important. As a result, it allows for the
+        interpolation of full data sets or only where may be necessary.
+
+        The `dt` parameter is only relavent if an `indices` parameter is given.
 
         Examples
         --------
-        >>> interp = Interpolation()
-        >>> data = np.array([[1, 6], [2, 7], [3, 8], [4, 9], [5, 10]])
-        >>> interp(data=data, factor=2, dt=1, indices=np.array([[2, 3]]))
-        array([[ 1.        ,  6.        ],
-               [ 2.        ,  7.        ],
-               [ 2.42857143,  7.42857143],
-               [ 2.85714286,  7.85714286],
-               [ 3.28571429,  8.28571429],
-               [ 3.71428571,  8.71428571],
-               [ 4.14285714,  9.14285714],
-               [ 4.57142857,  9.57142857],
-               [ 5.        , 10.        ]])
+        >>> data_1 = np.linspace(0, 9, 10).reshape((-1, 1))
+        >>> data_2 = np.linspace(5, 14, 10).reshape((-1, 1)))
+        >>> data = np.concatenate((data_1, data_2, axis=1)
+        >>> ind = np.array([[2, 4]]
+        >>> Interpolation()._interp(data=data, factor=2, dt=1, indices=ind))
+        np.array([[ 0.          5.        ]
+                  [ 1.          6.        ]
+                  [ 1.57142857  6.57142857]
+                  [ 2.14285714  7.14285714]
+                  [ 2.71428571  7.71428571]
+                  [ 3.28571429  8.28571429]
+                  [ 3.85714286  8.85714286]
+                  [ 4.42857143  9.42857143]
+                  [ 5.         10.        ]
+                  [ 6.         11.        ]
+                  [ 7.         12.        ]
+                  [ 8.         13.        ]
+                  [ 9.         14.        ]])
         """
 
         j = data.shape[0]
@@ -65,33 +80,34 @@ class Interpolation(object):
         indep = np.linspace(0, j - 1, j)
         interp = interp1d(x=indep, y=data, axis=0, kind="cubic")
 
-        if type(indices) == type(None):
+        if indices is None:
 
             indep_new = np.linspace(0, j - 1, j * factor)
 
         else:
 
-            indep_new = np.linspace(0, j - 1, j)
+            indep_new = np.copy(indep)
 
             for reg in np.flipud(indices):
 
-                extension = np.arange(reg[-1] + 1, reg[-1] + 1 + dt, 1)
-                reg = np.append(reg, extension)
-                reg = np.insert(reg, 0, np.arange(reg[0] - dt, reg[0], 1))
+                min_I, max_I = reg[0] - dt, reg[-1] + dt
 
-                min_I, max_I = reg[0], reg[-1]
+                if min_I < 0:
+                    min_I = 0
 
-                if min_I != max_I:
-                    num_ind = int(factor * (max_I - min_I + 1))
-                    reg_indep_new = np.linspace(min_I, max_I, num_ind)
+                if max_I > indep[-1]:
+                    max_I = indep[-1]
+
+                if factor == 1:
+                    alpha = 1
                 else:
-                    reg_indep_new = reg
+                    alpha = 0
 
-                delete_ind = reg[np.where(reg <= j - 1)[0]]
-                indep_new = np.delete(indep_new, delete_ind)
+                left_reg = indep_new[:min_I]
+                new_reg = np.linspace(min_I, max_I, factor * (max_I - min_I + alpha))
+                right_reg = indep_new[max_I + 1:]
 
-                insert_vals = reg_indep_new[np.where(reg_indep_new <= j - 1)[0]]
-                indep_new = np.insert(indep_new, min_I, insert_vals)
+                indep_new = np.concatenate((left_reg, new_reg, right_reg))
 
         data_new = interp(indep_new)
 
