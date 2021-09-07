@@ -1,7 +1,6 @@
-from ._astronomicalquantities import AstronomicalQuantities
-from ._interpolation import Interpolation
-from ._odyssey_enums import FlightStates
-from ._odyssey_math_utils import skew, sat_rotation
-from .coordinate import Coordinate
-from .satellite import Satellite
-from .time import Time
+from celest.satellite._astronomicalquantities import AstronomicalQuantities
+from celest.satellite._interpolation import Interpolation
+from celest.satellite._odyssey_math_utils import skew, sat_rotation
+from celest.satellite.coordinate import Coordinate
+from celest.satellite.satellite import Satellite
+from celest.satellite.time import Time

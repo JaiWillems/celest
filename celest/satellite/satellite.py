@@ -7,9 +7,9 @@ planning.
 #NAT was here hehe :)
 
 from celest.core.decorators import set_module
-from celest.satellite import Coordinate, FlightStates, sat_rotation
+from celest.satellite import Coordinate, sat_rotation
 from scipy.spatial.transform import Rotation, Slerp
-from typing import List, Literal
+from typing import Any, List, Literal
 import pandas as pd
 import numpy as np
 
@@ -24,8 +24,8 @@ class Satellite(object):
 
     Parameters
     ----------
-    coordinates : Coordinate
-        `Coordinate` object containing the position and time evolution of the
+    position : Coordinate
+        `Coordinate` object containing the time evolving position of the
         satellite.
 
     Attributes
@@ -41,46 +41,48 @@ class Satellite(object):
         Calculate the solar power generated from the satellite solar cells.
     solar_radiation_pressure(pointProfiles)
         Calculate the solar radiation pressure experienced by the satellite.
-    generate_pointing_profiles(target_site, encounter_indices, manouver_gap)
+    generate_pointing_profiles(groundPos, encInd, maneuverTime)
         Generates satellite rotations for ground tracking.
     save_data(fileName, delimiter, posTypes)
         Save the time and position data of the satellite.
     """
     
-    def __init__(self, coordinates: Coordinate) -> None:
+    def __init__(self, position: Any) -> None:
         """Initialize attributes."""
 
-        self.time = coordinates.timeData
-        self.position = coordinates
+        self.times = position.times
+        self.position = position
 
-    def generate_pointing_profiles(self, target_site: Coordinate, encounter_indices: np.array, maneuver_gap: int) -> Rotation:
+    def generate_pointing_profiles(self, groundPos: Any, encInd: np.array,
+                                   maneuverTime: int) -> Rotation:
         """Generates satellite rotations for ground tracking.
 
-        This function is intended to take in a single ground site, along with
-        the windows at which the spacecraft makes **IMAGING** passes
-        over the site. This method uses the Odyssey Pointing profile
+        This function is intended to take in a single ground location along
+        with the windows at which the spacecraft makes imaging passed over the
+        location. This method uses the Odyssey Pointing Profile
         determination system created by Mingde Yin.
 
         NOTE: This should be generalized in the future to many sites.
 
         Parameters
         ----------
-        target_site: Coordinate
-            `Coordinate` representation of ground location.
-        encounter_indices: np.array
-            Array of arrays of indices for which spacecraft is in an imaging
-            encounter window with the given ground location.
-        maneuver_gap: float
+        groundPos : GroundPosition
+            Ground location of encounter.
+        encInd: np.array
+            Array of arrays of indices that correspond to times and positions
+            where the spacecraft is in an imaging encounter window with the
+            given ground location.
+        maneuverTime: float
             Number of array indices to pad on either side of
             an encounter window to use for maneuvering time.
-            TODO: turn into a standard time unit, like seconds,
-            since setting a fixed number of array indices is bad
+            TODO: Turn into a standard time unit since setting a fixed number
+            of array indices is limited.
         
         Notes
         -----
-        The general strategy for the pointing profile generation is as follows:
-        1. The base orientation is to have the spacecraft pointing towards
-           Zenith (up).
+        The strategy for pointing profile generation is as follows:
+        1. The default orientation is to have the spacecraft camera pointing
+        towards its zenith.
         2. When the spacecraft is imaging, orient the satellite such that the
         camera is facing the target.
         3. Generate an initial set of pointing profiles assuming the above.
@@ -88,51 +90,55 @@ class Satellite(object):
            states to smooth out transitions.
         """
 
-        # Stage 1: Preliminary rotations
+        ground_GEO = [groundPos.coor[0], groundPos.coor[1], groundPos.radius]
+        ground_GEO = np.repeat(np.array([ground_GEO]), self.position.length, axis=0)
+        target_site = Coordinate(ground_GEO, "GEO", self.times)
+
+        # Stage 1: preliminary rotations.
         # Get difference vector between spacecraft and target site.
         SC_to_site: np.ndarray = target_site.ECI() - self.position.ECI()
 
-        # Set the spacecraft to be zenith pointing, EXCEPT when over the site.
+        # Point toward the zenith except when over the imaging site.
         pointing_directions = self.position.ECI()
-        pointing_directions[encounter_indices, :] = SC_to_site[encounter_indices, :]
+        pointing_directions[encInd, :] = SC_to_site[encInd, :]
 
         # Preliminary rotation set.
         # Temporarily represent as quaternion for interpolation.
         rotations: np.ndarray = sat_rotation(pointing_directions).as_quat()
 
         # Set flight modes. By default, point normal.
-        flight_indices = FlightStates.NORMAL_POINTING * np.ones(SC_to_site.shape[0])
+        flight_ind = 0 * np.ones(SC_to_site.shape[0])
 
-        # Point to target during encounters
-        flight_indices[encounter_indices] = FlightStates.ENCOUNTER
+        # Point to target during encounters.
+        flight_ind[encInd] = 2
 
-        # Stage 2: Interpolation.
+        # Stage 2: interpolation.
         # Generate sets of encounters which are clustered together.
-        # This takes individual indices into clusters which we can use
-        # later to figure out when to start interpolation.
-        split_ind = np.where(np.diff(encounter_indices) > 1)[0]+1
-        encounter_segments = np.split(encounter_indices, split_ind)
+        # This takes individual encInd into clusters which we can use later to
+        # figure out when to start interpolation.
+        split_ind = np.where(np.diff(encInd) > 1)[0]+1
+        encounter_segments = np.split(encInd, split_ind)
 
-        for encounter_indices in encounter_segments:
+        for encInd in encounter_segments:
 
-            starting_step = encounter_indices[0] - maneuver_gap
-            ending_step = encounter_indices[-1] + maneuver_gap
+            start_step = encInd[0] - maneuverTime
+            end_step = encInd[-1] + maneuverTime
 
             # Get starting and ending quaternions.
-            starting_rotation = rotations[starting_step]
-            ending_rotation = rotations[ending_step]
+            start_rotation = rotations[start_step]
+            end_rotation = rotations[end_step]
 
-            slerp_1 = Slerp([starting_step, encounter_indices[0]], Rotation.from_quat([starting_rotation, rotations[encounter_indices[0]]]))
-            interpolated_rotations_1: Rotation = slerp_1(np.arange(starting_step, encounter_indices[0]))
+            slerp_1 = Slerp([start_step, encInd[0]], Rotation.from_quat([start_rotation, rotations[encInd[0]]]))
+            interp_rotations_1: Rotation = slerp_1(np.arange(start_step, encInd[0]))
 
-            rotations[starting_step:encounter_indices[0]] = interpolated_rotations_1.as_quat()
-            flight_indices[starting_step:encounter_indices[0]] = FlightStates.PRE_ENCOUNTER
+            rotations[start_step:encInd[0]] = interp_rotations_1.as_quat()
+            flight_ind[start_step:encInd[0]] = 1
 
-            slerp_2 = Slerp([encounter_indices[-1], ending_step], Rotation.from_quat([rotations[encounter_indices[-1]], ending_rotation]))
-            interpolated_rotations_2: Rotation = slerp_2(np.arange(encounter_indices[-1], ending_step))
+            slerp_2 = Slerp([encInd[-1], end_step], Rotation.from_quat([rotations[encInd[-1]], end_rotation]))
+            interp_rotations_2: Rotation = slerp_2(np.arange(encInd[-1], end_step))
 
-            rotations[encounter_indices[-1]:ending_step] = interpolated_rotations_2.as_quat()
-            flight_indices[encounter_indices[-1]:ending_step] = FlightStates.POST_ENCOUNTER
+            rotations[encInd[-1]:end_step] = interp_rotations_2.as_quat()
+            flight_ind[encInd[-1]:end_step] = 3
 
         return Rotation.from_quat(rotations)
     
@@ -142,7 +148,7 @@ class Satellite(object):
         Parameters
         ----------
         fileName : str
-            File name of the output file as wither a .txt or .csv file.
+            File name of the output file as either a .txt or .csv file.
         delimiter : str
             String of length 1 representing the feild delimiter for the output
             file.
@@ -163,7 +169,7 @@ class Satellite(object):
         """
 
         data = {}
-        data["Time (julian)"] = pd.Series(self.time)
+        data["Time (julian)"] = pd.Series(self.times.julian())
         if "GEO" in posTypes:
             GEO_pos = self.position.GEO()
             data["GEO.lat"] = pd.Series(GEO_pos[:, 0])
