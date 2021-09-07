@@ -1,8 +1,8 @@
 """Localize ground position information.
 
-The groundposition module contains the `GoundPosition` class to store ground
-location data and is used in the `Encounter` class' to manage the
-groundposition-encounter relationship.
+This module contains the `GoundPosition` class which stores ground location
+data and is an instrumental part of encounter planning by managing the ground
+location and satellite encounter relationship.
 """
 
 
@@ -14,126 +14,140 @@ import numpy as np
 
 @set_module('celest.encounter')
 class GroundPosition(object):
-    """Localize ground position based information.
+    """Localize Earth bound location information.
 
-    The `GoundPosition` class stores ground location data and is used in the
-    `Encounter` class' to manage the groundposition-encounter relationship.
+    The `GoundPosition` class stores ground location data and is an
+    instrumental part of encounter planning by managing the ground location and
+    satellite encounter relationship.
 
     Parameters
     ----------
     name : str
-        Name of ground location used for identification and indexing.
+        Name of the ground location used for identification and indexing.
     coor : tuple
-        Geodetic coordinates for the ground position location given in decimal
-        degrees in the (latitude, longitude) format.
-    
+        Geodetic coordinates for the ground location given in the
+        (latitude, longitude) format where the values are in degrees and
+        decimals.
+
     Attributes
     ----------
     name : str
-        Name of ground location used for identification and indexing.
+        Name of the ground location used for identification and indexing.
     coor : tuple
-        Geodetic coordinates for the ground position location given in decimal
-        degrees in the (latitude, longitude) format.
+        Geodetic coordinates for the location given in degrees and decimals.
     radius : float
-        Radius of earths surface at the given coordinates using WGS84.
+        Earth's radius at the given coordinates.
     encounters : Dict
-        Dictionary where the keys are the encounter names and the values are
-        the corresponding `EncounterSpec` objects.
+        Dictionary containing encounter information where the keys are the
+        encounter names and the values are the corresponding `EncounterSpec`
+        objects defining an encounter.
 
     Methods
     -------
     _radius(obsCoor)
-        Return Earth's radius at `obsCoor`.
+        Calculate the Earth's geocentric radius using WGS84.
     add_encounter(name, encType, ang, angType, maxAng, solar)
-        Define an encounter for the `GroundPosition` object.
-
-    Examples
-    --------
-    >>> toronto = GroundPosition(name="Toronto", coor=(43.662300, -79.394530))
-    >>> toronto.add_encounter(name="CYYZ IMG", encType="I", ang=30,
-    ...                       angType="N", maxAng=True, solar=1)
+        Define encounter for the ground location.
     """
-    
+
     def __init__(self, name: str, coor: Tuple[float, float]) -> None:
         """Initialize attributes."""
 
         self.name = name
         self.coor = coor
-        self.radius = self._radius(coor)
+        self.radius = self._radius(coor[0])
         self.encounters = {}
-    
+
     def __str__(self) -> str:
-        """Define `GroundPosition` information string."""
+        """Define information string."""
 
-        title = "Celest.GoundPosition Object\n"
-        name = f"Name: {self.name}\t"
-        coor = f"Coordinates: {self.coor}\t"
-        radius = f"Radius: {self.radius}"
+        output = [
+            f"name={self.name}",
+            f"coor={self.coor}",
+            f"radius={round(self.radius, 5)}",
+            f"{len(self.encounters)} encounter(s)"
+        ]
 
-        return title + name + coor + radius
-    
-    def _radius(self, obsCoor: Tuple[float, float]) -> float:
-        """Return Earth's radius at `obsCoor`.
+        return ", ".join(output)
 
-        This method uses the World Geodetic System, WGS84, to calculate the
-        Earth's radius at the given coordinates.
+    def _radius(self, latitude: float) -> float:
+        """Calculate the Earth's geocentric radius using WGS84.
 
         Parameters
         ----------
-        obsCoor : tuple
-            Geodetic coordinates for the ground position location given in
-            decimal degrees in the (latitude, longitude) format.
+        latitude : float
+            Latitude of the ground location in degrees and decimals.
 
         Returns
         -------
         float
-            The Earths radius at obsCoor given in km.
+            Earth's geocentric radius in kilometres and decimals.
 
         Notes
         -----
-        The Earth can be modeled as an ellipsoid given by the following
-        equation:
+        By using an Earth ellipsoid with the WGS84 parameters of
+        :math:`a=6378.137` and :math:`b=6356.7523142`, the geocentric radius
+        can be calculated using the following formulation:
 
-        .. math:: r = \sqrt{\\frac{(6378.14)^2(6356.75)^2}{(6378.14)^2\sin{\phi}^2+(6356.75)^2\cos{\phi}^2}}
+        .. math:: r = \sqrt{\frac{(a^2\cos(\beta))^2 + (b^2\sin(\beta))^2}{(a\cos(\beta))^2 + (b\sin(\beta))^2}}
 
-        where :math:`\phi` is the observers lattitude.
+        where :math:`\beta` is the observer's latitude.[1]_
+
+        References
+        ----------
+        .. [1] Timur. Earth Radius by Latitude (WGS 84). 2018. url:
+           https://planetcalc.com/7721/.
         """
 
-        phi = np.radians(obsCoor[0])
+        # Get lattidue parameter.
+        phi = np.radians(latitude)
 
         # Define WGS84 Parameters.
-        semi_major = 6378.137**2
-        semi_minor = 6356.752314245**2
+        semi_major = 6378.137
+        semi_minor = 6356.752314245
 
-        numerator = semi_major * semi_minor
-        denominator = semi_major * np.sin(phi)**2 + semi_minor * np.cos(phi)**2
+        c_phi, s_phi = np.cos(phi), np.sin(phi)
 
-        return np.sqrt(numerator / denominator)
-    
+        num = (semi_major ** 2 * c_phi) ** 2 + (semi_minor ** 2 * s_phi) ** 2
+        denom = (semi_major * c_phi) ** 2 + (semi_minor * s_phi) ** 2
+        radius = np.sqrt(num / denom)
+
+        return radius
+
     def add_encounter(self, name: str, encType: Literal["I", "T"], ang: float,
-                      angType: Literal["A", "N"], maxAng: bool, solar:
-                      Literal[-1, 0, 1]=0) -> None:
-        """Define an encounter for the `GroundPosition` object.
+                      angType: Literal["A", "N"], solar: Literal[-1, 0, 1]=0,
+                      sca: float=0) -> None:
+        """Define encounter for the ground location.
+
+        This method allows for the specification of a ground/satellite
+        encounter for the specific Earth-based location. This association will
+        be used in window generation and encounter planning.
 
         Parameters
         ----------
         name : str
-            String acting as the encounter identifier. Used for later indexing.
-        encType :  {"I", "T"}
+            Encounter identifier.
+        encType : {"I", "T"}
             Specifies encounter category as either imaging or transmission.
         ang : float
-            Angluar constraint for the encounter in degrees.
+            Angular constraint for the encounter in degrees.
         angType : {"A", "N"}
-            String specifying the constraint angle as either the altitude, or
-            off-nadir angle type.
-        maxAng : bool
-            Defines the contraint angle as a maximum constraint if True or as
-            minimum constraint if False. Note that the off-nadir angle is
-            measured to increase away from nadir.
+            String specifying the constraint angle as either the altitude or
+            the off-nadir angle type.
         solar : {-1, 0, 1}, optional
-            Defines sunlight constraint where -1 gets windows at night, 0 gets
-            windows at day or night, and 1 gets windows at day.
+            Defines sunlight allowance where -1 allows for windows at night, 0
+            allows for windows at day or night, and 1 allows for windows at day.
+        sca : float, optional
+            Float specifying the minimum angle between a satellite's position
+            vector and the Sun's position vector in a ground-location-centric
+            reference system. Refer to notes for more information.
+
+        Examples
+        --------
+        >>> ground_pos = GroundPosition(name="Toronto", coor=(43.6532, -79.3832))
+        >>> ground_pos.add_encounter(name="CYYZ IMG, encType="I", ang=30,
+        ...                          angType="N", solar=0, SCA=0)
         """
 
-        encounter_object = EncounterSpec(name, encType, ang, angType, maxAng, solar)
+        encounter_object = EncounterSpec(name, encType, ang, angType, solar, sca)
         self.encounters[name] = encounter_object
