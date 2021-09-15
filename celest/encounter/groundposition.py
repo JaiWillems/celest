@@ -7,9 +7,24 @@ location and satellite encounter relationship.
 
 
 from celest.core.decorators import set_module
-from celest.encounter import EncounterSpec
 from typing import Literal, Tuple
 import numpy as np
+
+
+_image_encounter = {
+    "type": "I",
+    "angType": "N",
+    "lighting": 1,
+    "sca": 0
+}
+
+
+_data_link_encounter = {
+    "type": "T",
+    "angType": "A",
+    "lighting": 0,
+    "sca": 30
+}
 
 
 @set_module('celest.encounter')
@@ -28,6 +43,11 @@ class GroundPosition(object):
         Geodetic coordinates for the ground location given in the
         (latitude, longitude) format where the values are in degrees and
         decimals.
+    encType : {"image", "data_link"}
+        Name of the encounter type as either an imaging encounter or a data
+        link encounter. See notes for encounter specifications.
+    ang : float
+        Limit encounter angle in degrees.
 
     Attributes
     ----------
@@ -37,26 +57,78 @@ class GroundPosition(object):
         Geodetic coordinates for the location given in degrees and decimals.
     radius : float
         Earth's radius at the given coordinates.
-    encounters : Dict
-        Dictionary containing encounter information where the keys are the
-        encounter names and the values are the corresponding `EncounterSpec`
-        objects defining an encounter.
+    ang : float
+        Angular constraint for the encounter in degrees.
+    type : {"I", "T"}
+        Specifies encounter category as either imaging or transmission.
+    ang_type : {"A", "N"}
+        String specifying the constraint angle as either the altitude or
+        off-nadir angle type (see notes).
+    lighting : {-1, 0, 1}
+        Defines sunlight constraint where -1 gets windows at night, 0 gets
+        windows at day or night, and 1 gets windows at day.
+    solar_constraint_angle : float
+        Float specifying the minimum angle between a satellite's position
+        vector and the Sun's position vector in a ground-location-centric
+        reference system. Refer to notes for more information.
 
     Methods
     -------
     _radius(obsCoor)
         Calculate the Earth's geocentric radius using WGS84.
-    add_encounter(name, encType, ang, angType, maxAng, solar)
-        Define encounter for the ground location.
+    
+    Notes
+    -----
+    The altitude angle is the position of an object measured in increasing
+    degrees from the horizon. The off-nadir angle is the acute angle between
+    the satellites nadir and the line joining the satellite with the ground
+    location.
+
+    When the "image" encounter type is selected, the valid encounter region
+    is where the satellite's off-nadir angle is less then the constraint angle.
+    The imaging encounters are constrained by daylight and no solar constraint
+    angle.
+
+    When the "data_link" encounter type is selected, the valid encounter region
+    is where the satellites altitude angle is greater than the constraint
+    angle. The data link encunters will be calculated at any time of day and
+    will have a 30 degree constraint angle.
+
+    In some instances of ground to satellite communication, hardware damage
+    can be incurred when the ground station is within a certain angle of the
+    Sun. The solar constraint angle allows encounters to be calculated out of
+    direct alignment of the Sun by invalidating encounter regions where the
+    Sun is behind or close to the satellite as seen from the ground station
+    assuming the ground station is actively tracking the satellite.
     """
 
-    def __init__(self, name: str, coor: Tuple[float, float]) -> None:
+    def __init__(self, name: str, coor: Tuple[float, float], encType:
+                 Literal["image", "data_link"], ang: float) -> None:
         """Initialize attributes."""
 
         self.name = name
         self.coor = coor
         self.radius = self._radius(coor[0])
-        self.encounters = {}
+
+        self.ang = ang
+        
+        if encType == "image":
+
+            self.type = _image_encounter["type"]
+            self.ang_type = _image_encounter["angType"]
+            self.lighting = _image_encounter["lighting"]
+            self.solar_constraint_angle = _image_encounter["sca"]
+
+        elif encType == "data_link":
+
+            self.type = _data_link_encounter["type"]
+            self.ang_type = _data_link_encounter["angType"]
+            self.lighting = _data_link_encounter["lighting"]
+            self.solar_constraint_angle = _data_link_encounter["sca"]
+
+        else:
+
+            raise Exception("The encType parameter must be either \"image\" or \"data_link\"")
 
     def __str__(self) -> str:
         """Define information string."""
@@ -113,41 +185,3 @@ class GroundPosition(object):
         radius = np.sqrt(num / denom)
 
         return radius
-
-    def add_encounter(self, name: str, encType: Literal["I", "T"], ang: float,
-                      angType: Literal["A", "N"], solar: Literal[-1, 0, 1]=0,
-                      sca: float=0) -> None:
-        """Define encounter for the ground location.
-
-        This method allows for the specification of a ground/satellite
-        encounter for the specific Earth-based location. This association will
-        be used in window generation and encounter planning.
-
-        Parameters
-        ----------
-        name : str
-            Encounter identifier.
-        encType : {"I", "T"}
-            Specifies encounter category as either imaging or transmission.
-        ang : float
-            Angular constraint for the encounter in degrees.
-        angType : {"A", "N"}
-            String specifying the constraint angle as either the altitude or
-            the off-nadir angle type.
-        solar : {-1, 0, 1}, optional
-            Defines sunlight allowance where -1 allows for windows at night, 0
-            allows for windows at day or night, and 1 allows for windows at day.
-        sca : float, optional
-            Float specifying the minimum angle between a satellite's position
-            vector and the Sun's position vector in a ground-location-centric
-            reference system. Refer to notes for more information.
-
-        Examples
-        --------
-        >>> ground_pos = GroundPosition(name="Toronto", coor=(43.6532, -79.3832))
-        >>> ground_pos.add_encounter(name="CYYZ IMG, encType="I", ang=30,
-        ...                          angType="N", solar=0, SCA=0)
-        """
-
-        encounter_object = EncounterSpec(name, encType, ang, angType, solar, sca)
-        self.encounters[name] = encounter_object

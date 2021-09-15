@@ -1,3 +1,5 @@
+
+
 from celest.encounter import GroundPosition
 from celest.satellite import Coordinate, Time
 from unittest import TestCase
@@ -278,7 +280,7 @@ class TestCoordinate(TestCase):
 
         # Get Celest results.
         coor = Coordinate(itrsData, "ECEF", self.timeData)
-        groundPos = GroundPosition("Saskatoon", obsCoor)
+        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
         calc_alt, calc_az = coor.horizontal(groundPos)
 
         for i in range(calc_alt.size-5000):
@@ -305,7 +307,7 @@ class TestCoordinate(TestCase):
                               38.27, 23.73, 56.29])
 
         obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition("Saskatoon", obsCoor)
+        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
 
         timeData = Time(self.times[210:220], 2430000)
         coor = Coordinate(self.ECEF[210:220], "ECEF", timeData)
@@ -370,7 +372,7 @@ class TestCoordinate(TestCase):
                          7851.70082642, 7359.09189844])
 
         obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition("Saskatoon", obsCoor)
+        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
 
         timeData = Time(times, 2430000)
         coor = Coordinate(position, "ECEF", timeData)
