@@ -1,8 +1,7 @@
 """Satellite orbital representations and coordinate conversions.
 
-The `Satellite` object localizes satellite related information and
-functionality, and is passed into the `Encounter` class for encounter
-planning.
+This module contains the `Satellite` class to localize satellite-related
+information and functionality.
 """
 #NAT was here hehe :)
 
@@ -25,8 +24,7 @@ class Satellite(object):
     Parameters
     ----------
     position : Coordinate
-        `Coordinate` object containing the time evolving position of the
-        satellite.
+        Satellite time-evolving positions.
 
     Attributes
     ----------
@@ -37,16 +35,12 @@ class Satellite(object):
 
     Methods
     -------
-    solar_power(pointProfiles)
-        Calculate the solar power generated from the satellite solar cells.
-    solar_radiation_pressure(pointProfiles)
-        Calculate the solar radiation pressure experienced by the satellite.
     generate_pointing_profiles(groundPos, encInd, maneuverTime)
-        Generates satellite rotations for ground tracking.
+        Generate satellite rotations for ground tracking.
     save_data(fileName, delimiter, posTypes)
-        Save the time and position data of the satellite.
+        Save satellite time and position data.
     """
-    
+
     def __init__(self, position: Any) -> None:
         """Initialize attributes."""
 
@@ -55,10 +49,10 @@ class Satellite(object):
 
     def generate_pointing_profiles(self, groundPos: Any, encInd: np.array,
                                    maneuverTime: int) -> Rotation:
-        """Generates satellite rotations for ground tracking.
+        """Generate satellite rotations for ground tracking.
 
         This function is intended to take in a single ground location along
-        with the windows at which the spacecraft makes imaging passed over the
+        with the windows at which the spacecraft makes imaging passes over the
         location. This method uses the Odyssey Pointing Profile
         determination system created by Mingde Yin.
 
@@ -67,7 +61,7 @@ class Satellite(object):
         Parameters
         ----------
         groundPos : GroundPosition
-            Ground location of encounter.
+            Ground location and encounter information.
         encInd: np.array
             Array of arrays of indices that correspond to times and positions
             where the spacecraft is in an imaging encounter window with the
@@ -77,7 +71,7 @@ class Satellite(object):
             an encounter window to use for maneuvering time.
             TODO: Turn into a standard time unit since setting a fixed number
             of array indices is limited.
-        
+
         Notes
         -----
         The strategy for pointing profile generation is as follows:
@@ -96,7 +90,7 @@ class Satellite(object):
 
         # Stage 1: preliminary rotations.
         # Get difference vector between spacecraft and target site.
-        SC_to_site: np.ndarray = target_site.ECI() - self.position.ECI()
+        SC_to_site = target_site.ECI() - self.position.ECI()
 
         # Point toward the zenith except when over the imaging site.
         pointing_directions = self.position.ECI()
@@ -104,7 +98,7 @@ class Satellite(object):
 
         # Preliminary rotation set.
         # Temporarily represent as quaternion for interpolation.
-        rotations: np.ndarray = sat_rotation(pointing_directions).as_quat()
+        rotations = sat_rotation(pointing_directions).as_quat()
 
         # Set flight modes. By default, point normal.
         flight_ind = 0 * np.ones(SC_to_site.shape[0])
@@ -129,28 +123,28 @@ class Satellite(object):
             end_rotation = rotations[end_step]
 
             slerp_1 = Slerp([start_step, encInd[0]], Rotation.from_quat([start_rotation, rotations[encInd[0]]]))
-            interp_rotations_1: Rotation = slerp_1(np.arange(start_step, encInd[0]))
+            interp_rotations_1 = slerp_1(np.arange(start_step, encInd[0]))
 
             rotations[start_step:encInd[0]] = interp_rotations_1.as_quat()
             flight_ind[start_step:encInd[0]] = 1
 
             slerp_2 = Slerp([encInd[-1], end_step], Rotation.from_quat([rotations[encInd[-1]], end_rotation]))
-            interp_rotations_2: Rotation = slerp_2(np.arange(encInd[-1], end_step))
+            interp_rotations_2 = slerp_2(np.arange(encInd[-1], end_step))
 
             rotations[encInd[-1]:end_step] = interp_rotations_2.as_quat()
             flight_ind[encInd[-1]:end_step] = 3
 
         return Rotation.from_quat(rotations)
-    
+
     def save_data(self, fileName: str, delimiter: Literal[",", "\\t"], posTypes: List) -> None:
-        """Save satellite data to local directory.
+        """Save satellite time and position data.
 
         Parameters
         ----------
         fileName : str
             File name of the output file as either a .txt or .csv file.
         delimiter : str
-            String of length 1 representing the feild delimiter for the output
+            String of length 1 representing the field delimiter for the output
             file.
         posTypes : List
             List containing the types of position data to store. Possible
@@ -174,7 +168,7 @@ class Satellite(object):
             GEO_pos = self.position.GEO()
             data["GEO.lat"] = pd.Series(GEO_pos[:, 0])
             data["GEO.lon"] = pd.Series(GEO_pos[:, 1])
-            data["GEO.radius"] = pd.Series(GEO_pos[:, 2])
+            data["GEO.height"] = pd.Series(GEO_pos[:, 2])
         if "ECI" in posTypes:
             ECI_pos = self.position.ECI()
             data["ECI.X"] = pd.Series(ECI_pos[:, 0])
