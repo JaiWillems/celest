@@ -5,10 +5,11 @@ analysis implementation.
 """
 
 
+from typing import Literal
 import numpy as np
 
 
-def cone_constraint(theta, U, X):
+def cone_constraint(theta: np.array, U: np.array, X: np.array) -> np.array:
     """Return an array of indices for `X` points that fall within a cone.
 
     This method defines a double-sided cone with an apex located at `U` and an
@@ -51,7 +52,7 @@ def cone_constraint(theta, U, X):
     return ind
 
 
-def plane_constraint(U, X):
+def plane_constraint(U: np.array, X: np.array) -> np.array:
     """Return an array of indices containing points that fall above a plane.
 
     Parameters
@@ -85,7 +86,8 @@ def plane_constraint(U, X):
     return ind
 
 
-def aperature_theta(ang, ang_type, n=None, U=None, X=None):
+def aperature_theta(ang: float, form: Literal[0, 1], n: int=None, U:
+                    np.array=None, X: np.array=None) -> np.array:
     """Calculate cone aperature angles from constraint angles.
 
     This method calculates the aperture angles for the cone that defines a
@@ -95,7 +97,7 @@ def aperature_theta(ang, ang_type, n=None, U=None, X=None):
     ----------
     ang : float
         The constraint angle in degrees.
-    angType : {0, 1}
+    form : {0, 1}
         Defines the angle as altitude if `angType=0` and off-nadir if
         `angType=1`.
     n : int, optional
@@ -131,7 +133,7 @@ def aperature_theta(ang, ang_type, n=None, U=None, X=None):
     where :math:`\gamma` is the off-nadir constraint angle.
     """
 
-    if ang_type:
+    if form:
         ang = np.radians(ang)
 
         num = np.linalg.norm(X - U, axis=1)
@@ -146,7 +148,8 @@ def aperature_theta(ang, ang_type, n=None, U=None, X=None):
     return theta
 
 
-def analytical_encounter_ind(satECEF, gndECEF, ang, angType):
+def analytical_encounter_ind(sat_position: np.array, gnd_position: np.array,
+                             ang: float, form: Literal[0, 1]) -> np.array:
     """Return encounter indices.
 
     This method returns the encounter indices corresponding only to valid
@@ -155,9 +158,9 @@ def analytical_encounter_ind(satECEF, gndECEF, ang, angType):
 
     Parameters
     ----------
-    satECEF : np.array
+    sat_position : np.array
         Array of shape (n, 3) containing satellite ECEF positions.
-    gndECEF : np.array
+    gnd_position : np.array
         Array of shape (n, 3) containing ground location ECEF positions.
     ang : float
         Constraint angle in degrees.
@@ -177,10 +180,10 @@ def analytical_encounter_ind(satECEF, gndECEF, ang, angType):
     interest and its aperture angle defined by the constraint angle.
     """
 
-    n = satECEF.shape[0]
-    U = gndECEF
-    X = satECEF
-    theta = aperature_theta(ang, angType, n, U, X)
+    n = sat_position.shape[0]
+    U = gnd_position
+    X = sat_position
+    theta = aperature_theta(ang, form, n, U, X)
 
     ind_1 = cone_constraint(theta, U, X)
     ind_2 = plane_constraint(U, X)

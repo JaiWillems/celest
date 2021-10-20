@@ -29,7 +29,7 @@ class TestSatellite(TestCase):
     def test_interpolate(self):
         """Test `Satellite.interpolate`."""
 
-        location = GroundPosition((0, 0))
+        location = GroundPosition(0, 0)
 
         window = Window(None, location, self.times[100] + 2430000, self.times[150] + 2430000, None, None, None, None)
         window_list = Windows()

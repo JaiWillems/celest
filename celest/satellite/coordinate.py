@@ -473,9 +473,6 @@ class Coordinate(object):
         ----------
         location : GroundPosition
             Ground location defining the center of the horizontal system.
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
 
         Returns
         -------
@@ -487,7 +484,7 @@ class Coordinate(object):
         --------
         >>> time = Time(julian=np.array([2454545]))
         >>> position = np.array([[6343.82, -2640.87, -11.26]])
-        >>> location = GroundPosition(coor=(52.1579, -106.6702))
+        >>> location = GroundPosition(52.1579, -106.6702)
         >>> coor = Coordinate(position=position, frame="ecef", time=time)
         >>> coor.horizontal(location=location)
         (array([-40.8786098]), array([94.73615482]))
@@ -497,8 +494,8 @@ class Coordinate(object):
             self.ECEF()
 
         # Convert observer position into cartesian coordinates.
-        coor, radius = location.coor, location.radius
-        GEO_data = self._GEO_to_ECEF(np.array([[coor[0], coor[1], 0]]))
+        lat, lon, radius = location.lat, location.lon, location.radius
+        GEO_data = self._GEO_to_ECEF(np.array([[lat, lon, 0]]))
         obs = np.repeat(GEO_data, self.length, 0)
 
         # Determine line of sight vector then altitude.
@@ -507,7 +504,7 @@ class Coordinate(object):
 
         # Find surface tangent vector passing through z-axis.
         k_hat = np.repeat(np.array([[0, 0, 1]]), self.length, axis=0)
-        beta = np.radians(coor[0])
+        beta = np.radians(lat)
         tangent = (k_hat.T * radius / np.sin(beta)).T - obs
 
         # Find LOS projection on tangent plane.
@@ -549,8 +546,8 @@ class Coordinate(object):
         if self._ECEF is None:
             self.ECEF()
 
-        coor = location.coor
-        GEO_data = self._GEO_to_ECEF(np.array([[coor[0], coor[1], 0]]))
+        lat, lon = location.lat, location.lon
+        GEO_data = self._GEO_to_ECEF(np.array([[lat, lon, 0]]))
         obs = np.repeat(GEO_data, self.length, 0)
 
         LOS = np.subtract(self._ECEF, obs)
@@ -690,8 +687,8 @@ class Coordinate(object):
         if self._ECEF is None:
             self.ECEF()
 
-        coor = location.coor
-        gnd_ECEF = self._GEO_to_ECEF(np.array([[coor[0], coor[1], 0]]))
+        lat, lon = location.lat, location.lon
+        gnd_ECEF = self._GEO_to_ECEF(np.array([[lat, lon, 0]]))
         gnd_ECEF = np.repeat(gnd_ECEF, self.length, 0)
 
         # Find LOS vector norm.

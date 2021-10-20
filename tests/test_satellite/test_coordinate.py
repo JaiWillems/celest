@@ -238,8 +238,9 @@ class TestCoordinate(TestCase):
         from astropy import time
 
         # Set up observer location.
+        lat, lon = 52.1579, -106.6702
         obsCoor = (52.1579, -106.6702)
-        loc = EarthLocation.from_geodetic(obsCoor[1]*u.deg, obsCoor[0]*u.deg)
+        loc = EarthLocation.from_geodetic(lon*u.deg, lat*u.deg)
 
         # Prepare time and position information.
         timeData = time.Time(self.times + 2430000, format="jd")
@@ -262,7 +263,7 @@ class TestCoordinate(TestCase):
 
         # Get Celest results.
         coor = Coordinate(itrsData, "ecef", self.timeData)
-        groundPos = GroundPosition(obsCoor)
+        groundPos = GroundPosition(lat, lon)
         calc_alt, calc_az = coor.horizontal(groundPos)
 
         for i in range(calc_alt.size-5000):
@@ -288,8 +289,7 @@ class TestCoordinate(TestCase):
         off_nadir = np.array([66.88, 65.09, 63.90, 63.22, 62.46, 61.67, 58.42,
                               38.27, 23.73, 56.29])
 
-        obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition(obsCoor)
+        groundPos = GroundPosition(52.1579, -106.6702)
 
         timeData = Time(self.times[210:220], 2430000)
         coor = Coordinate(self.ECEF[210:220], "ecef", timeData)
@@ -353,8 +353,7 @@ class TestCoordinate(TestCase):
         dist = np.array([9070.49268746, 8776.7179543, 8330.99543153,
                          7851.70082642, 7359.09189844])
 
-        obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition(obsCoor)
+        groundPos = GroundPosition(52.1579, -106.6702)
 
         timeData = Time(times, 2430000)
         coor = Coordinate(position, "ecef", timeData)
