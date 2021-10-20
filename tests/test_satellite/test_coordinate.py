@@ -1,7 +1,8 @@
 
 
-from celest.encounter import GroundPosition
-from celest.satellite import Coordinate, Time
+from celest.encounter.groundposition import GroundPosition
+from celest.satellite.coordinate import Coordinate
+from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest
@@ -26,38 +27,38 @@ class TestCoordinate(TestCase):
         geo = np.concatenate((self.geo, self.alt.reshape((-1, 1))), axis=1)
 
         self.timeData = Time(self.times, 2430000)
-        self.coor_ECI = Coordinate(self.ECI, "ECI", self.timeData)
-        self.coor_ECEF = Coordinate(self.ECEF, "ECEF", self.timeData)
-        self.coor_GEO = Coordinate(geo, "GEO", self.timeData)
+        self.coor_ECI = Coordinate(self.ECI, "eci", self.timeData)
+        self.coor_ECEF = Coordinate(self.ECEF, "ecef", self.timeData)
+        self.coor_GEO = Coordinate(geo, "geo", self.timeData)
 
     def test_set_base_position(self):
         """Test `Coordinate._set_base_position`."""
 
-        coor_1 = Coordinate(self.geo, "GEO", self.timeData)
+        coor_1 = Coordinate(self.geo, "geo", self.timeData)
 
         self.assertEqual(coor_1._GEO.shape[1], 3)
 
-        self.assertIsNotNone(coor_1.times)
+        self.assertIsNotNone(coor_1.time)
         self.assertIsNotNone(coor_1._GEO)
         self.assertIsNone(coor_1._ECI)
         self.assertIsNone(coor_1._ECEF)
         self.assertEqual(self.length, coor_1.length)
 
-        coor_2 = Coordinate(self.ECI, "ECI", self.timeData, 9)
+        coor_2 = Coordinate(self.ECI, "eci", self.timeData)
 
-        self.assertIsNotNone(coor_2.times)
+        self.assertIsNotNone(coor_2.time)
         self.assertIsNone(coor_2._GEO)
         self.assertIsNotNone(coor_2._ECI)
         self.assertIsNone(coor_2._ECEF)
-        self.assertEqual(9 * self.length, coor_2.length)
+        self.assertEqual(self.length, coor_2.length)
 
-        coor_3 = Coordinate(self.ECEF, "ECEF", self.timeData, 3)
+        coor_3 = Coordinate(self.ECEF, "ecef", self.timeData)
 
-        self.assertIsNotNone(coor_3.times)
+        self.assertIsNotNone(coor_3.time)
         self.assertIsNone(coor_3._GEO)
         self.assertIsNone(coor_3._ECI)
         self.assertIsNotNone(coor_3._ECEF)
-        self.assertEqual(3 * self.length, coor_3.length)
+        self.assertEqual(self.length, coor_3.length)
 
     def test_GEO_to_ECEF(self):
         """Test `Coordinate._GEO_to_ECEF`.
@@ -104,25 +105,6 @@ class TestCoordinate(TestCase):
             with self.subTest(i=i):
                 self.assertAlmostEqual(calc_GEO[i, 2], self.alt[i], delta=0.06)
 
-    def test_ISO6709_representation(self):
-        """Test `Coordinate._ISO6709_representation`.
-
-        Notes
-        -----
-        Test cases generated in accordance to ISO6709 formatting standards.
-        """
-
-        geo = np.array([[43.6532, -79.3832, 430.23],
-                        [-33.2833, 149.1000, 532.98]])
-        sexagesimal = np.array(["43\u00B039\u203211.52\u2033N 79\u00B022\u203259.52\u2033W 430.23km",
-                                "33\u00B016\u203259.88\u2033S 149\u00B006\u203200.00\u2033E 532.98km"])
-
-        calc_ang = self.coor_GEO._ISO6709_representation(geoPos=geo)
-
-        for i in range(calc_ang.shape[0]):
-            with self.subTest(i=i):
-                self.assertTrue(sexagesimal[i] == calc_ang[i])
-
     def test_GEO(self):
         """Test `Coordinate.GEO`."""
 
@@ -166,7 +148,7 @@ class TestCoordinate(TestCase):
 
         timeData = Time(np.array([2454545]))
         basePos = np.array([[6343.82, -2640.87, -11.26]])
-        posData = Coordinate(basePos, "ECEF", timeData)
+        posData = Coordinate(basePos, "ecef", timeData)
         calc_era = posData.ERA()
 
         self.assertAlmostEqual(era[0], calc_era[0], delta=0.01)
@@ -179,8 +161,8 @@ class TestCoordinate(TestCase):
         Test cases are taken from a GMAT data set.
         """
 
-        calc_ECEF = self.coor_ECI._ECI_and_ECEF(self.ECI, type="ECI")
-        calc_ECI = self.coor_ECEF._ECI_and_ECEF(self.ECEF, type="ECEF")
+        calc_ECEF = self.coor_ECI._ECI_and_ECEF(self.ECI, frame="eci")
+        calc_ECI = self.coor_ECEF._ECI_and_ECEF(self.ECEF, frame="ecef")
 
         for i in range(self.length):
             with self.subTest(i=i):
@@ -279,8 +261,8 @@ class TestCoordinate(TestCase):
         az = altazCoor.az.degree
 
         # Get Celest results.
-        coor = Coordinate(itrsData, "ECEF", self.timeData)
-        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
+        coor = Coordinate(itrsData, "ecef", self.timeData)
+        groundPos = GroundPosition(obsCoor)
         calc_alt, calc_az = coor.horizontal(groundPos)
 
         for i in range(calc_alt.size-5000):
@@ -307,10 +289,10 @@ class TestCoordinate(TestCase):
                               38.27, 23.73, 56.29])
 
         obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
+        groundPos = GroundPosition(obsCoor)
 
         timeData = Time(self.times[210:220], 2430000)
-        coor = Coordinate(self.ECEF[210:220], "ECEF", timeData)
+        coor = Coordinate(self.ECEF[210:220], "ecef", timeData)
         calc_off_nadir = coor.off_nadir(groundPos)
 
         for i in range(10):
@@ -372,30 +354,15 @@ class TestCoordinate(TestCase):
                          7851.70082642, 7359.09189844])
 
         obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
+        groundPos = GroundPosition(obsCoor)
 
         timeData = Time(times, 2430000)
-        coor = Coordinate(position, "ECEF", timeData)
+        coor = Coordinate(position, "ecef", timeData)
         calc_dist = coor.distance(groundPos)
 
         for i in range(5):
             with self.subTest(i=i):
                 self.assertAlmostEqual(calc_dist[i], dist[i], delta=0.1)
-
-    def test_sexagesimal(self):
-        """Test `Coordinate.sexagesimal`."""
-
-        ang = np.array([43.6532, -79.3832, -33.2833, 149.1000])
-        sexagesimal = np.array(["+43\u00B039\u203211.52\u2033",
-                                "-79\u00B022\u203259.52\u2033",
-                                "-33\u00B016\u203259.88\u2033",
-                                "+149\u00B006\u203200.00\u2033"])
-
-        calc_ang = self.coor_GEO.sexagesimal(ang)
-
-        for i in range(calc_ang.shape[0]):
-            with self.subTest(i=i):
-                self.assertTrue(sexagesimal[i] == calc_ang[i])
 
 
 if __name__ == "__main__":
