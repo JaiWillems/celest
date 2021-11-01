@@ -107,7 +107,7 @@ class TestTime(TestCase):
             with self.subTest(i=i):
                 self.assertAlmostEqual(hour_angle[i], calc_hour_angle[i], delta=0.01)
 
-    def test_UT1(self):
+    def test_ut1(self):
         """Test `Time.UT1`.
 
         Notes
@@ -120,7 +120,7 @@ class TestTime(TestCase):
         ut1 = self.astropy_time.to_value("decimalyear") % 1
         ut1 = (ut1 * 365 * 24) % 24 + dt
 
-        calc_ut1 = Time(julian=self.julData).UT1()
+        calc_ut1 = Time(julian=self.julData).ut1()
 
         for i in range(calc_ut1.size):
             with self.subTest(i=i):
@@ -150,8 +150,8 @@ class TestTime(TestCase):
                 self.assertEqual(calc_datetime[i].second, dt.second)
                 self.assertAlmostEqual(calc_datetime[i].microsecond, dt.microsecond, delta=1)
 
-    def test_GMST(self):
-        """Test `Time.GMST`.
+    def test_gmst(self):
+        """Test `Time.gmst`.
 
         Notes
         -----
@@ -161,14 +161,14 @@ class TestTime(TestCase):
         gmst = self.astropy_time.sidereal_time("mean", "greenwich")
         gmst = coordinates.Angle(gmst).hour
 
-        calc_gmst = Time(julian=self.julData).GMST()
+        calc_gmst = Time(julian=self.julData).gmst()
 
         for i in range(calc_gmst.size):
             with self.subTest(i=i):
                 self.assertAlmostEqual(gmst[i], calc_gmst[i], delta=0.0001)
 
-    def test_LMST(self):
-        """Test `Time.LMST`.
+    def test_lmst(self):
+        """Test `Time.lmst`.
 
         Notes
         -----
@@ -178,14 +178,14 @@ class TestTime(TestCase):
         lmst = self.astropy_time.sidereal_time("mean", longitude="150")
         lmst = coordinates.Angle(lmst).hour
 
-        calc_lmst = Time(julian=self.julData).LMST(longitude=150)
+        calc_lmst = Time(julian=self.julData).lmst(longitude=150)
 
         for i in range(calc_lmst.size):
             with self.subTest(i=i):
                 self.assertAlmostEqual(lmst[i], calc_lmst[i], delta=0.1)
 
-    def test_GAST(self):
-        """Test `Time.GAST`.
+    def test_gast(self):
+        """Test `Time.gast`.
 
         Notes
         -----
@@ -195,14 +195,14 @@ class TestTime(TestCase):
         gast = self.astropy_time.sidereal_time("apparent", "greenwich")
         gast = coordinates.Angle(gast).hour
 
-        calc_gast = Time(julian=self.julData).GAST()
+        calc_gast = Time(julian=self.julData).gast()
 
         for i in range(calc_gast.size):
             with self.subTest(i=i):
                 self.assertAlmostEqual(gast[i], calc_gast[i], delta=0.0001)
 
-    def test_LAST(self):
-        """Test `Time.LAST`.
+    def test_last(self):
+        """Test `Time.last`.
 
         Notes
         -----
@@ -212,7 +212,7 @@ class TestTime(TestCase):
         last = self.astropy_time.sidereal_time("apparent", longitude="150")
         last = coordinates.Angle(last).hour
 
-        calc_last = Time(julian=self.julData).LAST(longitude=150)
+        calc_last = Time(julian=self.julData).last(longitude=150)
 
         for i in range(calc_last.size):
             with self.subTest(i=i):

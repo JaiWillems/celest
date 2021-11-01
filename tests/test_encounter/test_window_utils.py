@@ -4,7 +4,7 @@ import numpy as np
 import unittest
 from unittest import TestCase
 from celest.encounter.groundposition import GroundPosition
-from celest.encounter._window_utils import _sun_ECEF, _get_ang, _window_encounter_ind
+from celest.encounter._window_utils import _sun_itrs, _get_ang, _window_encounter_ind
 from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
 from celest.satellite.time import Time
@@ -17,15 +17,15 @@ class TestWindowUtils(TestCase):
 
         fname = "tests/test_data/coordinate_validation_set.txt"
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
-        times, ECEF = data[:, 0], data[:, 10:]
+        times, itrs = data[:, 0], data[:, 10:]
 
         timeData = Time(times, 2430000)
-        coor = Coordinate(ECEF, "ecef", timeData)
+        coor = Coordinate(itrs, "itrs", timeData)
 
         self.finch = Satellite(coor)
 
-    def test_sun_ECEF(self):
-        """Test `Encounter._sun_ECEF`.
+    def test_sun_itrs(self):
+        """Test `Encounter._sun_itrs`.
 
         Notes
         -----
@@ -47,7 +47,7 @@ class TestWindowUtils(TestCase):
         y = itrsCoor.y.to(units.km).value
         z = itrsCoor.z.to(units.km).value
 
-        calc_sun_pos = _sun_ECEF(julData)
+        calc_sun_pos = _sun_itrs(julData)
         self.assertTrue(np.allclose(x, calc_sun_pos[:, 0], rtol=0.05))
         self.assertTrue(np.allclose(y, calc_sun_pos[:, 1], rtol=0.05))
         self.assertTrue(np.allclose(z, calc_sun_pos[:, 2], rtol=0.05))
@@ -78,8 +78,8 @@ class TestWindowUtils(TestCase):
         altitude, _ = self.finch.position.horizontal(location=location)
         off_nadir = self.finch.position.off_nadir(location=location)
 
-        sun_ECEF = _sun_ECEF(julData)
-        sun_pos = Coordinate(sun_ECEF, "ecef", self.finch.time)
+        sun_itrs = _sun_itrs(julData)
+        sun_pos = Coordinate(sun_itrs, "itrs", self.finch.time)
         sun_alt, _ = sun_pos.horizontal(location=location)
 
         enc_ind = np.arange(0, julData.shape[0], 1)
@@ -105,13 +105,13 @@ class TestWindowUtils(TestCase):
         
         alt_ind = np.where(30 <= altitude)[0]
 
-        sat_ECEF = self.finch.position.ECEF()
+        sat_itrs = self.finch.position.itrs()
 
         ground_GEO = [location.lat, location.lon]
         ground_GEO = np.repeat(np.array([ground_GEO]), julData.size, axis=0)
-        gnd_ECEF = Coordinate(ground_GEO, "geo", self.finch.time).ECEF()
+        gnd_itrs = Coordinate(ground_GEO, "geo", self.finch.time).itrs()
 
-        sca_angs = _get_ang(sat_ECEF - gnd_ECEF, sun_ECEF - gnd_ECEF)
+        sca_angs = _get_ang(sat_itrs - gnd_itrs, sun_itrs - gnd_itrs)
         sca_ind = np.where(sca_angs > 30)[0]
         
         enc_ind = np.intersect1d(enc_ind, alt_ind)

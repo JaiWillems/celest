@@ -81,13 +81,13 @@ def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
             ind = np.where(alt > ang)[0]
 
         ind = np.split(ind, np.where(np.diff(ind) != 1)[0] + 1)
-        ind = np.array(ind)
+        ind = np.array(ind, dtype=object)
 
         julian_interp = _interpolate(satellite.time.julian(), factor, 2, ind)
-        eci_interp = _interpolate(satellite.position.ECI(), factor, 2, ind)
+        eci_interp = _interpolate(satellite.position.gcrs(), factor, 2, ind)
 
-        satellite.position._ECI = eci_interp
-        satellite.position._ECEF = None
+        satellite.position._GCRS = eci_interp
+        satellite.position._ITRS = None
         satellite.position._GEO = None
         satellite.position.length = eci_interp.shape[0]
         satellite.position.time._julian = julian_interp
@@ -97,7 +97,7 @@ def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
     enc_ind = _window_encounter_ind(satellite, location, ang, ang_type, sca, lighting)
 
     window_ind = np.split(enc_ind, np.where(np.diff(enc_ind) != 1)[0] + 1)
-    window_ind = np.array(window_ind)
+    window_ind = np.array(window_ind, dtype=object)
 
     times = satellite.time.julian()
 

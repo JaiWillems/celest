@@ -1,6 +1,6 @@
 
 
-from celest.encounter._encounter_math_utils import analytical_encounter_ind
+from celest.encounter._encounter_math_utils import _analytical_encounter_ind
 from celest.satellite.coordinate import Coordinate
 from celest.satellite.time import Time
 from typing import Any, Literal
@@ -9,8 +9,8 @@ import numpy as np
 import pkg_resources
 
 
-def _sun_ECEF(julian: np.ndarray) -> np.ndarray:
-    """Return Sun ECEF position.
+def _sun_itrs(julian: np.ndarray) -> np.ndarray:
+    """Return Sun itrs position.
 
     Parameters
     ----------
@@ -33,9 +33,9 @@ def _sun_ECEF(julian: np.ndarray) -> np.ndarray:
 
     SPK.close(kernal)
 
-    sun_ECEF = Coordinate(e2sun, "eci", Time(julian)).ECEF()
+    sun_itrs = Coordinate(e2sun, "gcrs", Time(julian)).itrs()
 
-    return sun_ECEF
+    return sun_itrs
 
 def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     """Calculate degree angle bewteen two vectors.
@@ -87,24 +87,24 @@ def _window_encounter_ind(satellite: Any, location: Any, ang: float, form:
         Array containing indices defining viable satellite encounter positions.
     """
 
-    sat_ECEF = satellite.position.ECEF()
+    sat_itrs = satellite.position.itrs()
     time_data = satellite.time.julian()
 
     ground_GEO = [location.lat, location.lon]
     ground_GEO = np.repeat(np.array([ground_GEO]), time_data.size, axis=0)
-    gnd_ECEF = Coordinate(ground_GEO, "geo", Time(time_data)).ECEF()
+    gnd_itrs = Coordinate(ground_GEO, "geo", Time(time_data)).itrs()
 
-    enc_params = [sat_ECEF, gnd_ECEF, ang, form]
-    analytical_ind = analytical_encounter_ind(*enc_params)
+    enc_params = [sat_itrs, gnd_itrs, ang, form]
+    analytical_ind = _analytical_encounter_ind(*enc_params)
 
-    sun_ECEF = _sun_ECEF(time_data)
-    sca_angs = _get_ang(sat_ECEF - gnd_ECEF, sun_ECEF - gnd_ECEF)
+    sun_itrs = _sun_itrs(time_data)
+    sca_angs = _get_ang(sat_itrs - gnd_itrs, sun_itrs - gnd_itrs)
     sca_ind = np.where(sca_angs > sca)[0]
 
     enc_ind = np.intersect1d(analytical_ind, sca_ind)
 
     if lighting != 0:
-        sun_angs = _get_ang(gnd_ECEF, sun_ECEF)
+        sun_angs = _get_ang(gnd_itrs, sun_itrs)
 
         if lighting == 1:
             # Isolate indices occuring at day.

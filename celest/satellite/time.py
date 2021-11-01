@@ -15,8 +15,8 @@ import numpy as np
 class Time(object):
     """Time representations.
 
-    The `Time` class allows a user to convert an array of times in Julian days
-    into various time representations.
+    The `Time` class allows a user to convert an array of Julian day times in
+    the J2000 epoch into various time representations.
 
     Parameters
     ----------
@@ -35,19 +35,19 @@ class Time(object):
         Return the true hour angle in hours and decimals.
     mean_hour_angle(longitude)
         Return the mean hour angle in hours and decimals.
-    UT1()
+    ut1()
         Return the universal time (same as GMT) in hours and decimals.
     julian()
         Return Julian times.
     datetime()
         Return `datetime.datetime` object array.
-    GMST(longitude)
+    gmst(longitude)
         Return Greenwich Mean Sidereal Time in hours and decimals.
-    LMST(longitude)
+    lmst(longitude)
         Return Local Mean Sidereal Time in hours and decimals.
-    GAST(longitude)
+    gast(longitude)
         Return Greenwich Apparent Sidereal Time in hours and decimals.
-    LAST(longitude)
+    last(longitude)
         Return Local Apparent Sidereal Time in hours and degrees.
     """
 
@@ -86,12 +86,12 @@ class Time(object):
         The true solar time, :math:`TT_s` can be calculated by first converting
         Julian data, :math:`JD`, into UTC data by the following:
 
-        .. math:: UTC = 24\left(JD\%1\right)^h + \alpha^h
+        .. math:: UTC = 24\left(JD\%1\\right)^h + \\alpha^h
 
         The true solar time can then be calculated using the Equation of Time,
-        :math:`EoT`, definition and the mean solar time, :math:`MT_s`.
+        :math:`EoT`, definition and the mean solar time, :math:`MT_s`.[1]_
 
-        .. math:: TT_s = MT_s + EoT [1]_
+        .. math:: TT_s = MT_s + EoT
 
         .. math:: TT_s = (UTC^h + (EoT^\circ + \phi^\circ)/15)\%24
 
@@ -144,7 +144,7 @@ class Time(object):
         The mean solar time, :math:`MT_s` can be calculated by first converting
         Julian data, :math:`JD`, into UTC data by the following:
 
-        .. math:: UTC = 24\left(JD\%1\right)^h + \alpha^h
+        .. math:: UTC = 24\left(JD\%1\\right)^h + \\alpha^h
 
         The mean solar time can then be calculated using the Equation of Time,
         :math:`EoT`, and the local meridians longitude, :math:`\phi` as
@@ -275,7 +275,7 @@ class Time(object):
 
         return HRA
 
-    def UT1(self) -> np.ndarray:
+    def ut1(self) -> np.ndarray:
         """Return the universal time (same as GMT) in hours and decimals.
 
         This method returns a universal time by calculating the mean solar time
@@ -303,15 +303,15 @@ class Time(object):
         Examples
         --------
         >>> julian = np.array([2455368.75, 2459450.85, 2456293.5416666665])
-        >>> Time(julian=julian).UT1()
+        >>> Time(julian=julian).ut1()
         np.array([6.00000,
                   8.40000,
                   1.00000])
         """
 
-        UT1 = self.mean_solar_time(longitude=0)
+        ut1 = self.mean_solar_time(longitude=0)
 
-        return UT1
+        return ut1
 
     def julian(self) -> np.ndarray:
         """Return Julian times.
@@ -364,7 +364,7 @@ class Time(object):
 
         return datetime_arr
 
-    def GMST(self) -> np.ndarray:
+    def gmst(self) -> np.ndarray:
         """Return Greenwich Mean Sidereal Time in hours and decimals.
 
         Returns
@@ -378,8 +378,7 @@ class Time(object):
         The Greenwich Mean Sidereal Time can be calculated from the following
         equation:
 
-        .. math:: GMST = \left(280.46061837 + 360.98564736629(j - 2451545) +
-            0.000387933T^2 - \\frac{T^3}{38710000}\\right) % 360 / 15
+        .. math:: GMST = \left(280.46 + 360.99(j - 2451545) + 0.000387933T^2 - \\frac{T^3}{38710000}\\right) % 360 / 15
 
         where
 
@@ -395,7 +394,7 @@ class Time(object):
         Examples
         --------
         >>> julian = np.array([2455368.75, 2459450.85, 2456293.5416666665])
-        >>> Time(julian=julian).GMST()
+        >>> Time(julian=julian).gmst()
         np.array([23.955316,
                   6.589391,
                   7.723214])
@@ -407,15 +406,15 @@ class Time(object):
         T2 = T * T
         T3 = T2 * T
 
-        GMST = 280.46061837
-        GMST = GMST + 360.98564736629 * (julData - 2451545)
-        GMST = GMST + 0.000387933 * T2
-        GMST = GMST - T3 / 38710000
-        GMST = GMST % 360 / 15
+        gmst = 280.46061837
+        gmst = gmst + 360.98564736629 * (julData - 2451545)
+        gmst = gmst + 0.000387933 * T2
+        gmst = gmst - T3 / 38710000
+        gmst = gmst % 360 / 15
 
-        return GMST
+        return gmst
 
-    def LMST(self, longitude: np.ndarray) -> np.ndarray:
+    def lmst(self, longitude: np.ndarray) -> np.ndarray:
         """Return Local Mean Sidereal Time in hours and decimals.
 
         Parameters
@@ -434,10 +433,10 @@ class Time(object):
         The Local Mean Sidereal Time can be calculated using the following
         formulation:
 
-        .. math:: LMST^h = h^h_{mSun} + \alpha^h_{mSun}
+        .. math:: LMST^h = h^h_{mSun} + \\alpha^h_{mSun}
 
         where :math:`h^h_{mSun}` is the mean solar hour angle at the observer's
-        longitude and :math:`\alpha^h_{mSun}` is the right ascension of the
+        longitude and :math:`\\alpha^h_{mSun}` is the right ascension of the
         mean Sun position.[1]_
 
         References
@@ -448,7 +447,7 @@ class Time(object):
         Examples
         --------
         >>> julian = np.array([2455368.75, 2459450.85, 2456293.5416666665])
-        >>> Time(julian=julian).LMST(longitude=150)
+        >>> Time(julian=julian).lmst(longitude=150)
         np.array([9.98419514,
                   16.62892539,
                   17.78123885])
@@ -457,11 +456,11 @@ class Time(object):
         hour_angle = self.mean_hour_angle(longitude)
         alpha_sun = sun_right_ascension(self._julian) / 15
 
-        LMST = (hour_angle + alpha_sun) % 24
+        lmst = (hour_angle + alpha_sun) % 24
 
-        return LMST
+        return lmst
 
-    def GAST(self) -> np.ndarray:
+    def gast(self) -> np.ndarray:
         """Return Greenwich Apparent Sidereal Time in hours and decimals.
 
         Returns
@@ -483,20 +482,20 @@ class Time(object):
         Examples
         --------
         >>> julian = np.array([2455368.75, 2459450.85, 2456293.5416666665])
-        >>> Time(julian=julian).GAST()
+        >>> Time(julian=julian).gast()
         np.array([23.955596,
                   6.589146,
                   7.723465])
         """
 
-        GMST = self.GMST()
+        gmst = self.gmst()
         EoE = equation_of_equinoxes(self._julian) / 3600
 
-        GAST = GMST + EoE
+        gast = gmst + EoE
 
-        return GAST
+        return gast
 
-    def LAST(self, longitude: np.ndarray) -> np.ndarray:
+    def last(self, longitude: np.ndarray) -> np.ndarray:
         """Return Local Apparent Sidereal Time in hours and degrees.
 
         Parameters
@@ -516,9 +515,9 @@ class Time(object):
         The Local Apparent Sidereal Time can be calculated using the following
         formulation:
 
-        .. math:: LAST^h = UT1^h - 12^h + \alpha^h_{mSun} + EoE^h + \Lambda^\circ/15
+        .. math:: LAST^h = UT1^h - 12^h + \\alpha^h_{mSun} + EoE^h + \Lambda^\circ/15
 
-        where :math:`\alpha^h_{mSun}` is the right ascension of the mean Sun
+        where :math:`\\alpha^h_{mSun}` is the right ascension of the mean Sun
         position in hours, :math:`EoE^h` is the equation of equinoxes in hours,
         and :math:`\Lambda` is the observer's longitude in  degrees.[1]_
 
@@ -530,16 +529,16 @@ class Time(object):
         Examples
         --------
         >>> julian = np.array([2455368.75, 2459450.85, 2456293.5416666665])
-        >>> Time(julian=julian).LAST(longitude=150)
+        >>> Time(julian=julian).last(longitude=150)
         np.array([9.98447567,
                   16.6286799,
                   17.78148932])
         """
 
-        UT1 = self.UT1()
+        ut1 = self.ut1()
         alpha_sun = sun_right_ascension(self._julian) / 15
         EoE = equation_of_equinoxes(self._julian) / 3600
 
-        LAST = (UT1 - 12 + alpha_sun + EoE + longitude / 15) % 24
+        last = (ut1 - 12 + alpha_sun + EoE + longitude / 15) % 24
 
-        return LAST
+        return last

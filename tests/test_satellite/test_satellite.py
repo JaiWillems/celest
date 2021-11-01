@@ -19,10 +19,10 @@ class TestSatellite(TestCase):
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
 
         self.times = data[:, 0]
-        self.ECEF = data[:, 10:]
+        self.ITRS = data[:, 10:]
 
         self.timeData = Time(self.times, 2430000)
-        self.coor = Coordinate(self.ECEF, "ecef", self.timeData)
+        self.coor = Coordinate(self.ITRS, "itrs", self.timeData)
 
         self.finch = Satellite(self.coor)
 
@@ -47,7 +47,7 @@ class TestSatellite(TestCase):
         """Test `Satellite.save_data`."""
 
         times = ("julian", "ut1", "gmst", "gast")
-        positions = ("geo", "eci", "ecef")
+        positions = ("geo", "gcrs", "itrs")
         self.finch.save_data("test_data.csv", ",", times, positions)
 
         data = np.loadtxt("test_data.csv", delimiter=",", skiprows=1)
@@ -56,24 +56,24 @@ class TestSatellite(TestCase):
         load_gmst = data[:, 3]
         load_gast = data[:, 4]
         load_geo = data[:, 5:8]
-        load_eci = data[:, 8:11]
-        load_ecef = data[:, 11:]
+        load_gcrs = data[:, 8:11]
+        load_itrs = data[:, 11:]
 
         julian = self.finch.time.julian()
-        ut1 = self.finch.time.UT1()
-        gmst = self.finch.time.GMST()
-        gast = self.finch.time.GAST()
-        geo = self.finch.position.GEO()
-        eci = self.finch.position.ECI()
-        ecef = self.finch.position.ECEF()
+        ut1 = self.finch.time.ut1()
+        gmst = self.finch.time.gmst()
+        gast = self.finch.time.gast()
+        geo = self.finch.position.geo()
+        gcrs = self.finch.position.gcrs()
+        itrs = self.finch.position.itrs()
 
         self.assertTrue(np.array_equal(load_julian, julian))
         self.assertTrue(np.array_equal(load_ut1, ut1))
         self.assertTrue(np.array_equal(load_gmst, gmst))
         self.assertTrue(np.array_equal(load_gast, gast))
         self.assertTrue(np.array_equal(load_geo, geo))
-        self.assertTrue(np.array_equal(load_eci, eci))
-        self.assertTrue(np.array_equal(load_ecef, ecef))
+        self.assertTrue(np.array_equal(load_gcrs, gcrs))
+        self.assertTrue(np.array_equal(load_itrs, itrs))
 
         import os
         os.remove("test_data.csv")

@@ -9,7 +9,7 @@ from typing import Literal
 import numpy as np
 
 
-def cone_constraint(theta: np.array, U: np.array, X: np.array) -> np.array:
+def _cone_constraint(theta: np.array, U: np.array, X: np.array) -> np.array:
     """Return an array of indices for `X` points that fall within a cone.
 
     This method defines a double-sided cone with an apex located at `U` and an
@@ -52,7 +52,7 @@ def cone_constraint(theta: np.array, U: np.array, X: np.array) -> np.array:
     return ind
 
 
-def plane_constraint(U: np.array, X: np.array) -> np.array:
+def _plane_constraint(U: np.array, X: np.array) -> np.array:
     """Return an array of indices containing points that fall above a plane.
 
     Parameters
@@ -86,7 +86,7 @@ def plane_constraint(U: np.array, X: np.array) -> np.array:
     return ind
 
 
-def aperature_theta(ang: float, form: Literal[0, 1], n: int=None, U:
+def _aperature_theta(ang: float, form: Literal[0, 1], n: int=None, U:
                     np.array=None, X: np.array=None) -> np.array:
     """Calculate cone aperature angles from constraint angles.
 
@@ -148,7 +148,7 @@ def aperature_theta(ang: float, form: Literal[0, 1], n: int=None, U:
     return theta
 
 
-def analytical_encounter_ind(sat_position: np.array, gnd_position: np.array,
+def _analytical_encounter_ind(sat_position: np.array, gnd_position: np.array,
                              ang: float, form: Literal[0, 1]) -> np.array:
     """Return encounter indices.
 
@@ -183,10 +183,10 @@ def analytical_encounter_ind(sat_position: np.array, gnd_position: np.array,
     n = sat_position.shape[0]
     U = gnd_position
     X = sat_position
-    theta = aperature_theta(ang, form, n, U, X)
+    theta = _aperature_theta(ang, form, n, U, X)
 
-    ind_1 = cone_constraint(theta, U, X)
-    ind_2 = plane_constraint(U, X)
+    ind_1 = _cone_constraint(theta, U, X)
+    ind_2 = _plane_constraint(U, X)
 
     ind_final = np.intersect1d(ind_1, ind_2)
 

@@ -83,7 +83,7 @@ class Satellite(object):
         
         indices = np.zeros((0,), dtype=int)
         time = self.time.julian()
-        position = self.position.ECI()
+        position = self.position.gcrs()
 
         for window in windows:
             start = window.start
@@ -101,15 +101,15 @@ class Satellite(object):
         self.time._length = time_interp.size
 
         self.position.time = self.time
-        self.position._ECI = position_interp
-        self.position._ECEF = None
+        self.position._GCRS = position_interp
+        self.position._ITRS = None
         self.position._GEO = None
         self.position.length = time_interp.size
 
         self.length = len(self.position)
 
     def save_data(self, fname: str, delimiter: Literal[",", "\\t"], times:
-                  Tuple=("julian",), positions: Tuple=("eci",)) -> None:
+                  Tuple=("julian",), positions: Tuple=("gcrs",)) -> None:
         """Save satellite time and position data.
 
         Parameters
@@ -124,7 +124,7 @@ class Satellite(object):
             values include "julian", "ut1", "gmst", and "gast".
         positions : Tuple, optional
             List containing the types of position data to save. Possible
-            list values include "ecef", "eci", and "geo".
+            list values include "gcrs", "itrs", and "geo".
 
         Notes
         -----
@@ -134,18 +134,18 @@ class Satellite(object):
 
         Examples
         --------
-        >>> positions = ["eci", "ecef"]
+        >>> positions = ["gcrs", "itrs"]
         >>> finch.save_data(fname="data.csv", delimiter=",", positions=positions)
         """
 
         key_mapping = {
             "julian": (self.time.julian, "Julian.J2000"),
-            "ut1": (self.time.UT1, "UT1.hr"),
-            "gmst": (self.time.GMST, "GMST.hr"),
-            "gast": (self.time.GAST, "GAST.hr"),
-            "ecef": (self.position.ECEF, "ECEF.x.km", "ECEF.y.km", "ECEF.z.km"),
-            "eci": (self.position.ECI, "ECI.x.km", "ECI.y.km", "ECI.z.km"),
-            "geo": (self.position.GEO, "GEO.lat.deg", "GEO.lon.deg", "GEO.height.km")
+            "ut1": (self.time.ut1, "UT1.hr"),
+            "gmst": (self.time.gmst, "GMST.hr"),
+            "gast": (self.time.gast, "GAST.hr"),
+            "itrs": (self.position.itrs, "ITRS.x.km", "ITRS.y.km", "ITRS.z.km"),
+            "gcrs": (self.position.gcrs, "GCRS.x.km", "GCRS.y.km", "GCRS.z.km"),
+            "geo": (self.position.geo, "GEO.lat.deg", "GEO.lon.deg", "GEO.height.km")
         }
 
         data = {}

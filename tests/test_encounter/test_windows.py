@@ -5,7 +5,7 @@ import unittest
 from unittest import TestCase
 from celest.encounter.groundposition import GroundPosition
 from celest.encounter._window_handling import Window, Windows
-from celest.encounter.encounter import generate
+from celest.encounter.windows import generate
 from celest.encounter._window_utils import _window_encounter_ind
 from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
@@ -19,10 +19,10 @@ class TestEncounter(TestCase):
 
         fname = "tests/test_data/coordinate_validation_set.txt"
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
-        times, ECEF = data[:, 0], data[:, 10:]
+        times, itrs = data[:, 0], data[:, 10:]
 
         timeData = Time(times, 2430000)
-        coor = Coordinate(ECEF, "ecef", timeData)
+        coor = Coordinate(itrs, "itrs", timeData)
 
         self.finch = Satellite(coor)
 
