@@ -1,3 +1,4 @@
+"""Testing module for the `Time` class."""
 
 
 import julian as jd

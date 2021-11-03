@@ -1,3 +1,4 @@
+"""Test module for the `GroundPosition` class."""
 
 
 import numpy as np

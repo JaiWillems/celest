@@ -1,3 +1,4 @@
+"""Testing module for the encounter mathematical basis."""
 
 
 from celest.encounter.groundposition import GroundPosition

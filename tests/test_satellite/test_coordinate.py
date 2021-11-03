@@ -1,3 +1,4 @@
+"""Testing module for the `Coordinate` class."""
 
 
 from celest.encounter.groundposition import GroundPosition

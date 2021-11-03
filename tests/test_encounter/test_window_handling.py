@@ -1,3 +1,4 @@
+"""Testing module for the window data structures."""
 
 
 import numpy as np

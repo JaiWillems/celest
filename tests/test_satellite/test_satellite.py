@@ -1,3 +1,4 @@
+"""Testing module for the `Satellite` class."""
 
 
 import numpy as np

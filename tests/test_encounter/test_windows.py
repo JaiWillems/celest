@@ -1,3 +1,4 @@
+"""Testing module for the encounter generation function."""
 
 
 import numpy as np

@@ -1,3 +1,4 @@
+"""Testing module for the angular representations functionality."""
 
 
 from celest.satellite._angle_representations import sexagesimal, _ISO6709_representation
