@@ -7,13 +7,12 @@ used for position inputs and outputs for other `Celest` functionality.
 
 
 from celest.core.decorators import set_module
-from celest.satellite import Interpolation
-from typing import Any, Dict, Literal, Tuple
+from typing import Any, Literal, Tuple
 import numpy as np
 
 
 @set_module('celest.satellite')
-class Coordinate(Interpolation):
+class Coordinate(object):
     """Localize position information representations.
 
     The `Coordinate` class provides a simple user interface for converting a
@@ -22,15 +21,14 @@ class Coordinate(Interpolation):
 
     Parameters
     ----------
-    basePos : np.array
+    position : np.ndarray
         Base position to initialize the `Coodinate` class.
-    type : {"GEO", "ECEF", "ECI"}
-        Specifying the inputed position type.
-    timeData : Time
-        Times associated with the position data. The length of the `timeData`
-        parameter must match the length of the `basePos` parameter.
-    factor : int, optional
-        Interpolation factor used to interpolate the input position data.
+    frame : {"gcrs", "geo", "itrs"}
+        Specifies the input position frame.
+    time : Time
+        Times associated with the position data in the J2000 epoch. The length
+        of the `time` parameter must match the length of the `position`
+        parameter.
 
     Attributes
     ----------
@@ -41,41 +39,49 @@ class Coordinate(Interpolation):
 
     Methods
     -------
-    GEO(iso=False, **kwargs)
+    geo(iso=False)
         Return geographical position data.
-    ERA(**kwargs)
+    era()
         Return the Earth rotation angles in radians and decimals.
-    ECI(**kwargs)
-        Return cartesian ECI position data.
-    ECEF(**kwargs)
-        Return cartesian ECEF position data.
-    horizontal(groundPos, **kwargs)
+    gcrs()
+        Return cartesian gcrs position data.
+    itrs()
+        Return cartesian itrs position data.
+    horizontal(location)
         Return horizontal position data in degrees and decimals.
-    off_nadir(groundPos, **kwargs)
+    off_nadir(location)
         Return the off-nadir angle to a ground location.
-    altitude(**kwargs)
+    altitude()
         Return the altitude above Earth's surface in kilometres.
-    distance(groundPos, **kwargs)
+    distance(location)
         Return the distance to a ground location.
-    sexagesimal(angles)
-        Convert decimal angles into sexagesimal angles.
     """
 
-    def __init__(self, basePos: np.array, type: str, timeData: Any, factor:
-                 int=0) -> None:
+    def __init__(self, position: np.ndarray, frame: Literal["gcrs", "geo", "itrs"], time: Any) -> None:
         """Initialize attributes."""
+        
+        if frame not in ["gcrs", "geo", "itrs"]:
+            raise ValueError(f"{frame} is not a valid frame.")
+        
+        if position.shape[0] != len(time):
+            raise ValueError(f"position and time data lengths are mismatched being {position.shape[0]} and {len(time)}")
 
-        self.times = timeData
+        self.time = time
 
         self._GEO = None
-        self._ECI = None
-        self._ECEF = None
+        self._GCRS = None
+        self._ITRS = None
 
         self.length = None
-        self._set_base_position(basePos, type, factor)
+        self._set_base_position(position, frame)
+    
+    def __len__(self) -> int:
+        """Return length of position and time data."""
 
-    def _set_base_position(self, basePos: np.array, type:
-                           Literal["ECEF", "ECI", "GEO"], factor: int) -> None:
+        return self.length
+
+    def _set_base_position(self, position: np.ndarray, frame:
+                           Literal["gcrs", "geo", "itrs"]) -> None:
         """Initialize base position.
 
         This method takes an input position to initialize the object's base
@@ -83,68 +89,63 @@ class Coordinate(Interpolation):
 
         Parameters
         ----------
-        basePos : np.array
+        position : np.ndarray
             Array of shape (n, 2) or (n, 3) containing the inputted position
             data.
-        type : {"ECEF", "ECI", "GEO"}
-            String defining the type of input position data as either
-            Earth-centered-Earth-fixed (ECEF), Earth-centered-inertial (ECI),
-            or geographical (GEO) data.
-        factor : int
-            Interpolation factor used to interpolate input data of length `n`
-            to length `factor*n`.
+        frame : {"gcrs", "geo", "itrs"}
+            String defining the type of input position data as the Geocentric
+            Celestial Reference System (gcrs), International Terrestrial
+            Reference System (itrs), or geographical (geo) data.
 
         Notes
         -----
-        The input data must be of shape (n, 3) if `type="ECEF"` or `type="ECI"`
+        The input data must be of shape (n, 3) if `type="itrs"` or `type="gcrs"`
         where the columns are XYZ cartesian data. The data can be of the shape
-        (n, 2) or (n, 3) if `type="GEO"` where the columns are geodetic
+        (n, 2) or (n, 3) if `type="geo"` where the columns are geodetic
         latitude, terrestrial longitude, and geodetic altitude. When
         geographical data is entered of shape (n, 2), the height data is
         assumed to be zero.
         """
-
-        if factor > 0:
-            basePos = self._interp(basePos, factor=factor)
-
+        
+        basePos = position
         self.length = basePos.shape[0]
 
-        if type == "GEO":
+        if frame == "geo":
             if basePos.shape[1] == 2:
                 height = np.zeros((self.length, 1))
                 basePos = np.concatenate((basePos, height), axis=1)
 
             self._GEO = basePos
 
-        elif type == "ECI":
-            self._ECI = basePos
+        elif frame == "gcrs":
+            self._GCRS = basePos
 
-        elif type == "ECEF":
-            self._ECEF = basePos
+        elif frame == "itrs":
+            self._ITRS = basePos
 
-    def _GEO_to_ECEF(self, posData: np.array) -> np.array:
-        """Convert geographical to ECEF coordinates.
+    def _geo_to_itrs(self, position: np.ndarray) -> np.ndarray:
+        """Convert geographical to itrs coordinates.
 
         Parameters
         ----------
-        posData : np.array
+        position : np.ndarray
             Array of shape (n, 3) containing geographical coordinates of a
             position with columns of geodetic latitude, terrestrial longitude,
             and geodetic altitude given in decimal degrees and kilometres.
 
         Returns
         -------
-        np.array
-            Array of shape (n, 3) containing the XYZ ECEF position data.
+        np.ndarray
+            Array of shape (n, 3) containing the XYZ itrs position data.
 
         See Also
         --------
-        _ECEF_to_GEO : Convert ECEF to geographical coordinates.
+        _itrs_to_geo : Convert itrs to geographical coordinates.
 
         Notes
         -----
         This method uses an ellipsoid based model of the Earth to convert a
-        geographical position to ECEF cartesian coordinates using the methods
+        geographical position to itrs cartesian coordinates using the methods
         described in "Coordinate Systems in Geodesy" by E. J. Krakiwsky and
         D.E. Wells as presented by Christopher Lum.[1]_[2]_
 
@@ -159,41 +160,41 @@ class Coordinate(Interpolation):
         a = 6378.137
         b = 6356.752314245
 
-        lat, lon = np.radians(posData[:, 0]), np.radians(posData[:, 1])
+        lat, lon = np.radians(position[:, 0]), np.radians(position[:, 1])
 
         e = np.sqrt(1 - b ** 2 / a ** 2)
         N = a / np.sqrt(1 - e ** 2 * np.sin(lat) ** 2)
-        h = posData[:, 2]
+        h = position[:, 2]
 
         x = ((N + h) * np.cos(lat) * np.cos(lon)).reshape((-1, 1))
         y = ((N + h) * np.cos(lat) * np.sin(lon)).reshape((-1, 1))
         z = ((N * (1 - e ** 2) + h) * np.sin(lat)).reshape((-1, 1))
-        ECEF = np.concatenate((x, y, z), axis=1)
+        itrs = np.concatenate((x, y, z), axis=1)
 
-        return ECEF
+        return itrs
 
-    def _ECEF_to_GEO(self, posData: np.array) -> np.array:
-        """Convert ECEF to geographical coordinates.
+    def _itrs_to_geo(self, position: np.ndarray) -> np.ndarray:
+        """Convert itrs to geographical coordinates.
 
         Parameters
         ----------
-        posData : np.array
-            Array of shape (n, 3) with rows containing XYZ ECEF position data.
+        position : np.ndarray
+            Array of shape (n, 3) with rows containing XYZ itrs position data.
 
         Returns
         -------
-        np.array
+        np.ndarray
             Array of shape (n, 3) with columns of geodetic latitude,
             terrestrial longitude, and geodetic altitude data in degrees and
             kilometres.
 
         See Also
         --------
-        _GEO_to_ECEF : Convert geographical to ECEF coordinates.
+        _GEO_to_itrs : Convert geographical to itrs coordinates.
 
         Notes
         -----
-        Let :math:`x`, :math:`y`, and :math:`z` be the ECEF vector components.
+        Let :math:`x`, :math:`y`, and :math:`z` be the itrs vector components.
         We can then calculate the latitude, :math:`\phi`, using the following
         equation:
 
@@ -206,9 +207,9 @@ class Coordinate(Interpolation):
         """
 
         # Cartesian coordinates.
-        x = posData[:, 0]
-        y = posData[:, 1]
-        z = posData[:, 2]
+        x = position[:, 0]
+        y = position[:, 1]
+        z = position[:, 2]
 
         # Convert to spherical coordinates.
         radius = np.sqrt(x ** 2 + y ** 2 + z ** 2)
@@ -226,80 +227,17 @@ class Coordinate(Interpolation):
 
         return geo
 
-    def _ISO6709_representation(self, geoPos: np.array) -> np.array:
-        """Format geographical data in an international standard.
-
-        This method formats the input geographical point location data in the
-        ISO6709 standard format.
-
-        Parameters
-        ----------
-        geoPos : np.array
-            Array of shape (n, 3) with columns of geodetic latitude,
-            terrestrial longitude, and geodetic altitude data.
-
-        Returns
-        -------
-        np.array
-            Array of shape (n,) containing position strings in accordance to
-            ISO6709 standard.
-        """
-
-        deg = "\u00B0"
-        min = "\u2032"
-        sec = "\u2033"
-
-        out_arr = np.empty((geoPos.shape[0],), dtype="<U37")
-
-        for i in range(geoPos.shape[0]):
-
-            lat, lon, h = geoPos[i, 0], geoPos[i, 1], geoPos[i, 2]
-
-            # Format latitude string.
-            degree = int(abs(lat))
-            minute = int(60 * np.round(abs(lat) - degree, 2))
-            second = np.round(abs(60 * (60 * (abs(lat) - degree) - minute)), 2)
-            direction = "N" if lat >= 0 else "S"
-
-            degree = "%.2s" % str(degree).zfill(2)
-            minute = "%.2s" % str(minute).zfill(2)
-            second = str("%.2f" % second).zfill(5)
-
-            lat_str = f"{degree}{deg}{minute}{min}{second}{sec}{direction} "
-
-            # Format longitude string.
-            degree = int(abs(lon))
-            minute = int(60 * np.round(abs(lon) - degree, 2))
-            second = np.round(abs(60 * (60 * (abs(lon) - degree) - minute)), 2)
-            direction = "E" if lon >= 0 else "W"
-
-            degree = "%.3s" % str(degree).zfill(2)
-            minute = "%.2s" % str(minute).zfill(2)
-            second = str("%.2f" % second).zfill(5)
-
-            lon_str = f"{degree}{deg}{minute}{min}{second}{sec}{direction} "
-
-            # Format height string.
-            h_str = f"{h}km"
-
-            out_arr[i] = lat_str + lon_str + h_str
-
-        return out_arr
-
-    def GEO(self, iso=False, **kwargs: Dict[str, Any]) -> np.array:
+    def geo(self, iso: bool=False) -> np.ndarray:
         """Return geographical position data.
 
         Parameters
         ----------
         iso : bool, optional
             Formats the output as ISO6709 sexagesimal position strings if true.
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
 
         Returns
         -------
-        np.array
+        np.ndarray
             Array of shape (n, 3) with columns of geodetic latitude,
             terrestrial longitude, and geodetic altitude data. If
             `iso=True`, the output is an array of shape (n,) containing
@@ -307,50 +245,41 @@ class Coordinate(Interpolation):
 
         See Also
         --------
-        ECEF : Return ECEF position data.
-        ECI : Return ECI position data.
+        itrs : Return itrs position data.
+        gcrs : Return gcrs position data.
 
         Examples
         --------
-        >>> timeData = Time(julian=np.array([2454545]))
-        >>> basePos = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(basePos=basePos, type="ECEF", timeData=timeData)
-        >>> coor.GEO()
+        >>> time = Time(julian=np.array([2454545]))
+        >>> position = np.array([[6343.82, -2640.87, -11.26]])
+        >>> coor = Coordinate(position=position, frame="itrs", time=time)
+        >>> coor.geo()
         np.array([[-9.38870528e-02, -2.26014826e+01, 5.04126976e+02]])
 
         We can generate user-friendly position strings by setting `iso=True`.
 
-        >>> coor.GEO(iso=True)
+        >>> coor.geo(iso=True)
         np.array(['00°05′37.99″S 22°36′05.34″W 504.12697'])
         """
 
         if self._GEO is None:
-            if self._ECEF is not None:
-                self._GEO = self._ECEF_to_GEO(posData=self._ECEF)
+            if self._ITRS is not None:
+                self._GEO = self._itrs_to_geo(position=self._ITRS)
             else:
-                self._ECEF = self._ECI_and_ECEF(posData=self._ECI, type="ECI")
-                self._GEO = self._ECEF_to_GEO(posData=self._ECEF)
+                self._ITRS = self._gcrs_and_itrs(position=self._GCRS, frame="gcrs")
+                self._GEO = self._itrs_to_geo(position=self._ITRS)
 
-        GEO = self._interp(self._GEO, **kwargs) if kwargs else self._GEO
+        geo = self._ISO6709_representation(position=self._GEO) if iso else self._GEO
 
-        if iso:
-            GEO = self._ISO6709_representation(geoPos=GEO)
+        return geo
 
-        return GEO
-
-    def ERA(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Return the Earth rotation angles in radians and decimals.
-
-        Parameters
-        ----------
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
+    def era(self) -> np.ndarray:
+        """Return the Earth rotation angles in degrees and decimals.
 
         Returns
         -------
-        np.array
-            Array of shape (n,) containing Earth rotation angles in radians and
+        np.ndarray
+            Array of shape (n,) containing Earth rotation angles in degrees and
             decimals.
 
         Notes
@@ -372,58 +301,54 @@ class Coordinate(Interpolation):
 
         Examples
         --------
-        >>> timeData = Time(julian=np.array([2454545]))
-        >>> basePos = np.array([[6343.82, -2640.87, -11.26]])
-        >>> posData = Coordinate(basePos=basePos, type="ECEF", timeData=timeData)
-        >>> posData.ERA()
+        >>> time = Time(julian=np.array([2454545]))
+        >>> position = np.array([[6343.82, -2640.87, -11.26]])
+        >>> coor = Coordinate(position=position, type="itrs", time=time)
+        >>> coor.era()
         np.array([6.2360075])
         """
 
         ang = np.zeros((self.length,))
-        jul_data = self.times.julian()
+        jul_data = self.time.julian()
 
-        # Multiply time elapsed since J2000 by ERA and add J2000 orientation.
+        # Multiply time elapsed since J2000 by Earth rotation rate and add
+        # J2000 orientation.
         dJulian = jul_data - 2451545
         ang = (360.9856123035484 * dJulian + 280.46) % 360
 
-        ang = np.radians(ang)
-
-        if kwargs:
-            ang = self._interp(ang, **kwargs)
-
         return ang
 
-    def _ECI_and_ECEF(self, posData: np.array, type: str) -> np.array:
-        """Convert between ECI and ECEF positions.
+    def _gcrs_and_itrs(self, position: np.ndarray, frame: Literal["itrs", "gcrs"]) -> np.ndarray:
+        """Convert between gcrs and itrs positions.
 
         Parameters
         ----------
-        posData : np.array
+        position : np.ndarray
             Array of shape (n, 3) representing the input data as XYZ cartesian
             data.
-        type : {"ECI", "ECEF"}
+        frame : {"itrs", "gcrs"}
             The type of input data.
 
         Returns
         -------
-        np.array
+        np.ndarray
             Array of shape (n, 3) representing the output data as XYZ cartesian
             data.
 
         Notes
         -----
-        This method applies a simplification to converting between ECI and ECEF
-        coordinate by disregarding precession, nutation, and polar motion
-        effects (which will be incorporated in future releases). By disregarding
-        such factors, we can assume the alignment of the ECI and ECEF axes and
-        simplify the conversion to a rotation about the z-axis.
+        This method applies a simplification to converting between gcrs and
+        itrs coordinate by disregarding precession, nutation, and polar motion
+        effects (which will be incorporated in future releases). By
+        disregarding such factors, we can assume the alignment of the gcrs and
+        itrs axes and simplify the conversion to a rotation about the z-axis.
 
-        We can convert between the ECI and ECEF frames using the following
+        We can convert between the gcrs and itrs frames using the following
         equations:
 
-        .. math:: \vec{V}_{ECI} = E_3^\gamma\;\vec{V}_{ECEF}
+        .. math:: \vec{V}_{gcrs} = E_3^\gamma\;\vec{V}_{itrs}
 
-        .. math:: \vec{V}_{ECEF} = E_3^{-\gamma}\;\vec{V}_{ECI}
+        .. math:: \vec{V}_{itrs} = E_3^{-\gamma}\;\vec{V}_{gcrs}
 
         where :math:`\gamma` is the Earth rotation angle, :math:`E_3^\theta` is
         the rotation matrix that rotates a vector around the z-axis by an angle
@@ -437,7 +362,8 @@ class Coordinate(Interpolation):
            and Technology Group, Jan.2017, p. 21.
         """
 
-        theta = -self.ERA() if type == "ECI" else self.ERA()
+        theta = -self.era() if frame == "gcrs" else self.era()
+        theta = np.radians(theta)
 
         # Construct rotational matrix.
         A11 = np.cos(theta)
@@ -447,108 +373,93 @@ class Coordinate(Interpolation):
 
         # Rotate position data around z-axis by ERA.
         output = np.zeros((self.length, 3))
-        output[:, 0] = A11 * posData[:, 0] + A12 * posData[:, 1]
-        output[:, 1] = A21 * posData[:, 0] + A22 * posData[:, 1]
-        output[:, 2] = posData[:, 2]
+        output[:, 0] = A11 * position[:, 0] + A12 * position[:, 1]
+        output[:, 1] = A21 * position[:, 0] + A22 * position[:, 1]
+        output[:, 2] = position[:, 2]
 
         return output
 
-    def ECI(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Return cartesian ECI position data.
-
-        Parameters
-        ----------
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
+    def gcrs(self) -> np.ndarray:
+        """Return cartesian gcrs position data.
 
         Returns
         -------
-        np.array
-            Array of shape (n,3) with columns of XYZ ECI position data.
+        np.ndarray
+            Array of shape (n,3) with columns of XYZ gcrs position data.
 
         See Also
         --------
-        ECEF : Return cartesian ECEF position data.
-        GEO : Return geographical position data.
+        itrs : Return cartesian itrs position data.
+        geo : Return geographical position data.
 
         Examples
         --------
-        >>> timeData = Time(julian=np.array([2454545]))
-        >>> basePos = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(basePos=basePos, type="ECEF", timeData=timeData)
-        >>> coor.ECI()
+        >>> time = Time(julian=np.array([2454545]))
+        >>> position = np.array([[6343.82, -2640.87, -11.26]])
+        >>> coor = Coordinate(position=position, type="itrs", time=time)
+        >>> coor.gcrs()
         np.array([[6212.21719598, -2937.10811161, -11.26]])
         """
 
-        if self._ECI is None:
-            if self._ECEF is None:
-                self._ECEF = self._GEO_to_ECEF(self._GEO)
-            self._ECI = self._ECI_and_ECEF(self._ECEF, type="ECEF")
+        if self._GCRS is None:
+            if self._ITRS is None:
+                self._ITRS = self._geo_to_itrs(self._GEO)
+            self._GCRS = self._gcrs_and_itrs(self._ITRS, frame="itrs")
 
-        ECI = self._interp(self.ECI, **kwargs) if kwargs else self._ECI
+        return self._GCRS
 
-        return ECI
-
-    def ECEF(self, **kwargs: Dict[str, Any]) -> np.array:
-        """Return cartesian ECEF position data.
-
-        Parameters
-        ----------
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
+    def itrs(self) -> np.ndarray:
+        """Return cartesian itrs position data.
 
         Returns
         -------
-        np.array
-            Array of shape (n,3) with columns of XYZ ECEF position data.
+        np.ndarray
+            Array of shape (n,3) with columns of XYZ itrs position data.
 
         See Also
         --------
-        ECI : Return cartesian ECI position data.
-        GEO : Return geographical position data.
+        gcrs : Return cartesian gcrs position data.
+        geo : Return geographical position data.
 
         Examples
         --------
-        >>> timeData = Time(julian=np.array([2454545]))
-        >>> basePos = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(basePos=basePos, type="ECI", timeData=timeData)
-        >>> coor.ECEF()
+        >>> time = Time(julian=np.array([2454545]))
+        >>> position = np.array([[6343.82, -2640.87, -11.26]])
+        >>> coor = Coordinate(position=position, type="gcrs", time=time)
+        >>> coor.itrs()
         np.array([[6461.30569276, -2338.75507354, -11.26]])
         """
 
-        if self._ECEF is None:
-            if self._ECI is not None:
-                self._ECEF = self._ECI_and_ECEF(posData=self._ECI, type="ECI")
+        if self._ITRS is None:
+            if self._GCRS is not None:
+                self._ITRS = self._gcrs_and_itrs(position=self._GCRS, frame="gcrs")
             else:
-                self._ECEF = self._GEO_to_ECEF(posData=self._GEO)
+                self._ITRS = self._geo_to_itrs(position=self._GEO)
 
-        ECEF = self._interp(self._ECEF, **kwargs) if kwargs else self._ECEF
+        return self._ITRS
 
-        return ECEF
-
-    def _get_ang(self, vecOne: np.array, vecTwo: np.array) -> float:
+    def _get_ang(self, u: np.ndarray, v: np.ndarray) -> np.ndarray:
         """Calculate degree angle bewteen two vectors.
 
         Parameters
         ----------
-        vecOne, vecTwo : np.array
+        u, v : np.ndarray
             Arrays of shape (n,3) with rows of XYZ cartesian data.
 
         Returns
         -------
-        float
-            Degree angle between the two arrays.
+        np.ndarray
+            Array of shape (n,) containing the degree angle between the two
+            arrays.
         """
 
-        num = np.sum(vecOne * vecTwo, axis=1)
-        denom = np.linalg.norm(vecOne, axis=1) * np.linalg.norm(vecTwo, axis=1)
+        num = np.sum(u * v, axis=1)
+        denom = np.linalg.norm(u, axis=1) * np.linalg.norm(v, axis=1)
         ang = np.degrees(np.arccos(num / denom))
 
         return ang
 
-    def horizontal(self, groundPos: Any, **kwargs: Dict[str, Any]) -> Tuple:
+    def horizontal(self, location: Any) -> Tuple:
         """Return horizontal position data in degrees and decimals.
 
         In this method, the azimuth is calculated as increasing degrees
@@ -558,11 +469,8 @@ class Coordinate(Interpolation):
 
         Parameters
         ----------
-        groundPos : GroundPosition
+        location : GroundPosition
             Ground location defining the center of the horizontal system.
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
 
         Returns
         -------
@@ -572,29 +480,29 @@ class Coordinate(Interpolation):
 
         Examples
         --------
-        >>> timeData = Time(julian=np.array([2454545]))
-        >>> basePos = np.array([[6343.82, -2640.87, -11.26]])
-        >>> groundPos = GroundPosition(name="Saskatoon", coor=obsCoor)
-        >>> coor = Coordinate(basePos=basePos, type="ECEF", timeData=timeData)
-        >>> coor.horizontal(groundPos=groundPos)
+        >>> time = Time(julian=np.array([2454545]))
+        >>> position = np.array([[6343.82, -2640.87, -11.26]])
+        >>> location = GroundPosition(52.1579, -106.6702)
+        >>> coor = Coordinate(position=position, frame="ecef", time=time)
+        >>> coor.horizontal(location=location)
         (array([-40.8786098]), array([94.73615482]))
         """
 
-        if self._ECEF is None:
-            self.ECEF()
+        if self._ITRS is None:
+            self.itrs()
 
         # Convert observer position into cartesian coordinates.
-        coor, radius = groundPos.coor, groundPos.radius
-        GEO_data = self._GEO_to_ECEF(np.array([[coor[0], coor[1], 0]]))
+        lat, lon, radius = location.lat, location.lon, location.radius
+        GEO_data = self._geo_to_itrs(np.array([[lat, lon, 0]]))
         obs = np.repeat(GEO_data, self.length, 0)
 
         # Determine line of sight vector then altitude.
-        LOS = self._ECEF - obs
+        LOS = self._ITRS - obs
         Alt = 90 - self._get_ang(LOS, obs)
 
         # Find surface tangent vector passing through z-axis.
         k_hat = np.repeat(np.array([[0, 0, 1]]), self.length, axis=0)
-        beta = np.radians(coor[0])
+        beta = np.radians(lat)
         tangent = (k_hat.T * radius / np.sin(beta)).T - obs
 
         # Find LOS projection on tangent plane.
@@ -607,13 +515,9 @@ class Coordinate(Interpolation):
         Az = self._get_ang(tangent, proj_LOS)
         Az[neg_ind] = 360 - self._get_ang(tangent[neg_ind], proj_LOS[neg_ind])
 
-        if kwargs:
-            Alt = self._interp(Alt, **kwargs)
-            Az = self._interp(Az, **kwargs)
-
         return Alt, Az
 
-    def off_nadir(self, groundPos: Any, **kwargs: Dict[str, Any]) -> np.array:
+    def off_nadir(self, location: Any) -> np.ndarray:
         """Return the off-nadir angle to a ground location.
 
         This method calculates the off-nadir angle, in degrees and decimals, to
@@ -621,15 +525,12 @@ class Coordinate(Interpolation):
 
         Parameters
         ----------
-        groundPos : GroundPosition
+        location : GroundPosition
             Calculate off-nadir angles for the specified ground location.
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
 
         Returns
         -------
-        np.array
+        np.ndarray
             Array of shape (n,) containing off-nadir angle data in degrees and
             decimals.
 
@@ -640,33 +541,30 @@ class Coordinate(Interpolation):
         ground location of interest.
         """
 
-        if self._ECEF is None:
-            self.ECEF()
+        if self._ITRS is None:
+            self.itrs()
 
-        coor = groundPos.coor
-        GEO_data = self._GEO_to_ECEF(np.array([[coor[0], coor[1], 0]]))
-        obs = np.repeat(GEO_data, self.length, 0)
+        lat, lon = location.lat, location.lon
+        geo_data = self._geo_to_itrs(np.array([[lat, lon, 0]]))
+        obs = np.repeat(geo_data, self.length, 0)
 
-        LOS = np.subtract(self._ECEF, obs)
-        ang = self._get_ang(LOS, self._ECEF)
-
-        if kwargs:
-            ang = self._interp(ang, **kwargs)
+        LOS = np.subtract(self._ITRS, obs)
+        ang = self._get_ang(LOS, self._ITRS)
 
         return ang
 
-    def _WGS84_radius(self, lattitude: np.array) -> np.array:
+    def _WGS84_radius(self, lattitude: np.ndarray) -> np.ndarray:
         """Calculate the Earth's geocentric radius using WGS84.
 
         Parameters
         ----------
-        latitude : np.array
+        latitude : np.ndarray
             Array of shape (n,) representing the geocentric latitude of a
             ground location in degrees and decimals.
 
         Returns
         -------
-        np.array
+        np.ndarray
             Array of shape (n,) containing the Earth's geocentric radius in
             kilometres.
 
@@ -701,21 +599,15 @@ class Coordinate(Interpolation):
 
         return radius
 
-    def altitude(self, **kwargs: Dict[str, Any]) -> np.array:
+    def altitude(self) -> np.ndarray:
         """Return the geodetic altitude above Earth's surface in kilometres.
 
         This method uses the WGS84 reference ellipsoid to calculate the
         geodetic altitude above the Earth's surface.
 
-        Parameters
-        ----------
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
-
         Returns
         -------
-        np.array
+        np.ndarray
             Array of shape (n,) containing satellite altitudes in kilometres.
 
         Notes
@@ -731,20 +623,20 @@ class Coordinate(Interpolation):
 
         Examples
         --------
-        >>> timeData = Time(julian=np.array([2454545]))
-        >>> basePos = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(basePos=basePos, type="ECEF", timeData=timeData)
+        >>> time = Time(julian=np.array([2454545]))
+        >>> position = np.array([[6343.82, -2640.87, -11.26]])
+        >>> coor = Coordinate(position=position, type="itrs", time=time)
         >>> coor.altitude()
         np.array([504.1269764])
         """
 
-        if self._ECEF is None:
-            self.ECEF()
+        if self._ITRS is None:
+            self.itrs()
 
-        ECEF_data = self._ECEF
-        x = ECEF_data[:, 0]
-        y = ECEF_data[:, 1]
-        z = ECEF_data[:, 2]
+        itrs_data = self._ITRS
+        x = itrs_data[:, 0]
+        y = itrs_data[:, 1]
+        z = itrs_data[:, 2]
 
         a = 6378.137
         b = 6356.752314245
@@ -773,89 +665,32 @@ class Coordinate(Interpolation):
             N, h, phi = Np, hp, phip
             Np, hp, phip = new_vals(a, b, e, p, N, h, phi, z)
 
-        if kwargs:
-            h = self._interp(h, **kwargs)
-
         return h
 
-    def distance(self, groundPos: Any, **kwargs: Dict[str, Any]) -> np.array:
+    def distance(self, location: Any) -> np.ndarray:
         """Return the distance to a ground location.
 
         Parameters
         ----------
-        groundPos : GroundPosition
+        location : GroundPosition
             Calculate distances to the specified ground location.
-        kwargs : Dict, optional
-            Optional keyword arguments passed into the
-            `Interpolation()._interp()` method.
 
         Returns
         -------
-        np.array
+        np.ndarray
             Array of shape (n,) containing distances in kilometres between the
             satellite and ground location for each satellite position.
         """
 
-        if self._ECEF is None:
-            self.ECEF()
+        if self._ITRS is None:
+            self.itrs()
 
-        coor = groundPos.coor
-        gnd_ECEF = self._GEO_to_ECEF(np.array([[coor[0], coor[1], 0]]))
-        gnd_ECEF = np.repeat(gnd_ECEF, self.length, 0)
+        lat, lon = location.lat, location.lon
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]]))
+        gnd_itrs = np.repeat(gnd_itrs, self.length, 0)
 
         # Find LOS vector norm.
-        LOS = self._ECEF - gnd_ECEF
+        LOS = self._ITRS - gnd_itrs
         distances = np.linalg.norm(LOS, axis=1)
 
-        if kwargs:
-            distances = self._interp(distances, **kwargs)
-
         return distances
-
-    def sexagesimal(self, angles: np.array) -> np.array:
-        """Convert decimal angles into sexagesimal angles.
-
-        Parameters
-        ----------
-        angles : np.array
-            Array of shape (n,) containing angles in decimal degrees.
-
-        Returns
-        -------
-        np.array
-            Array of shape (n,) containing sexagesimal angles as strings.
-
-        Examples
-        --------
-        >>> angles = np.array([43.6532, -79.3832, -33.2833, 149.1000])
-        >>> coor = Coordinate(...)
-        >>> coor.sexagesimal(angles=angles)
-        np.array(['+43°39′11.52″',
-                  '-79°22′59.52″',
-                  '-33°16′59.88″',
-                  '+149°06′00.00″'])
-        """
-
-        deg = u"\u00B0"
-        min = u"\u2032"
-        sec = u"\u2033"
-
-        length = angles.shape[0]
-        out_arr = np.empty((length,), dtype="<U32")
-
-        for i in range(length):
-
-            ang = angles[i]
-
-            sign = "+" if ang >= 0 else "-"
-            degree = int(abs(ang))
-            minute = int(60 * np.round(abs(ang) - degree, 2))
-            second = np.round(abs(60 * (60 * (abs(ang) - degree) - minute)), 2)
-
-            degree = "%.3s" % str(degree).zfill(2)
-            minute = "%.2s" % str(minute).zfill(2)
-            second = str("%.2f" % second).zfill(5)
-
-            out_arr[i] = f"{sign}{degree}{deg}{minute}{min}{second}{sec}"
-
-        return out_arr

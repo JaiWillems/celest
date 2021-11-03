@@ -1,7 +1,8 @@
 
 
-from celest.encounter import GroundPosition
-from celest.satellite import Coordinate, Time
+from celest.encounter.groundposition import GroundPosition
+from celest.satellite.coordinate import Coordinate
+from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest
@@ -19,48 +20,48 @@ class TestCoordinate(TestCase):
         self.geo = data[:, 1:3]
         self.alt = data[:, 3]
         self.local_altaz = data[:, 4:7]
-        self.ECI = data[:, 7:10]
-        self.ECEF = data[:, 10:]
+        self.GCRS = data[:, 7:10]
+        self.ITRS = data[:, 10:]
         self.length = data.shape[0]
 
         geo = np.concatenate((self.geo, self.alt.reshape((-1, 1))), axis=1)
 
         self.timeData = Time(self.times, 2430000)
-        self.coor_ECI = Coordinate(self.ECI, "ECI", self.timeData)
-        self.coor_ECEF = Coordinate(self.ECEF, "ECEF", self.timeData)
-        self.coor_GEO = Coordinate(geo, "GEO", self.timeData)
+        self.coor_gcrs = Coordinate(self.GCRS, "gcrs", self.timeData)
+        self.coor_itrs = Coordinate(self.ITRS, "itrs", self.timeData)
+        self.coor_geo = Coordinate(geo, "geo", self.timeData)
 
     def test_set_base_position(self):
         """Test `Coordinate._set_base_position`."""
 
-        coor_1 = Coordinate(self.geo, "GEO", self.timeData)
+        coor_1 = Coordinate(self.geo, "geo", self.timeData)
 
         self.assertEqual(coor_1._GEO.shape[1], 3)
 
-        self.assertIsNotNone(coor_1.times)
+        self.assertIsNotNone(coor_1.time)
         self.assertIsNotNone(coor_1._GEO)
-        self.assertIsNone(coor_1._ECI)
-        self.assertIsNone(coor_1._ECEF)
+        self.assertIsNone(coor_1._GCRS)
+        self.assertIsNone(coor_1._ITRS)
         self.assertEqual(self.length, coor_1.length)
 
-        coor_2 = Coordinate(self.ECI, "ECI", self.timeData, 9)
+        coor_2 = Coordinate(self.GCRS, "gcrs", self.timeData)
 
-        self.assertIsNotNone(coor_2.times)
+        self.assertIsNotNone(coor_2.time)
         self.assertIsNone(coor_2._GEO)
-        self.assertIsNotNone(coor_2._ECI)
-        self.assertIsNone(coor_2._ECEF)
-        self.assertEqual(9 * self.length, coor_2.length)
+        self.assertIsNotNone(coor_2._GCRS)
+        self.assertIsNone(coor_2._ITRS)
+        self.assertEqual(self.length, coor_2.length)
 
-        coor_3 = Coordinate(self.ECEF, "ECEF", self.timeData, 3)
+        coor_3 = Coordinate(self.ITRS, "itrs", self.timeData)
 
-        self.assertIsNotNone(coor_3.times)
+        self.assertIsNotNone(coor_3.time)
         self.assertIsNone(coor_3._GEO)
-        self.assertIsNone(coor_3._ECI)
-        self.assertIsNotNone(coor_3._ECEF)
-        self.assertEqual(3 * self.length, coor_3.length)
+        self.assertIsNone(coor_3._GCRS)
+        self.assertIsNotNone(coor_3._ITRS)
+        self.assertEqual(self.length, coor_3.length)
 
-    def test_GEO_to_ECEF(self):
-        """Test `Coordinate._GEO_to_ECEF`.
+    def test_geo_to_itrs(self):
+        """Test `Coordinate._geo_to_itrs`.
 
         Notes
         -----
@@ -68,66 +69,47 @@ class TestCoordinate(TestCase):
         """
 
         geo = np.concatenate((self.geo, self.alt.reshape((-1, 1))), axis=1)
-        calc_ECEF = self.coor_GEO._GEO_to_ECEF(geo)
+        calc_itrs = self.coor_geo._geo_to_itrs(geo)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_ECEF[i, 0], self.ECEF[i, 0], delta=0.001)
+                self.assertAlmostEqual(calc_itrs[i, 0], self.ITRS[i, 0], delta=0.001)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_ECEF[i, 1], self.ECEF[i, 1], delta=0.001)
+                self.assertAlmostEqual(calc_itrs[i, 1], self.ITRS[i, 1], delta=0.001)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_ECEF[i, 2], self.ECEF[i, 2], delta=0.001)
+                self.assertAlmostEqual(calc_itrs[i, 2], self.ITRS[i, 2], delta=0.001)
 
-    def test_ECEF_to_GEO(self):
-        """Test `Coordinate._ECEF_to_GEO`.
+    def test_itrs_to_geo(self):
+        """Test `Coordinate._itrs_to_geo`.
 
         Notes
         -----
         Test cases are taken from a GMAT data set.
         """
 
-        calc_GEO = self.coor_ECEF._ECEF_to_GEO(self.ECEF)
+        calc_geo = self.coor_itrs._itrs_to_geo(self.ITRS)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_GEO[i, 0], self.geo[i, 0], delta=0.18)
+                self.assertAlmostEqual(calc_geo[i, 0], self.geo[i, 0], delta=0.18)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_GEO[i, 1], self.geo[i, 1], delta=0.00001)
+                self.assertAlmostEqual(calc_geo[i, 1], self.geo[i, 1], delta=0.00001)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_GEO[i, 2], self.alt[i], delta=0.06)
+                self.assertAlmostEqual(calc_geo[i, 2], self.alt[i], delta=0.06)
 
-    def test_ISO6709_representation(self):
-        """Test `Coordinate._ISO6709_representation`.
+    def test_geo(self):
+        """Test `Coordinate.geo`."""
 
-        Notes
-        -----
-        Test cases generated in accordance to ISO6709 formatting standards.
-        """
-
-        geo = np.array([[43.6532, -79.3832, 430.23],
-                        [-33.2833, 149.1000, 532.98]])
-        sexagesimal = np.array(["43\u00B039\u203211.52\u2033N 79\u00B022\u203259.52\u2033W 430.23km",
-                                "33\u00B016\u203259.88\u2033S 149\u00B006\u203200.00\u2033E 532.98km"])
-
-        calc_ang = self.coor_GEO._ISO6709_representation(geoPos=geo)
-
-        for i in range(calc_ang.shape[0]):
-            with self.subTest(i=i):
-                self.assertTrue(sexagesimal[i] == calc_ang[i])
-
-    def test_GEO(self):
-        """Test `Coordinate.GEO`."""
-
-        calc_geo_1 = self.coor_ECI.GEO()
-        calc_geo_2 = self.coor_ECEF.GEO()
+        calc_geo_1 = self.coor_gcrs.geo()
+        calc_geo_2 = self.coor_itrs.geo()
 
         for i in range(self.length):
             with self.subTest(i=i):
@@ -151,84 +133,84 @@ class TestCoordinate(TestCase):
                 self.assertAlmostEqual(calc_geo_2[i, 1], self.geo[i, 1], delta=0.00001)
                 self.assertAlmostEqual(calc_geo_2[i, 2], self.alt[i], delta=0.06)
 
-    def test_ERA(self):
-        """Test `Coordinate.ERA`.
+    def test_era(self):
+        """Test `Coordinate.era`.
 
         Notes
         -----
-        The `Coordinate.ERA` method was validated through
-        `Coordinate._ECI_and_ECEF` validation. This test method was implemented
-        using the calculated output of the `Coordinate.ERA` method after it was
+        The `Coordinate.era` method was validated through
+        `Coordinate._gcrs_and_itrs` validation. This test method was implemented
+        using the calculated output of the `Coordinate.era` method after it was
         shown to be correct.
         """
 
-        era = np.array([6.2360075])
+        era = np.degrees(np.array([6.2360075]))
 
         timeData = Time(np.array([2454545]))
         basePos = np.array([[6343.82, -2640.87, -11.26]])
-        posData = Coordinate(basePos, "ECEF", timeData)
-        calc_era = posData.ERA()
+        posData = Coordinate(basePos, "itrs", timeData)
+        calc_era = posData.era()
 
         self.assertAlmostEqual(era[0], calc_era[0], delta=0.01)
 
-    def test_ECI_and_ECEF(self):
-        """Test `Coordinate._ECI_and_ECEF`.
+    def test_gcrs_and_itrs(self):
+        """Test `Coordinate._gcrs_and_itrs`.
 
         Notes
         -----
         Test cases are taken from a GMAT data set.
         """
 
-        calc_ECEF = self.coor_ECI._ECI_and_ECEF(self.ECI, type="ECI")
-        calc_ECI = self.coor_ECEF._ECI_and_ECEF(self.ECEF, type="ECEF")
+        calc_itrs = self.coor_gcrs._gcrs_and_itrs(self.GCRS, frame="gcrs")
+        calc_gcrs = self.coor_itrs._gcrs_and_itrs(self.ITRS, frame="itrs")
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_ECEF[i, 0], self.ECEF[i, 0], delta=20)
-                self.assertAlmostEqual(calc_ECEF[i, 1], self.ECEF[i, 1], delta=20)
-                self.assertAlmostEqual(calc_ECEF[i, 2], self.ECEF[i, 2], delta=20)
+                self.assertAlmostEqual(calc_itrs[i, 0], self.ITRS[i, 0], delta=20)
+                self.assertAlmostEqual(calc_itrs[i, 1], self.ITRS[i, 1], delta=20)
+                self.assertAlmostEqual(calc_itrs[i, 2], self.ITRS[i, 2], delta=20)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_ECI[i, 0], self.ECI[i, 0], delta=20)
-                self.assertAlmostEqual(calc_ECI[i, 1], self.ECI[i, 1], delta=20)
-                self.assertAlmostEqual(calc_ECI[i, 2], self.ECI[i, 2], delta=20)
+                self.assertAlmostEqual(calc_gcrs[i, 0], self.GCRS[i, 0], delta=20)
+                self.assertAlmostEqual(calc_gcrs[i, 1], self.GCRS[i, 1], delta=20)
+                self.assertAlmostEqual(calc_gcrs[i, 2], self.GCRS[i, 2], delta=20)
 
-    def test_ECI(self):
-        """Test `Coordinate.ECI`."""
+    def test_gcrs(self):
+        """Test `Coordinate.gcrs`."""
 
-        calc_eci_1 = self.coor_ECEF.ECI()
-        calc_eci_2 = self.coor_GEO.ECI()
-
-        for i in range(self.length):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(calc_eci_1[i, 0], self.ECI[i, 0], delta=17)
-                self.assertAlmostEqual(calc_eci_1[i, 1], self.ECI[i, 1], delta=17)
-                self.assertAlmostEqual(calc_eci_1[i, 2], self.ECI[i, 2], delta=17)
+        calc_gcrs_1 = self.coor_itrs.gcrs()
+        calc_gcrs_2 = self.coor_geo.gcrs()
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_eci_2[i, 0], self.ECI[i, 0], delta=17)
-                self.assertAlmostEqual(calc_eci_2[i, 1], self.ECI[i, 1], delta=17)
-                self.assertAlmostEqual(calc_eci_2[i, 2], self.ECI[i, 2], delta=17)
-
-    def test_ECEF(self):
-        """Test `Coordinate.ECEF`."""
-
-        calc_ecef_1 = self.coor_ECI.ECEF()
-        calc_ecef_2 = self.coor_GEO.ECEF()
+                self.assertAlmostEqual(calc_gcrs_1[i, 0], self.GCRS[i, 0], delta=17)
+                self.assertAlmostEqual(calc_gcrs_1[i, 1], self.GCRS[i, 1], delta=17)
+                self.assertAlmostEqual(calc_gcrs_1[i, 2], self.GCRS[i, 2], delta=17)
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_ecef_1[i, 0], self.ECEF[i, 0], delta=17)
-                self.assertAlmostEqual(calc_ecef_1[i, 1], self.ECEF[i, 1], delta=17)
-                self.assertAlmostEqual(calc_ecef_1[i, 2], self.ECEF[i, 2], delta=17)
+                self.assertAlmostEqual(calc_gcrs_2[i, 0], self.GCRS[i, 0], delta=17)
+                self.assertAlmostEqual(calc_gcrs_2[i, 1], self.GCRS[i, 1], delta=17)
+                self.assertAlmostEqual(calc_gcrs_2[i, 2], self.GCRS[i, 2], delta=17)
+
+    def test_itrs(self):
+        """Test `Coordinate.itrs`."""
+
+        calc_itrs_1 = self.coor_gcrs.itrs()
+        calc_itrs_2 = self.coor_geo.itrs()
 
         for i in range(self.length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_ecef_2[i, 0], self.ECEF[i, 0], delta=5)
-                self.assertAlmostEqual(calc_ecef_2[i, 1], self.ECEF[i, 1], delta=5)
-                self.assertAlmostEqual(calc_ecef_2[i, 2], self.ECEF[i, 2], delta=5)
+                self.assertAlmostEqual(calc_itrs_1[i, 0], self.ITRS[i, 0], delta=17)
+                self.assertAlmostEqual(calc_itrs_1[i, 1], self.ITRS[i, 1], delta=17)
+                self.assertAlmostEqual(calc_itrs_1[i, 2], self.ITRS[i, 2], delta=17)
+
+        for i in range(self.length):
+            with self.subTest(i=i):
+                self.assertAlmostEqual(calc_itrs_2[i, 0], self.ITRS[i, 0], delta=5)
+                self.assertAlmostEqual(calc_itrs_2[i, 1], self.ITRS[i, 1], delta=5)
+                self.assertAlmostEqual(calc_itrs_2[i, 2], self.ITRS[i, 2], delta=5)
 
     def test_get_ang(self):
         """Test `Coordinate._get_ang`."""
@@ -237,7 +219,7 @@ class TestCoordinate(TestCase):
         vec_two = np.array([[36, 29, 38], [2703, 947, 8739], [9827, 921, 1]])
         ang = np.array([16.28, 37, 83.65])
 
-        calc_ang = self.coor_GEO._get_ang(vec_one, vec_two)
+        calc_ang = self.coor_geo._get_ang(vec_one, vec_two)
 
         for i in range(calc_ang.size):
             with self.subTest(i=i):
@@ -256,12 +238,12 @@ class TestCoordinate(TestCase):
         from astropy import time
 
         # Set up observer location.
-        obsCoor = (52.1579, -106.6702)
-        loc = EarthLocation.from_geodetic(obsCoor[1]*u.deg, obsCoor[0]*u.deg)
+        lat, lon = 52.1579, -106.6702
+        loc = EarthLocation.from_geodetic(lon*u.deg, lat*u.deg)
 
         # Prepare time and position information.
         timeData = time.Time(self.times + 2430000, format="jd")
-        x, y, z = self.ECI[:, 0], self.ECI[:, 1], self.ECI[:, 2]
+        x, y, z = self.GCRS[:, 0], self.GCRS[:, 1], self.GCRS[:, 2]
 
         # Define coordinate frames.
         gcrs = GCRS(obstime=timeData)
@@ -279,8 +261,8 @@ class TestCoordinate(TestCase):
         az = altazCoor.az.degree
 
         # Get Celest results.
-        coor = Coordinate(itrsData, "ECEF", self.timeData)
-        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
+        coor = Coordinate(itrsData, "itrs", self.timeData)
+        groundPos = GroundPosition(lat, lon)
         calc_alt, calc_az = coor.horizontal(groundPos)
 
         for i in range(calc_alt.size-5000):
@@ -306,11 +288,10 @@ class TestCoordinate(TestCase):
         off_nadir = np.array([66.88, 65.09, 63.90, 63.22, 62.46, 61.67, 58.42,
                               38.27, 23.73, 56.29])
 
-        obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
+        groundPos = GroundPosition(52.1579, -106.6702)
 
         timeData = Time(self.times[210:220], 2430000)
-        coor = Coordinate(self.ECEF[210:220], "ECEF", timeData)
+        coor = Coordinate(self.ITRS[210:220], "itrs", timeData)
         calc_off_nadir = coor.off_nadir(groundPos)
 
         for i in range(10):
@@ -338,7 +319,7 @@ class TestCoordinate(TestCase):
         denom = (a * clat) ** 2 + (b * slat) ** 2
         radius = np.sqrt(num / denom)
 
-        calc_radius = self.coor_GEO._WGS84_radius(self.geo[:, 0])
+        calc_radius = self.coor_geo._WGS84_radius(self.geo[:, 0])
 
         for i in range(5):
             with self.subTest(i=i):
@@ -352,7 +333,7 @@ class TestCoordinate(TestCase):
         Test cases are taken from a GMAT data set.
         """
 
-        calc_alt = self.coor_ECEF.altitude()
+        calc_alt = self.coor_itrs.altitude()
 
         for i in range(calc_alt.size):
             with self.subTest(i=i):
@@ -371,31 +352,15 @@ class TestCoordinate(TestCase):
         dist = np.array([9070.49268746, 8776.7179543, 8330.99543153,
                          7851.70082642, 7359.09189844])
 
-        obsCoor = (52.1579, -106.6702)
-        groundPos = GroundPosition("Saskatoon", obsCoor, "image", 30)
+        groundPos = GroundPosition(52.1579, -106.6702)
 
         timeData = Time(times, 2430000)
-        coor = Coordinate(position, "ECEF", timeData)
+        coor = Coordinate(position, "itrs", timeData)
         calc_dist = coor.distance(groundPos)
 
         for i in range(5):
             with self.subTest(i=i):
                 self.assertAlmostEqual(calc_dist[i], dist[i], delta=0.1)
-
-    def test_sexagesimal(self):
-        """Test `Coordinate.sexagesimal`."""
-
-        ang = np.array([43.6532, -79.3832, -33.2833, 149.1000])
-        sexagesimal = np.array(["+43\u00B039\u203211.52\u2033",
-                                "-79\u00B022\u203259.52\u2033",
-                                "-33\u00B016\u203259.88\u2033",
-                                "+149\u00B006\u203200.00\u2033"])
-
-        calc_ang = self.coor_GEO.sexagesimal(ang)
-
-        for i in range(calc_ang.shape[0]):
-            with self.subTest(i=i):
-                self.assertTrue(sexagesimal[i] == calc_ang[i])
 
 
 if __name__ == "__main__":

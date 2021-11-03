@@ -1,71 +1,34 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>encounter &mdash; Celest 0.1.8 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>Encounter Module &mdash; Celest 0.1.8 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="groundposition" href="groundposition.html" /> 
+    <link rel="prev" title="Satellite Module" href="satellite.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html">
-          
-
-          
-            
             <img src="../_static/celest_documentation_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,406 +36,72 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">User Guide</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Guide</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../guide/introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/contributing.html">Contributing</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="satellite.html">satellite</a></li>
-<li class="toctree-l1"><a class="reference internal" href="groundposition.html">groundposition</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">encounter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="satellite.html">Satellite Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Encounter Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#groundposition-class">GroundPosition Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#window-generation">Window Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#windows-class">Windows Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#satellite-attitudes">Satellite Attitudes</a></li>
+</ul>
+</li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">Celest</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>encounter</li>
-    
-    
+      <li>Encounter Module</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/modules/encounter.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="encounter">
-<h1>encounter<a class="headerlink" href="#encounter" title="Permalink to this headline">¶</a></h1>
-<p>Satellite encounter planning.</p>
-<p>The encounter module contains the Encounter class that is used to compute,
-store, and schedule Earth-satellite encounters.</p>
+             
+  <section id="encounter-module">
+<h1>Encounter Module<a class="headerlink" href="#encounter-module" title="Permalink to this headline"></a></h1>
+<section id="groundposition-class">
+<h2>GroundPosition Class<a class="headerlink" href="#groundposition-class" title="Permalink to this headline"></a></h2>
 <dl class="py class">
-<dt>
-<em class="property">class </em><code class="sig-prename descclassname">encounter.</code><code class="sig-name descname">Encounter</code></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">celest.encounter.</span></span><span class="sig-name descname"><span class="pre">GroundPosition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Computes, schedules, and store satellite encounter data.</p>
-<p>The Encounter class extends off the information stored in Satellite and
-GroundPosition objects to compute, store, and schedule Earth-Satellite
-encounters.</p>
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">encounters</code></dt>
-<dd><p>Dictionary of EncounterSpec objects where the key is the
-EncounterSpec’s name attribute.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">sunPos</code></dt>
-<dd><p>Array of shape (n,3) containing the sun position in the ECEF
-cartesian frame.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>np.array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">add_encounter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">encType</span></em>, <em class="sig-param"><span class="n">groundPos</span></em>, <em class="sig-param"><span class="n">ang</span></em>, <em class="sig-param"><span class="n">angType</span></em>, <em class="sig-param"><span class="n">maxAng</span></em>, <em class="sig-param"><span class="n">solar</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Defines and stores EncounterSpec object in the encounters attribute
-dictionary.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">_sun_position</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeData</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Instantiates sunPos attribute.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">windows</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">satellite</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Instantiates windows attribute of the EncounterSpec objects.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">save_windows</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fileName</span></em>, <em class="sig-param"><span class="n">delimiter</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Saves window data in local directory.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">encounter_stats</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Get encounter statistics.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">_special_interp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">satellite</span><span class="p">:</span> <span class="n">satellite.Satellite</span></em>, <em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">encounter</span><span class="p">:</span> <span class="n">encounter.EncounterSpec</span></em>, <em class="sig-param"><span class="n">factor</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">buffer</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">dt</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>numpy.array<span class="p">, </span>numpy.array<span class="p">, </span>numpy.array<span class="p">, </span>numpy.array<span class="p">]</span></dt>
-<dd><p>Interpolate encounter regions.</p>
-<p>This method identifies the positional data relevent to the inputed
-encounter and interpolates these regions.</p>
+<p>Localize Earth bound location information.</p>
+<p>The <cite>GoundPosition</cite> class stores ground location information and is an
+instrumental part of encounter planning functionality.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>satellite</strong> (<em>Satellite</em>) – Satellite object related to the encounters.</p></li>
-<li><p><strong>grouundPos</strong> (<em>GroundPosition</em>) – Specifies ground location associated with the encounters.</p></li>
-<li><p><strong>encounter</strong> (<em>EncounterSpec</em>) – Defines the valid encounter region.</p></li>
-<li><p><strong>factor</strong> (<em>int</em>) – The factor increase in the number of steps in interpolated regions.</p></li>
-<li><p><strong>buffer</strong> (<em>float</em>) – Positive angular buffer to interpolate data that comes within the
-buffer from the encounter constraint angle.</p></li>
-<li><p><strong>dt</strong> (<em>int</em>) – The number of data points adjacent to a valid encounter region to
-interpolate within.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>np.array</em> – The array of new times corresponding to interpolated position data.</p></li>
-<li><p><em>np.array</em> – The array of interpolated altitude data.</p></li>
-<li><p><em>np.array</em> – The array of interpolated azimuth data.</p></li>
-<li><p><em>np.array</em> – The array of interpolated nadir angle data.</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The inspiration for the buffer is to interpolate regions that have the
-potential to surpass the encounter constraint angle but may perhaps lie
-between data points. The buffer is recommended all times but
-escpecially with coarse data.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">_sun_position</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeData</span><span class="p">:</span> <span class="n">numpy.array</span></em><span class="sig-paren">)</span> &#x2192; list</dt>
-<dd><p>Instantiate sunPos attribute.</p>
-<p>This method uses the de421 ephemeris to calculate the sun”s position in
-the ECEF cartesian frame at each time in the timeData parameter.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>timeData</strong> (<em>np.array</em>) – Array of shape (n,) containing datetime objects in UTC.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Array of shape (n,3) with columns of X, Y, Z ECEF sun position
-data.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">encounter</span> <span class="o">=</span> <span class="n">Encounter</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">UTCTimeData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2020-06-01 12:00:00.0340&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="s1">&#39;2020-06-01 12:01:00.0340&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sunPos</span> <span class="o">=</span> <span class="n">encounter</span><span class="o">.</span><span class="n">_sun_position</span><span class="p">(</span><span class="n">timeData</span><span class="o">=</span><span class="n">UTCTimeData</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">add_encounter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">encType</span><span class="p">:</span> <span class="n">Literal<span class="p">[</span>IMG<span class="p">, </span>DL<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">ang</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">angType</span><span class="p">:</span> <span class="n">Literal<span class="p">[</span>alt<span class="p">, </span>nadirLOS<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">maxAng</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">solar</span><span class="p">:</span> <span class="n">Literal[- 1, 0, 1]</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; None</dt>
-<dd><p>Define an encounter type.</p>
-<p>This method uses the input data to create a key/value pair in the
-encounters attribute dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – String acting as the encounter identifier. Used for later indexing.</p></li>
-<li><p><strong>encType</strong> (<em>{&quot;IMG&quot;</em><em>, </em><em>&quot;DL&quot;}</em>) – Specifies encounter category as either imaging or data linking.</p></li>
-<li><p><strong>goundPos</strong> (<em>GroundPosition</em>) – Ground location associated with the encounter.</p></li>
-<li><p><strong>ang</strong> (<em>float</em>) – Angluar constraint for the encounter in degrees.</p></li>
-<li><p><strong>angType</strong> (<em>{&quot;alt&quot;</em><em>, </em><em>&quot;nadirLOS&quot;}</em>) – String specifying the constraint angle as either the altitude, or
-nadir-LOS angle type.</p></li>
-<li><p><strong>maxAng</strong> (<em>bool</em>) – Defines the contraint angle as a maximum constraint if True or as
-minimum constraint if False. Note that the nadirLOS angle is
-measured to increase away from nadir.</p></li>
-<li><p><strong>solar</strong> (<em>{-1</em><em>, </em><em>0</em><em>, </em><em>1}</em><em>, </em><em>optional</em>) – Defines sunlight constraint where -1 gets windows at night, 0 gets
-windows at day or night, and 1 gets windows at day.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">encounters</span> <span class="o">=</span> <span class="n">Encounter</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">encounters</span><span class="o">.</span><span class="n">add_encounter</span><span class="p">(</span><span class="s2">&quot;CYYZ IMG&quot;</span><span class="p">,</span> <span class="s2">&quot;IMG&quot;</span><span class="p">,</span> <span class="n">toronto</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;nadirLOS&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                         <span class="kc">True</span><span class="p">,</span> <span class="n">solar</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">encounter_stats</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame</dt>
-<dd><p>Generate encounter statistics.</p>
-<p>This method produces various statistics for each encounterSpec object
-Statistics include the raw number of viable passes, cumulative
-encounter time, daily average counts, and the daily average time for
-each encounter and encounter type.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>None</strong> – </p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Pandas DataFrame containing the statistics for each encounter and
-encounter type.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pd.DataFrame</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The returned pandas DataFrame can be printed for easy viewing.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stats</span> <span class="o">=</span> <span class="n">encounters</span><span class="o">.</span><span class="n">encounter_stats</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>See documentation for more detail on instantiated dependencies.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">save_windows</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None</dt>
-<dd><p>Save window data to local directory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fileName</strong> (<em>str</em>) – File name of output file. Can be a .txt or .csv file.</p></li>
-<li><p><strong>delimiter</strong> (<em>str</em>) – String of length 1 representing the feild delimiter for the output
-file.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>It is recommended to use a tab delimiter for .txt files and comma
-delimiters for .csv files. The method will return an error if fileName
-already exists in the current working directory. The windows
-function must be called prior to the save_windows method call.</p>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">encounters</span><span class="o">.</span><span class="n">windows</span><span class="p">(</span><span class="n">finch</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">encounters</span><span class="o">.</span><span class="n">save_windows</span><span class="p">(</span><span class="s2">&quot;EncounterWindows.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;   &quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>See documentation for more detail on instantiated dependencies.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">windows</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">satellite</span><span class="p">:</span> <span class="n">satellite.Satellite</span></em>, <em class="sig-param"><span class="n">interp</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">factor</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">buffer</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">dt</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; None</dt>
-<dd><p>Instantiates windows attribute of EncounterSpec objects.</p>
-<p>This method determines determines the windows for each EncounterSpec
-object specified in the encounters attribute.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>satellite</strong> (<em>Satellite</em>) – Satellite object with appropriate dependencies instantiated.</p></li>
-<li><p><strong>interp</strong> (<em>{True</em><em>, </em><em>False}</em><em>, </em><em>optional</em>) – If True then the windows will be generated from data interpolated
-around valid encounter regions.</p></li>
-<li><p><strong>factor</strong> (<em>int</em><em>, </em><em>optional</em>) – The factor increase in the number of steps in interpolated regions.</p></li>
-<li><p><strong>buffer</strong> (<em>float</em><em>, </em><em>optional</em>) – Positive angular buffer to interpolate data that comes within the
-buffer from the encounter constraint angle.</p></li>
-<li><p><strong>dt</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of data points adjacent to a valid encounter region to
-interpolate within.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>If an EncounterSpec objects use an “alt” angle type then the Satellite
-must have the corresponding GroundPositions alt and az attributes
-instantiated. If an EncounterSpec objects use a “nadirLOS” angle type
-then the Satellite must have the corresponding GroundPositions nadirAng
-attribute instantiated.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">encounters</span><span class="o">.</span><span class="n">windows</span><span class="p">(</span><span class="n">finch</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>See documentation for more detail on instantiated dependencies.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt>
-<em class="property">class </em><code class="sig-prename descclassname">encounter.</code><code class="sig-name descname">EncounterSpec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">encType</span><span class="p">:</span> <span class="n">Literal<span class="p">[</span>IMG<span class="p">, </span>DL<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">groundPos</span><span class="p">:</span> <span class="n">groundposition.GroundPosition</span></em>, <em class="sig-param"><span class="n">ang</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">angType</span><span class="p">:</span> <span class="n">Literal<span class="p">[</span>alt<span class="p">, </span>nadirLOS<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">maxAng</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">solar</span><span class="p">:</span> <span class="n">Literal[- 1, 0, 1]</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Localize encounter information.</p>
-<p>The EncounterSpec object localizes encounter information specific to a
-GroundPosition Object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – String acting as the encounter identifier. Used for later indexing.</p></li>
-<li><p><strong>encType</strong> (<em>{&quot;IMG&quot;</em><em>, </em><em>&quot;DL&quot;}</em>) – Specifies encounter category as either imaging or data linking.</p></li>
-<li><p><strong>goundPos</strong> (<em>GroundPosition</em>) – Ground location associated with the encounter.</p></li>
-<li><p><strong>ang</strong> (<em>float</em>) – Angluar constraint for the encounter in degrees.</p></li>
-<li><p><strong>angType</strong> (<em>{&quot;alt&quot;</em><em>, </em><em>&quot;nadirLOS&quot;}</em>) – String specifying the constraint angle as either the altitude, or
-nadir-LOS angle type.</p></li>
-<li><p><strong>maxAng</strong> (<em>bool</em>) – Defines the contraint angle as a maximum constraint if True or as
-minimum constraint if False. Note that the nadirLOS angle is
-measured to increase away from nadir.</p></li>
-<li><p><strong>solar</strong> (<em>{-1</em><em>, </em><em>0</em><em>, </em><em>1}</em><em>, </em><em>optional</em>) – Defines sunlight constraint where -1 gets windows at night, 0 gets
-windows at day or night, and 1 gets windows at day.</p></li>
+<li><p><strong>latitude</strong> (<em>float</em>) – Locations geodetic lattitude in degrees and decimals.</p></li>
+<li><p><strong>longitude</strong> (<em>float</em>) – Locations geodetic longitude in degrees and decimals.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt>
-<code class="sig-name descname">name</code></dt>
-<dd><p>Encounter identifier.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">type</code></dt>
-<dd><p>Specifies encounter category as either imaging or data linking.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>{“IMG”, “DL”}</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">groundPos</code></dt>
-<dd><p>Ground location associated with the encounter.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>GroundPosition</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">ang</code></dt>
-<dd><p>Angluar constraint for the encounter in degrees.</p>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">lat</span></span></dt>
+<dd><p>Geodetic latitude for the location given in degrees and decimals.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float</p>
@@ -481,113 +110,176 @@ windows at day or night, and 1 gets windows at day.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt>
-<code class="sig-name descname">angType</code></dt>
-<dd><p>String specifying the constraint angle as either the altitude, or
-nadir-LOS angle type.</p>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">lon</span></span></dt>
+<dd><p>Geodetic longitude for the location given in degrees and decimals.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>{“alt”, “nadirLOS”}</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt>
-<code class="sig-name descname">maxAng</code></dt>
-<dd><p>Defines the contraint angle as a maximum constraint if True or as
-minimum constraint if False. Note that the nadirLOS angle is
-measured to increase away from nadir.</p>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">radius</span></span></dt>
+<dd><p>Earth’s radius at the given coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">solar</code></dt>
-<dd><p>Defines sunlight constraint where -1 gets windows at night, 0 gets
-windows at day or night, and 1 gets windows at day.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>{-1, 0, 1}, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">windows</code></dt>
-<dd><p>Array of shape (n,3) of window start, end, and elapsed seconds data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>np.array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">length</code></dt>
-<dd><p>Length, n, of data attributes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</div>
+</section>
+<section id="window-generation">
+<h2>Window Generation<a class="headerlink" href="#window-generation" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">celest.encounter.windows.</span></span><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enc</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'image'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'data</span> <span class="pre">link'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">celest.encounter._window_handling.Windows</span></span></span></dt>
+<dd><p>Return encounter windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> (<em>Satellite</em>) – Satellite taking part in ground interactions.</p></li>
+<li><p><strong>location</strong> (<em>GroundPosition</em>) – Ground location of imaging site or ground station.</p></li>
+<li><p><strong>enc</strong> (<em>{&quot;image&quot;</em><em>, </em><em>&quot;data link&quot;}</em>) – Type of encounter as being an imaging or data link encounter.</p></li>
+<li><p><strong>ang</strong> (<em>float</em>) – Encounter contraint angle in degrees.</p></li>
+<li><p><strong>factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Data interpolation factor for more precise encounter information, by
+default 5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The encounter opportunities between the satellite and ground location
+of the type specified.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Windows</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p class="rubric">Examples</p>
+</dd></dl>
+
+</section>
+<section id="windows-class">
+<h2>Windows Class<a class="headerlink" href="#windows-class" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">celest.encounter._window_handling.</span></span><span class="sig-name descname"><span class="pre">Windows</span></span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">encounter_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span></dt>
+<dd><p>Return enocunter statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Data base of encounter statistics.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">save_encounters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">','</span><span class="p"><span class="pre">,</span> </span><span class="pre">'\t'</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dd><p>Save encounter information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>str</em>) – File name to save encounter information to.</p></li>
+<li><p><strong>delimiter</strong> (<em>{&quot;</em><em>,</em><em>&quot;</em><em>, </em><em>&quot;     &quot;}</em>) – String or character separating columns.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.array</span></span></span></dt>
+<dd><p>Return windows within a NumPy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Array containing window data.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="satellite-attitudes">
+<h2>Satellite Attitudes<a class="headerlink" href="#satellite-attitudes" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">celest.encounter.attitudes.</span></span><span class="sig-name descname"><span class="pre">attitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encInd</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maneuverTime</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">scipy.spatial.transform.rotation.Rotation</span></span></span></dt>
+<dd><p>Generate satellite rotations for ground tracking.</p>
+<p>This function is intended to take in a single ground location along
+with the windows at which the spacecraft makes imaging passes over the
+location. This method uses the Odyssey Pointing Profile
+determination system created by Mingde Yin.</p>
+<p>NOTE: This should be generalized in the future to many sites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>location</strong> (<em>GroundPosition</em>) – Ground location and encounter information.</p></li>
+<li><p><strong>encInd</strong> (<em>np.array</em>) – Array of arrays of indices that correspond to times and positions
+where the spacecraft is in an imaging encounter window with the
+given ground location.</p></li>
+<li><p><strong>maneuverTime</strong> (<em>float</em>) – Number of array indices to pad on either side of
+an encounter window to use for maneuvering time.
+TODO: Turn into a standard time unit since setting a fixed number
+of array indices is limited.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The strategy for pointing profile generation is as follows: (1) The default
+orientation is to have the spacecraft camera pointing towards its zenith.
+(2) When the spacecraft is imaging, orient the satellite such that the
+camera is facing the target. (3) Generate an initial set of pointing
+profiles assuming the above. (4) Interpolate the rotations between the
+normal and target-acquired states to smooth out transitions.</p>
+</dd></dl>
+
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="groundposition.html" class="btn btn-neutral float-left" title="groundposition" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="satellite.html" class="btn btn-neutral float-left" title="Satellite Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Jai Willems.
-
-    </p>
+    <p>&#169; Copyright 2021, Jai Willems.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
