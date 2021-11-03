@@ -1,3 +1,13 @@
 [build-system]
-requires = ["setuptools", "wheel", "datetime", "jplephem", "julian", "numpy", "pandas", "scipy"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.2,<4", "datetime", "jplephem", "julian", "numpy", "pandas", "scipy"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "Celest"
+authors = [{name = "Jai Willems, Nishkrit Desai", email = "jai52h@hotmail.com, nishkrit@ndes.ai"}]
+readme = "README.md"
+dynamic = ["version", "description"]
+license = "BSD-3-Clause"
+
+[project.urls]
+Home = "https://github.com/JaiWillems/Celest"
