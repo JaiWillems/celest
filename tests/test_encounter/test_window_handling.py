@@ -1,11 +1,11 @@
 """Testing module for the window data structures."""
 
 
+from celest.encounter.groundposition import GroundPosition
+from celest.encounter._window_handling import Window, Windows
+from unittest import TestCase
 import numpy as np
 import unittest
-from unittest import TestCase
-from celest.encounter._window_handling import Window, Windows
-from celest.encounter.groundposition import GroundPosition
 
 
 class TestWindow(TestCase):

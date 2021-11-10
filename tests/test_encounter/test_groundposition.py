@@ -1,10 +1,10 @@
 """Test module for the `GroundPosition` class."""
 
 
+from celest.encounter.groundposition import GroundPosition
+from unittest import TestCase
 import numpy as np
 import unittest
-from unittest import TestCase
-from celest.encounter.groundposition import GroundPosition
 
 
 class TestGroundPosition(TestCase):

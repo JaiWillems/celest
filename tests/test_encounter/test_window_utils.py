@@ -1,14 +1,14 @@
 """Testing module for the window utility functions."""
 
 
-import numpy as np
-import unittest
-from unittest import TestCase
 from celest.encounter.groundposition import GroundPosition
-from celest.encounter._window_utils import _sun_itrs, _get_ang, _window_encounter_ind
+from celest.encounter._window_utils import _get_ang, _sun_itrs, _window_encounter_ind
 from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
 from celest.satellite.time import Time
+from unittest import TestCase
+import numpy as np
+import unittest
 
 
 class TestWindowUtils(TestCase):

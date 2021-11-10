@@ -1,16 +1,16 @@
 """Testing module for the encounter generation function."""
 
 
-import numpy as np
-import unittest
-from unittest import TestCase
 from celest.encounter.groundposition import GroundPosition
-from celest.encounter._window_handling import Window, Windows
 from celest.encounter.windows import generate
+from celest.encounter._window_handling import Window, Windows
 from celest.encounter._window_utils import _window_encounter_ind
 from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
 from celest.satellite.time import Time
+from unittest import TestCase
+import numpy as np
+import unittest
 
 
 class TestEncounter(TestCase):

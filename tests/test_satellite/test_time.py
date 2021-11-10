@@ -1,12 +1,12 @@
 """Testing module for the `Time` class."""
 
 
+from astropy import coordinates, time
+from celest.satellite.time import Time
+from unittest import TestCase
 import julian as jd
 import unittest
 import numpy as np
-from astropy import coordinates, time
-from unittest import TestCase
-from celest.satellite.time import Time
 
 
 class TestTime(TestCase):
