@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="Celest",
-    version="0.2.0",
+    version="0.2.20",
     author="Jai Willems",
     author_email="jai52h@hotmail.com",
     description="Satellite dynamics and mission planning library.",
@@ -13,9 +13,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/JaiWillems/Celest",
     license="BSD-3-Clause",
-    packages=["celest"],
+    packages=setuptools.find_packages(include=["celest", "celest.*"]),
     install_requires=[
-        "datetime",
         "jplephem",
         "julian",
         "numpy",
@@ -23,6 +22,8 @@ setuptools.setup(
         "scipy"
     ],
     classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
