@@ -1,4 +1,7 @@
-"""
+"""Generate window sets for specified encounters.
+
+This module contains functions to generate window sets for various satellite
+and ground-location encounters.
 """
 
 

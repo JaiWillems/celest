@@ -1,4 +1,8 @@
+"""Window generation dependencies.
 
+This module contains implementation specific functions used in identifying
+viable encounters.
+"""
 
 from celest.encounter._encounter_math_utils import _analytical_encounter_ind
 from celest.satellite.coordinate import Coordinate

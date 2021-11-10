@@ -3,7 +3,7 @@
 This module contains the `Satellite` class to localize satellite-related
 information and functionality.
 """
-#NAT was here hehe :)
+
 
 from celest.core.decorators import set_module
 from celest.core.interpolation import _interpolate

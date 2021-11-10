@@ -1,9 +1,14 @@
+"""Generate pointing profiles for a satellite.
+
+This module contains the functionality to determine satellite orientations for
+ground tracking.
+"""
 
 
-from scipy.spatial.transform import Rotation, Slerp
 from celest.satellite.coordinate import Coordinate
-import numpy as np
+from scipy.spatial.transform import Rotation, Slerp
 from typing import Any
+import numpy as np
 
 
 
@@ -120,7 +125,7 @@ def attitudes(self, location: Any, encInd: np.ndarray, maneuverTime: int) -> Rot
     ----------
     location : GroundPosition
         Ground location and encounter information.
-    encInd: np.array
+    encInd: np.ndarray
         Array of arrays of indices that correspond to times and positions
         where the spacecraft is in an imaging encounter window with the
         given ground location.
