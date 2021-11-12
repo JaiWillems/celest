@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Satellite Module &mdash; Celest 0.1.8 documentation</title>
+  <title>Satellite Module &mdash; Celest 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -84,6 +84,11 @@
 <h1>Satellite Module<a class="headerlink" href="#satellite-module" title="Permalink to this headline"></a></h1>
 <section id="time-class">
 <h2>Time Class<a class="headerlink" href="#time-class" title="Permalink to this headline"></a></h2>
+<p>The <cite>Time</cite> class allows for flexible and convenient time specifications. It
+takes in Julian date data in the J2000 epoch or in another epoch with the
+appropriate offset to convert to the J2000 epoch. Example usage of the <cite>Time</cite>
+class to carry out conversions can be seen in the tutorials page
+<cite>here &lt;Position and Time Conversions&gt;</cite>.</p>
 <dl class="py class">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">celest.satellite.</span></span><span class="sig-name descname"><span class="pre">Time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">julian</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span></dt>
@@ -238,10 +243,10 @@ equation:</p>
 <p>where</p>
 <div class="math notranslate nohighlight">
 \[T = \frac{JD - 2451545}{36525}\]</div>
-<p>and <span class="math notranslate nohighlight">\(JD\)</span> is the current Julian day.[1]_</p>
+<p>and <span class="math notranslate nohighlight">\(JD\)</span> is the current Julian day. <a class="reference internal" href="#mee98a" id="id1"><span>[Mee98a]</span></a></p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="mee98a"><span class="brackets"><a class="fn-backref" href="#id1">Mee98a</a></span></dt>
 <dd><p>Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
 1998, pp. 87 - 88. isbn: 9780943396613.</p>
 </dd>
@@ -303,10 +308,10 @@ formulation:</p>
 \[LAST^h = UT1^h - 12^h + \alpha^h_{mSun} + EoE^h + \Lambda^\circ/15\]</div>
 <p>where <span class="math notranslate nohighlight">\(\alpha^h_{mSun}\)</span> is the right ascension of the mean Sun
 position in hours, <span class="math notranslate nohighlight">\(EoE^h\)</span> is the equation of equinoxes in hours,
-and <span class="math notranslate nohighlight">\(\Lambda\)</span> is the observer’s longitude in  degrees.[1]_</p>
+and <span class="math notranslate nohighlight">\(\Lambda\)</span> is the observer’s longitude in  degrees. <a class="reference internal" href="#sl13f" id="id2"><span>[SL13f]</span></a></p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="sl13f"><span class="brackets"><a class="fn-backref" href="#id2">SL13f</a></span></dt>
 <dd><p>M. Soffel and R. Langhans. Space-Time Reference Systems.
 Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 205.</p>
 </dd>
@@ -344,10 +349,10 @@ formulation:</p>
 \[LMST^h = h^h_{mSun} + \alpha^h_{mSun}\]</div>
 <p>where <span class="math notranslate nohighlight">\(h^h_{mSun}\)</span> is the mean solar hour angle at the observer’s
 longitude and <span class="math notranslate nohighlight">\(\alpha^h_{mSun}\)</span> is the right ascension of the
-mean Sun position.[1]_</p>
+mean Sun position. <a class="reference internal" href="#sl13e" id="id3"><span>[SL13e]</span></a></p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="sl13e"><span class="brackets"><a class="fn-backref" href="#id3">SL13e</a></span></dt>
 <dd><p>M. Soffel and R. Langhans. Space-Time Reference Systems.
 Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 205.</p>
 </dd>
@@ -395,10 +400,10 @@ mean solar time by a rate of <span class="math notranslate nohighlight">\(15^\ci
 hour angle can be calculated from the following:</p>
 <div class="math notranslate nohighlight">
 \[h_{hSun}^\circ = MT_s^\circ - 180^\circ\]</div>
-<p>where <span class="math notranslate nohighlight">\(MT_s^\circ\)</span> is the mean solar time in degrees.[1]_</p>
+<p>where <span class="math notranslate nohighlight">\(MT_s^\circ\)</span> is the mean solar time in degrees. <a class="reference internal" href="#sl13c" id="id4"><span>[SL13c]</span></a></p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id4"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="sl13c"><span class="brackets"><a class="fn-backref" href="#id4">SL13c</a></span></dt>
 <dd><p>M. Soffel and R. Langhans. Space-Time Reference Systems.
 Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.</p>
 </dd>
@@ -487,10 +492,10 @@ true solar time by a rate of <span class="math notranslate nohighlight">\(15^\ci
 hour angle can be calculated from the following:</p>
 <div class="math notranslate nohighlight">
 \[h_{Sun}^\circ = TT_s^\circ - 180^\circ\]</div>
-<p>where <span class="math notranslate nohighlight">\(TT_s^\circ\)</span> is the true solar time in degrees.[1]_</p>
+<p>where <span class="math notranslate nohighlight">\(TT_s^\circ\)</span> is the true solar time in degrees. <a class="reference internal" href="#sl13b" id="id5"><span>[SL13b]</span></a></p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id5"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="sl13b"><span class="brackets"><a class="fn-backref" href="#id5">SL13b</a></span></dt>
 <dd><p>M. Soffel and R. Langhans. Space-Time Reference Systems.
 Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.</p>
 </dd>
@@ -534,14 +539,14 @@ Julian data, <span class="math notranslate nohighlight">\(JD\)</span>, into UTC 
 <div class="math notranslate nohighlight">
 \[UTC = 24\left(JD\%1\right)^h + \alpha^h\]</div>
 <p>The true solar time can then be calculated using the Equation of Time,
-<span class="math notranslate nohighlight">\(EoT\)</span>, definition and the mean solar time, <span class="math notranslate nohighlight">\(MT_s\)</span>.[1]_</p>
+<span class="math notranslate nohighlight">\(EoT\)</span>, definition and the mean solar time, <span class="math notranslate nohighlight">\(MT_s\)</span>. <a class="reference internal" href="#sl13a" id="id6"><span>[SL13a]</span></a></p>
 <div class="math notranslate nohighlight">
 \[TT_s = MT_s + EoT\]</div>
 <div class="math notranslate nohighlight">
 \[TT_s = (UTC^h + (EoT^\circ + \phi^\circ)/15)\%24\]</div>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id6"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="sl13a"><span class="brackets"><a class="fn-backref" href="#id6">SL13a</a></span></dt>
 <dd><p>M. Soffel and R. Langhans. Space-Time Reference Systems.
 Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.</p>
 </dd>
@@ -574,11 +579,11 @@ decimals.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>The universal time is equal to the mean solar time at the Greenwich
-meridian.[1]_ It can be calculated using
+meridian. <a class="reference internal" href="#sl13d" id="id7"><span>[SL13d]</span></a> It can be calculated using
 <cite>Time.mean_solar_time(longitude=0)</cite>.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id7"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="sl13d"><span class="brackets"><a class="fn-backref" href="#id7">SL13d</a></span></dt>
 <dd><p>M. Soffel and R. Langhans. Space-Time Reference Systems.
 Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.</p>
 </dd>
@@ -598,6 +603,10 @@ Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.</p>
 </section>
 <section id="coordinate-class">
 <h2>Coordinate Class<a class="headerlink" href="#coordinate-class" title="Permalink to this headline"></a></h2>
+<p>The <cite>Coordinate</cite> class is used to represent a satellite position and can be
+used to carry out coordinate transformations between differerent coordinate
+frames. The Example usage of the <cite>Coordinate</cite> class to carry out conversions
+can be seen in the tutorials page <cite>here &lt;Position and Time Conversions&gt;</cite>.</p>
 <dl class="py class">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">celest.satellite.</span></span><span class="sig-name descname"><span class="pre">Coordinate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'gcrs'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'geo'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'itrs'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span></dt>
@@ -619,7 +628,7 @@ parameter.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">times</span></span></dt>
+<span class="sig-name descname"><span class="pre">time</span></span></dt>
 <dd><p>Times corresponding to the position data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -704,10 +713,10 @@ geodetic altitude above the Earth’s surface.</p>
 <p class="rubric">Notes</p>
 <p>This method uses an ellipsoid based model of the Earth to calculate the
 ellipsoid height in an iterative manner described in “Coordinate
-Systems in Geodesy” by E. J. Krakiwsky and D.E. Wells.[1]_</p>
+Systems in Geodesy” by E. J. Krakiwsky and D.E. Wells. <a class="reference internal" href="#kw98b" id="id8"><span>[KW98b]</span></a></p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id8"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="kw98b"><span class="brackets"><a class="fn-backref" href="#id8">KW98b</a></span></dt>
 <dd><p>E. J. Krakiwsky and D. E. Wells. Coordinate Systems in Geodesy.
 Jan. 1998, pp. 31–33.</p>
 </dd>
@@ -760,10 +769,10 @@ be calculated from the following formulation:</p>
 <div class="math notranslate nohighlight">
 \[\gamma^\circ = 360.9856123035484\Delta T + 280.46\]</div>
 <p>where <span class="math notranslate nohighlight">\(\Delta T=JD-2451545\)</span> is the elapsed days since the J2000
-epoch where <span class="math notranslate nohighlight">\(JD\)</span> is the Julian day.[1]_</p>
+epoch where <span class="math notranslate nohighlight">\(JD\)</span> is the Julian day. <a class="reference internal" href="#kok17a" id="id9"><span>[Kok17a]</span></a></p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id9"><span class="brackets">1</span></dt>
+<dl class="citation">
+<dt class="label" id="kok17a"><span class="brackets"><a class="fn-backref" href="#id9">Kok17a</a></span></dt>
 <dd><p>Don Koks. Changing Coordinates in the Context of Orbital
 Mechanics. Cyber and Electronic Warfare Division, Defence Science,
 and Technology Group, Jan.2017, p. 12 - 13.</p>
@@ -943,6 +952,11 @@ ground location of interest.</p>
 </section>
 <section id="satellite-class">
 <h2>Satellite Class<a class="headerlink" href="#satellite-class" title="Permalink to this headline"></a></h2>
+<p>The <cite>Satellite</cite> class is used to hold all necessary information for a given
+satellite such that it can be passed into the window generation functionality
+for mission planning. Example usage of the <cite>Satellite</cite> in a mission planning
+capacity can be seen in the tutorials page
+<cite>here &lt;Window Generation Workflow&gt;</cite>.</p>
 <dl class="py class">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">celest.satellite.</span></span><span class="sig-name descname"><span class="pre">Satellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span></dt>
@@ -992,7 +1006,7 @@ representations.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">windows</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">windows</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
 <dd><p>Interpolate satellite data for window times and positions.</p>
 <p>This method takes a series of windows and will interpolate the
 satellites position and time data in the regions corresponding with
@@ -1001,8 +1015,9 @@ window times.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>windows</strong> (<em>WindowList</em>) – Windows defining the regions to interpolate.</p></li>
-<li><p><strong>factor</strong> (<em>int</em>) – The interpolation factor will increase the number of points in
-window regions by the factor <cite>factor</cite>.</p></li>
+<li><p><strong>factor</strong> (<em>int</em><em>, </em><em>optional</em>) – The interpolation factor will increase the number of points in
+window regions by the factor <cite>factor</cite>. A strictly positive value
+should be used.</p></li>
 </ul>
 </dd>
 </dl>

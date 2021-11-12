@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Encounter Module &mdash; Celest 0.1.8 documentation</title>
+  <title>Encounter Module &mdash; Celest 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -83,6 +83,11 @@
 <h1>Encounter Module<a class="headerlink" href="#encounter-module" title="Permalink to this headline"></a></h1>
 <section id="groundposition-class">
 <h2>GroundPosition Class<a class="headerlink" href="#groundposition-class" title="Permalink to this headline"></a></h2>
+<p>The <cite>GroundPosition</cite> class is used to represent a ground location that can be
+passed into window generation functionality to produce viable ground-satellite
+encounter opportunities. Currently, the <cite>GroundPosition</cite> class is fairly
+preliminary but will be expanded in the future to accomidate more specific and
+complicated ellipsoid models based on the input geographical coordinates.</p>
 <dl class="py class">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">celest.encounter.</span></span><span class="sig-name descname"><span class="pre">GroundPosition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span></dt>
@@ -136,6 +141,8 @@ instrumental part of encounter planning functionality.</p>
 </section>
 <section id="window-generation">
 <h2>Window Generation<a class="headerlink" href="#window-generation" title="Permalink to this headline"></a></h2>
+<p>The window generation function takes produces all viable encounter
+opportunities of a specifie type for a given satellite and ground location.</p>
 <dl class="py function">
 <dt class="sig sig-object py">
 <span class="sig-prename descclassname"><span class="pre">celest.encounter.windows.</span></span><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enc</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">'image'</span><span class="p"><span class="pre">,</span> </span><span class="pre">'data</span> <span class="pre">link'</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">celest.encounter._window_handling.Windows</span></span></span></dt>
@@ -166,14 +173,34 @@ of the type specified.</p>
 </section>
 <section id="windows-class">
 <h2>Windows Class<a class="headerlink" href="#windows-class" title="Permalink to this headline"></a></h2>
+<p>The <cite>Windows</cite> class is the returned data structure from the <cite>generate</cite> function
+which holds all encounter opportunities and provides some basic functionality
+to gain insight or access to the data.</p>
 <dl class="py class">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">celest.encounter._window_handling.</span></span><span class="sig-name descname"><span class="pre">Windows</span></span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">encounter_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">save_encounters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">','</span><span class="p"><span class="pre">,</span> </span><span class="pre">'\\t'</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dd><p>Save encounter information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>str</em>) – File name to save encounter information to.</p></li>
+<li><p><strong>delimiter</strong> (<em>{&quot;</em><em>,</em><em>&quot;</em><em>, </em><em>&quot;t&quot;}</em>) – String or character separating columns.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span></dt>
 <dd><p>Return enocunter statistics.</p>
+<p>This method returns statistics on the stored encounters. The statistics
+include the 5th, 50th, and 95th percentile of encounter durations as
+well as the enocounter frequency.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Data base of encounter statistics.</p>
@@ -182,20 +209,17 @@ of the type specified.</p>
 <dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">save_encounters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">','</span><span class="p"><span class="pre">,</span> </span><span class="pre">'\t'</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
-<dd><p>Save encounter information.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fname</strong> (<em>str</em>) – File name to save encounter information to.</p></li>
-<li><p><strong>delimiter</strong> (<em>{&quot;</em><em>,</em><em>&quot;</em><em>, </em><em>&quot;     &quot;}</em>) – String or character separating columns.</p></li>
-</ul>
-</dd>
-</dl>
+<p class="rubric">Examples</p>
+<p>Assuming <cite>toronto_img</cite> is a <cite>Windows</cite> object returned from the windows
+generation function.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">toronto_img</span><span class="o">.</span><span class="n">stats</span><span class="p">()</span>
+<span class="go">                               (45, -73), image</span>
+<span class="go">Q5 Duration (s)                      108.468446</span>
+<span class="go">Q50 Duration (s)                     167.687443</span>
+<span class="go">Q75 Duration (s)                     177.506299</span>
+<span class="go">Encounter Frequency (per day)          1.340795</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -210,6 +234,17 @@ of the type specified.</p>
 <dd class="field-even"><p>np.ndarray</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<p>Assuming <cite>toronto_img</cite> is a <cite>Windows</cite> object returned from the windows
+generation function.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">toronto_img</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="go">array([&lt;celest.encounter._window_handling.Window object at 0x0000023FA0D8DFD0&gt;,</span>
+<span class="go">       &lt;celest.encounter._window_handling.Window object at 0x0000023FF0757940&gt;,</span>
+<span class="go">       &lt;celest.encounter._window_handling.Window object at 0x0000023FA10D5E50&gt;,</span>
+<span class="go">       &lt;celest.encounter._window_handling.Window object at 0x0000023FA10D5CA0&gt;],</span>
+<span class="go">       dtype=object)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -217,6 +252,10 @@ of the type specified.</p>
 </section>
 <section id="satellite-attitudes">
 <h2>Satellite Attitudes<a class="headerlink" href="#satellite-attitudes" title="Permalink to this headline"></a></h2>
+<p>The <cite>attitudes</cite> function is used to determine the rotation matrices of the
+satellite necessary to orient a down facing camera towards an ground location
+for target tracking that may be neccessary to fulfill a remote sensing mission
+objective.</p>
 <dl class="py function">
 <dt class="sig sig-object py">
 <span class="sig-prename descclassname"><span class="pre">celest.encounter.attitudes.</span></span><span class="sig-name descname"><span class="pre">attitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encInd</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maneuverTime</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">scipy.spatial.transform.rotation.Rotation</span></span></span></dt>
@@ -230,7 +269,7 @@ determination system created by Mingde Yin.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>location</strong> (<em>GroundPosition</em>) – Ground location and encounter information.</p></li>
-<li><p><strong>encInd</strong> (<em>np.array</em>) – Array of arrays of indices that correspond to times and positions
+<li><p><strong>encInd</strong> (<em>np.ndarray</em>) – Array of arrays of indices that correspond to times and positions
 where the spacecraft is in an imaging encounter window with the
 given ground location.</p></li>
 <li><p><strong>maneuverTime</strong> (<em>float</em>) – Number of array indices to pad on either side of

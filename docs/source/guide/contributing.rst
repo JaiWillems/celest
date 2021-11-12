@@ -10,7 +10,7 @@ Before you begin:
 
 * See if an `issue exists <https://github.com/JaiWillems/Celest/issues>`_ for the change you want to make.
 
-* See if we are [accepting controbutions](#Types-of-Contributions) for your type of issue.
+* See if we are `accepting controbutions <Types of Contributions>` for your type of issue.
 
 Don't see your issue? Open one
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -28,7 +28,7 @@ Fork using GitHub Desktop:
 
 Fork using the command line:
 
-* `Fork the repo <https://docs.github.com/en/get-started/quickstart/fork-a-repo#fork-an-example-repository>`_ so that you can make changes without affecting the original project until you are ready to merge them.
+* `Fork the repo <https://docs.github.com/en/get-started/quickstart/fork-a-repo#fork-an-example-repository>`__ so that you can make changes without affecting the original project until you are ready to merge them.
 
 Fork with `GitHub Codespaces <https://github.com/features/codespaces>`_:
 
