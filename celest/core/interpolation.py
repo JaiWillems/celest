@@ -72,7 +72,7 @@ def _interpolate(data: np.ndarray, factor: int=1, dt: int=0, indices:
     indep = np.linspace(0, j - 1, j, dtype=int)
     interp = interp1d(x=indep, y=data, axis=0, kind="cubic")
 
-    if indices is None:
+    if (indices is None) or (indices.size == 0):
 
         indep_new = np.linspace(0, j - 1, j * factor)
 

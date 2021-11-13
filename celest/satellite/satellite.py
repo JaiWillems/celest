@@ -94,6 +94,7 @@ class Satellite(object):
             indices = np.concatenate((indices, temp_ind))
         
         indices = np.split(indices, np.where(np.diff(indices) > 1)[0])
+        indices = np.array(indices, dtype=object)
 
         time_interp = _interpolate(data=time, factor=factor, dt=2, indices=indices)
         position_interp = _interpolate(data=position, factor=factor, dt=2, indices=indices)
