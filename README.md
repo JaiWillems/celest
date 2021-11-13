@@ -1,11 +1,16 @@
 # Celest 0.2.0
 
+[![PyPI version](https://badge.fury.io/py/celest.svg)](https://badge.fury.io/py/celest) [![license](https://img.shields.io/pypi/l/celest)](https://img.shields.io/pypi/l/celest) [![downloads](https://img.shields.io/pypi/dm/celest)](https://img.shields.io/pypi/dm/celest) [![Documentation Status](https://readthedocs.org/projects/celest/badge/?version=latest)](https://celest.readthedocs.io/en/latest/?badge=latest) [![python](https://img.shields.io/pypi/pyversions/celest)](https://img.shields.io/pypi/pyversions/celest) [![format](https://img.shields.io/pypi/wheel/celest)](https://img.shields.io/pypi/wheel/celest)
+
 Celest is a satellite dynamics and mission planning library designed for the University of Toronto Aerospace Team which is applying the program to a hyperspectral imaging CubeSat mission. The library aims to provide the necessary tools to plan satellite-ground interactions such as ground target tracking, and calculating imaging and transmission opportunities.
 
+* **Documentation:** https://celest.readthedocs.io/en/latest/
 * **Source Code:** https://github.com/JaiWillems/Celest
+* **PyPI:** https://pypi.org/project/celest/
 * **Bug Report or Feature Request:** https://github.com/JaiWillems/Celest/issues
 
 ## Installation
+
 Celest can be installed from PyPI using the following command:
 
 ```terminal
