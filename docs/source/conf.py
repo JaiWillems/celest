@@ -40,6 +40,9 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# Sphinx PDFs with unicode characters.
+latex_engine = 'xelatex'
+
 
 # -- Options for HTML output -------------------------------------------------
 
