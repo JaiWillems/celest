@@ -1,4 +1,4 @@
-# Celest 0.1.0
+# Celest 0.2.0
 
 Celest is a satellite dynamics and mission planning library designed for the University of Toronto Aerospace Team which is applying the program to a hyperspectral imaging CubeSat mission. The library aims to provide the necessary tools to plan satellite-ground interactions such as ground target tracking, and calculating imaging and transmission opportunities.
 

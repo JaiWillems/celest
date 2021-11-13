@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="celest",
-    version="0.1.0",
+    version="0.2.0",
     author="Jai Willems",
     author_email="jai52h@hotmail.com",
     description="Satellite dynamics and mission planning library.",
