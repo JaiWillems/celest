@@ -1,3 +1,2 @@
-from .satellite import Satellite
-from .groundposition import GroundPosition
-from .encounter import Encounter, EncounterSpec
+
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)

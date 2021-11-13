@@ -1,0 +1,2 @@
+Mingde Yin for the satellite attitudes feature and technical guidance in CubSat mission design.
+Nishkrit Desai for technical guidance in package development, code review, and program inspiration.
