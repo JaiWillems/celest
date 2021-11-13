@@ -40,7 +40,7 @@ class Window(object):
     satellite : Satellite
         Satellite associated with the encounter window.
     coor : tuple
-        Ground location coordinate tuple.
+        Ground location coordinate tuple in the (lat, lon) format.
     start : float
         Window start time in Julian.
     end : float
@@ -111,7 +111,7 @@ class Window(object):
         --------
         Let `window_old` be a `Window` object.
 
-        >>> windoe_new = window_old.copy()
+        >>> window_new = window_old.copy()
         """
 
         sat = self.satellite

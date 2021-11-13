@@ -10,7 +10,7 @@ Before you begin:
 
 * See if an `issue exists <https://github.com/JaiWillems/Celest/issues>`_ for the change you want to make.
 
-* See if we are `accepting contributions <Types of Contributions>` for your type of issue.
+* See if we are :ref:`accepting contributions <Types of Contributions>` for your type of issue.
 
 Don't see your issue? Open one
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -42,7 +42,7 @@ Make the changes to the file(s) you'd like to update.
 Open a pull request
 ^^^^^^^^^^^^^^^^^^^
 
-When you're done making changes and you'd like to propose them for review, use the :ref:`pull request template<Pull Request Template>` to open your pull request.
+When you're done making changes and you'd like to propose them for review, use the :ref:`pull request template <Pull Request Template>` to open your pull request.
 
 Submit your pull request & get it reviewed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -70,19 +70,19 @@ Issues
 
 Issues are used to track tasks that contributors can help with. If an issue hasn't received a reply from a Celest maintainer, then we haven't reviewed the issue yet and you shouldn't begin to work on it.
 
-If you have found something in the code or documentation that should be updated, search open issues to see if someone else has reported the same thing. If it's something new, open an issue using a [template](https://github.com/JaiWillems/Celest/issues/new/choose). We'll use the issue to have a conversation about the problem you want to fix.
+If you have found something in the code or documentation that should be updated, search open issues to see if someone else has reported the same thing. If it's something new, open an issue using a `template <https://github.com/JaiWillems/Celest/issues/new/choose>`_. We'll use the issue to have a conversation about the problem you want to fix.
 
 Pull Requests
 ^^^^^^^^^^^^^
 
 A pull request is a way to suggest changes in our repository.
 
-When we merge those changes to the current develop branch, they will be deployed in the upcoming Celest release. To learn more about opening a pull request in this repo, see :ref:`Opening a Pull Request<Opening a Pull Request>` below.
+When we merge those changes to the current development branch, they will be deployed in the upcoming Celest release. To learn more about opening a pull request in this repo, see :ref:`Opening a Pull Request <Opening a Pull Request>` below.
 
 Support
 ^^^^^^^
 
-We are a small team working hard to keep up with the demands of a continuously changing product. Unfortunately, we just can't help with support questions in this repository. If you are experiencing a problem with GitHub, unrelated to Celest, please [contact GitHub Support directly](https://support.github.com/request). Any issues, discussions, or pull requests opened here requesting support will be given information about how to contact GitHub Support, then closed and locked.
+We are a small team working hard to keep up with the demands of a continuously changing product. Unfortunately, we just can't help with support questions in this repository. If you are experiencing a problem with GitHub, unrelated to Celest, please `contact GitHub Support directly <https://support.github.com/request>`_. Any issues, discussions, or pull requests opened here requesting support will be given information about how to contact GitHub Support, then closed and locked.
 
 If you're having trouble with your GitHub account, contact `Support <https://support.github.com/contact?tags=docs-contributing-guide>`_.
 
@@ -149,7 +149,7 @@ For all code additions, it is encouraged to:
 
 * `Type annotate <https://docs.python.org/3/library/typing.html>`_ new function and methods.
 
-* Ensure code meets the `PEP8 style guide <https://www.python.org/dev/peps/pep-0008/>`_. A useful online checker that will point out several PEP8 infractions can be found [here](http://pep8online.com/).
+* Ensure code meets the `PEP8 style guide <https://www.python.org/dev/peps/pep-0008/>`_. A useful online checker that will point out several PEP8 infractions can be found `here <http://pep8online.com/>`_.
 
 * Ensure documentation strings are created or updated per `Numpy's style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
 
