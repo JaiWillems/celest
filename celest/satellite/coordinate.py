@@ -7,6 +7,7 @@ used for position inputs and outputs for other `Celest` functionality.
 
 
 from celest.core.decorators import set_module
+from celest.satellite._angle_representations import _ISO6709_representation
 from typing import Any, Literal, Tuple
 import numpy as np
 
@@ -32,7 +33,7 @@ class Coordinate(object):
 
     Attributes
     ----------
-    times : Time
+    time : Time
         Times corresponding to the position data.
     length : int
         Length of the input position and time arrays.
@@ -147,13 +148,13 @@ class Coordinate(object):
         This method uses an ellipsoid based model of the Earth to convert a
         geographical position to itrs cartesian coordinates using the methods
         described in "Coordinate Systems in Geodesy" by E. J. Krakiwsky and
-        D.E. Wells as presented by Christopher Lum.[1]_[2]_
+        D.E. Wells as presented by Christopher Lum. [KW98a]_ [Lum20]_
 
         References
         ----------
-        .. [1] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in Geodesy.
+        .. [KW98a] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in Geodesy.
            Jan. 1998.
-        .. [2] Christopher Lum. Geodetic Coordinates: Computing Latitude and
+        .. [Lum20] Christopher Lum. Geodetic Coordinates: Computing Latitude and
            Longitude.June 2020.url:https://www.youtube.com/watch?v=4BJ-GpYbZlU.
         """
 
@@ -269,7 +270,7 @@ class Coordinate(object):
                 self._ITRS = self._gcrs_and_itrs(position=self._GCRS, frame="gcrs")
                 self._GEO = self._itrs_to_geo(position=self._ITRS)
 
-        geo = self._ISO6709_representation(position=self._GEO) if iso else self._GEO
+        geo = _ISO6709_representation(position=self._GEO) if iso else self._GEO
 
         return geo
 
@@ -291,11 +292,11 @@ class Coordinate(object):
         .. math:: \gamma^\circ = 360.9856123035484\Delta T + 280.46
 
         where :math:`\Delta T=JD-2451545` is the elapsed days since the J2000
-        epoch where :math:`JD` is the Julian day.[1]_
+        epoch where :math:`JD` is the Julian day. [Kok17a]_
 
         References
         ----------
-        .. [1] Don Koks. Changing Coordinates in the Context of Orbital
+        .. [Kok17a] Don Koks. Changing Coordinates in the Context of Orbital
            Mechanics. Cyber and Electronic Warfare Division, Defence Science,
            and Technology Group, Jan.2017, p. 12 - 13.
 
@@ -353,11 +354,11 @@ class Coordinate(object):
         where :math:`\gamma` is the Earth rotation angle, :math:`E_3^\theta` is
         the rotation matrix that rotates a vector around the z-axis by an angle
         :math:`\theta`, and :math:`\vec{V}` is a position vector in either the
-        ECI or ECEF frames.[1]_
+        ECI or ECEF frames. [Kok17b]_
 
         References
         ----------
-        .. [1] Don Koks. Changing Coordinates in the Context of Orbital
+        .. [Kok17b] Don Koks. Changing Coordinates in the Context of Orbital
            Mechanics. Cyber and Electronic Warfare Division, Defence Science,
            and Technology Group, Jan.2017, p. 21.
         """
@@ -576,11 +577,11 @@ class Coordinate(object):
 
         .. math:: r = \sqrt{\frac{(a^2\cos(\beta))^2 + (b^2\sin(\beta))^2}{(a\cos(\beta))^2 + (b\sin(\beta))^2}}
 
-        where :math:`\beta` is the observer's latitude.[1]_
+        where :math:`\beta` is the observer's latitude. [Tim18]_
 
         References
         ----------
-        .. [1] Timur. Earth Radius by Latitude (WGS 84). 2018. url:
+        .. [Tim18] Timur. Earth Radius by Latitude (WGS 84). 2018. url:
            https://planetcalc.com/7721/.
         """
 
@@ -614,11 +615,11 @@ class Coordinate(object):
         -----
         This method uses an ellipsoid based model of the Earth to calculate the
         ellipsoid height in an iterative manner described in "Coordinate
-        Systems in Geodesy" by E. J. Krakiwsky and D.E. Wells.[1]_
+        Systems in Geodesy" by E. J. Krakiwsky and D.E. Wells. [KW98b]_
 
         References
         ----------
-        .. [1] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in Geodesy.
+        .. [KW98b] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in Geodesy.
            Jan. 1998, pp. 31–33.
 
         Examples

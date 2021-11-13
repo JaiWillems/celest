@@ -52,7 +52,7 @@ class Satellite(object):
 
         return self.length
     
-    def interpolate(self, windows: Any, factor: int) -> None:
+    def interpolate(self, windows: Any, factor: int=5) -> None:
         """Interpolate satellite data for window times and positions.
         
         This method takes a series of windows and will interpolate the
@@ -63,9 +63,10 @@ class Satellite(object):
         ----------
         windows : WindowList
             Windows defining the regions to interpolate.
-        factor : int
+        factor : int, optional
             The interpolation factor will increase the number of points in
-            window regions by the factor `factor`.
+            window regions by the factor `factor`. A strictly positive value
+            should be used.
         
         Notes
         -----
@@ -150,12 +151,18 @@ class Satellite(object):
 
         data = {}
 
+        if isinstance(times, str):
+            times = (times,)
+
         for time in times:
             time_information = key_mapping[time]
             time_data = time_information[0]()
             column = time_information[1]
 
             data[column] = time_data
+
+        if isinstance(positions, str):
+            positions = (positions,)
 
         for position in positions:
             position_information = key_mapping[position]

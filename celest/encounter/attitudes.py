@@ -111,29 +111,25 @@ def sat_rotation(sat_z: np.ndarray) -> Rotation:
     return Rotation.from_matrix(matrix)
 
 
-def attitudes(self, location: Any, encInd: np.ndarray, maneuverTime: int) -> Rotation:
+def attitudes(satellite: Any, location: Any, encInd: np.ndarray, maneuverTime: int) -> Rotation:
     """Generate satellite rotations for ground tracking.
 
-    This function is intended to take in a single ground location along
-    with the windows at which the spacecraft makes imaging passes over the
-    location. This method uses the Odyssey Pointing Profile
-    determination system created by Mingde Yin.
-
-    NOTE: This should be generalized in the future to many sites.
+    This function takes a ground location along and indices associated with
+    delested windows at which the spacecraft makes imaging passes over the
+    location. It then generates the satellite rotations to track the ground
+    location.
 
     Parameters
     ----------
     location : GroundPosition
         Ground location and encounter information.
     encInd: np.ndarray
-        Array of arrays of indices that correspond to times and positions
-        where the spacecraft is in an imaging encounter window with the
-        given ground location.
+        Array of indices that correspond to times and positions where the
+        spacecraft is in an imaging encounter window with the given ground
+        location.
     maneuverTime: float
         Number of array indices to pad on either side of
         an encounter window to use for maneuvering time.
-        TODO: Turn into a standard time unit since setting a fixed number
-        of array indices is limited.
 
     Notes
     -----
@@ -145,16 +141,16 @@ def attitudes(self, location: Any, encInd: np.ndarray, maneuverTime: int) -> Rot
     normal and target-acquired states to smooth out transitions.
     """
 
-    ground_GEO = [location.coor[0], location.coor[1], location.radius]
-    ground_GEO = np.repeat(np.array([ground_GEO]), self.position.length, axis=0)
-    target_site = Coordinate(ground_GEO, "GEO", self.times)
+    ground_GEO = [location.lat, location.lon, location.radius]
+    ground_GEO = np.repeat(np.array([ground_GEO]), satellite.position.length, axis=0)
+    target_site = Coordinate(ground_GEO, "geo", satellite.time)
 
     # Stage 1: preliminary rotations.
     # Get difference vector between spacecraft and target site.
-    SC_to_site = target_site.gcrs() - self.position.gcrs()
+    SC_to_site = target_site.gcrs() - satellite.position.gcrs()
 
     # Point toward the zenith except when over the imaging site.
-    pointing_directions = self.position.gcrs()
+    pointing_directions = satellite.position.gcrs()
     pointing_directions[encInd, :] = SC_to_site[encInd, :]
 
     # Preliminary rotation set.
@@ -172,27 +168,30 @@ def attitudes(self, location: Any, encInd: np.ndarray, maneuverTime: int) -> Rot
     # This takes individual encInd into clusters which we can use later to
     # figure out when to start interpolation.
     split_ind = np.where(np.diff(encInd) > 1)[0]+1
+    print(split_ind)
     encounter_segments = np.split(encInd, split_ind)
+    print(encounter_segments)
 
-    for encInd in encounter_segments:
+    for seg in encounter_segments:
+        print(seg)
 
-        start_step = encInd[0] - maneuverTime
-        end_step = encInd[-1] + maneuverTime
+        start_step = seg[0] - maneuverTime
+        end_step = seg[-1] + maneuverTime
 
         # Get starting and ending quaternions.
         start_rotation = rotations[start_step]
         end_rotation = rotations[end_step]
 
-        slerp_1 = Slerp([start_step, encInd[0]], Rotation.from_quat([start_rotation, rotations[encInd[0]]]))
-        interp_rotations_1 = slerp_1(np.arange(start_step, encInd[0]))
+        slerp_1 = Slerp([start_step, seg[0]], Rotation.from_quat([start_rotation, rotations[seg[0]]]))
+        interp_rotations_1 = slerp_1(np.arange(start_step, seg[0]))
 
-        rotations[start_step:encInd[0]] = interp_rotations_1.as_quat()
-        flight_ind[start_step:encInd[0]] = 1
+        rotations[start_step:seg[0]] = interp_rotations_1.as_quat()
+        flight_ind[start_step:seg[0]] = 1
 
-        slerp_2 = Slerp([encInd[-1], end_step], Rotation.from_quat([rotations[encInd[-1]], end_rotation]))
-        interp_rotations_2 = slerp_2(np.arange(encInd[-1], end_step))
+        slerp_2 = Slerp([seg[-1], end_step], Rotation.from_quat([rotations[seg[-1]], end_rotation]))
+        interp_rotations_2 = slerp_2(np.arange(seg[-1], end_step))
 
-        rotations[encInd[-1]:end_step] = interp_rotations_2.as_quat()
-        flight_ind[encInd[-1]:end_step] = 3
+        rotations[seg[-1]:end_step] = interp_rotations_2.as_quat()
+        flight_ind[seg[-1]:end_step] = 3
 
     return Rotation.from_quat(rotations)

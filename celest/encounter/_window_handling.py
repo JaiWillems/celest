@@ -87,12 +87,12 @@ class Window(object):
     def __str__(self) -> str:
         """Define `Window` information string."""
 
-        str_1 = str(self.coor) + "_"
-        str_2 = self.type + "_"
-        str_3 = "ang:" + self.angle_type + str(self.ang) + "_"
-        str_4 = "lighting:" + str(self.lighting) + "_"
-        str_5 = "sca:" + str(self.sca) + "_"
-        str_6 = "start:" + str(self.start) + "_"
+        str_1 = str(self.coor) + " "
+        str_2 = self.type + " "
+        str_3 = "ang:" + self.angle_type + str(self.ang) + " "
+        str_4 = "lighting:" + str(self.lighting) + " "
+        str_5 = "sca:" + str(self.sca) + " "
+        str_6 = "start:" + str(self.start) + " "
         str_7 = "end:" + str(self.end)
 
         str_final = str_1 + str_2 + str_3 + str_4 + str_5 + str_6 + str_7
@@ -162,21 +162,45 @@ class Windows(object):
         ----------
         window : Window
             Window to add to data base.
+
+        Notes
+        -----
+        This method adds a new window to the data base by appending it to the
+        internal Pandas Series object indexed by the window's start time.
         """
         
         temp_series = pd.Series(window, index=[window.start])
         self.windows = self.windows.append(temp_series)
         self.windows.sort_index(inplace=True)
 
-    def encounter_stats(self) -> pd.DataFrame:
+    def stats(self) -> pd.DataFrame:
         """Return enocunter statistics.
+
+        This method returns statistics on the stored encounters. The statistics
+        include the 5th, 50th, and 95th percentile of encounter durations as
+        well as the enocounter frequency.
         
         Return
         ------
         DataFrame
             Data base of encounter statistics.
+        
+        Examples
+        --------
+        Assuming `toronto_img` is a `Windows` object returned from the windows
+        generation function.
+
+        >>> toronto_img.stats()
+                                       (45, -73), image
+        Q5 Duration (s)                      108.468446
+        Q50 Duration (s)                     167.687443
+        Q75 Duration (s)                     177.506299
+        Encounter Frequency (per day)          1.340795
         """
 
+        if len(self.windows) == 0:
+            return None
+        
         enc_dict = {}
         start_times = np.empty((0,))
         end_times = np.empty((0,))
@@ -220,32 +244,52 @@ class Windows(object):
         -------
         np.ndarray
             Array containing window data.
+        
+        Examples
+        --------
+        Assuming `toronto_img` is a `Windows` object returned from the windows
+        generation function.
+
+        >>> toronto_img.to_numpy()
+        array([<celest.encounter._window_handling.Window object at 0x0000023FA0D8DFD0>,
+               <celest.encounter._window_handling.Window object at 0x0000023FF0757940>,
+               <celest.encounter._window_handling.Window object at 0x0000023FA10D5E50>,
+               <celest.encounter._window_handling.Window object at 0x0000023FA10D5CA0>],
+               dtype=object)
         """
 
         return self.windows.to_numpy()
 
-    def save_encounters(self, fname: str, delimiter: Literal[",", "\t"]) -> None:
+    def save(self, fname: str, delimiter: Literal[",", "\\t"]) -> None:
         """Save encounter information.
         
         Parameters
         ----------
         fname : str
             File name to save encounter information to.
-        delimiter : {",", "\t"}
+        delimiter : {",", "\\t"}
             String or character separating columns.
         """
         
         np_data = self.to_numpy()
 
-        out_data = np.empty(shape=(np_data.shape[0], 5), dtype="<U25")
+        out_data = np.empty(shape=(np_data.shape[0] + 1, 6), dtype="<U25")
+        out_data[0, :] = [
+            "latitude (deg)",
+            "longitude (deg)",
+            "start (jul)",
+            "end (jul)",
+            "duration (sec)",
+            "type"
+        ]
 
         for i, window in enumerate(np_data):
             
-            out_data[i, 0] = window.coor[0]
-            out_data[i, 1] = window.coor[1]
-            out_data[i, 2] = window.start
-            out_data[i, 3] = window.end
-            out_data[i, 4] = window.duration
-            out_data[i, 5] = window.type
+            out_data[i + 1, 0] = window.coor[0]
+            out_data[i + 1, 1] = window.coor[1]
+            out_data[i + 1, 2] = window.start
+            out_data[i + 1, 3] = window.end
+            out_data[i + 1, 4] = window.duration
+            out_data[i + 1, 5] = window.type
 
-        np.savetxt(out_data, fname=fname, delimiter=delimiter)
+        np.savetxt(fname, out_data, delimiter=delimiter, fmt="%s,%s,%s,%s,%s,%s")

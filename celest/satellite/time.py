@@ -91,7 +91,7 @@ class Time(object):
         .. math:: UTC = 24\left(JD\%1\\right)^h + \\alpha^h
 
         The true solar time can then be calculated using the Equation of Time,
-        :math:`EoT`, definition and the mean solar time, :math:`MT_s`.[1]_
+        :math:`EoT`, definition and the mean solar time, :math:`MT_s`. [SL13a]_
 
         .. math:: TT_s = MT_s + EoT
 
@@ -99,7 +99,7 @@ class Time(object):
 
         References
         ----------
-        .. [1] M. Soffel and R. Langhans. Space-Time Reference Systems.
+        .. [SL13a] M. Soffel and R. Langhans. Space-Time Reference Systems.
            Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.
 
         Examples
@@ -204,11 +204,11 @@ class Time(object):
 
         .. math:: h_{Sun}^\circ = TT_s^\circ - 180^\circ
 
-        where :math:`TT_s^\circ` is the true solar time in degrees.[1]_
+        where :math:`TT_s^\circ` is the true solar time in degrees. [SL13b]_
 
         References
         ----------
-        .. [1] M. Soffel and R. Langhans. Space-Time Reference Systems.
+        .. [SL13b] M. Soffel and R. Langhans. Space-Time Reference Systems.
            Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.
 
         Examples
@@ -257,11 +257,11 @@ class Time(object):
 
         .. math:: h_{hSun}^\circ = MT_s^\circ - 180^\circ
 
-        where :math:`MT_s^\circ` is the mean solar time in degrees.[1]_
+        where :math:`MT_s^\circ` is the mean solar time in degrees. [SL13c]_
 
         References
         ----------
-        .. [1] M. Soffel and R. Langhans. Space-Time Reference Systems.
+        .. [SL13c] M. Soffel and R. Langhans. Space-Time Reference Systems.
            Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.
 
         Examples
@@ -294,12 +294,12 @@ class Time(object):
         Notes
         -----
         The universal time is equal to the mean solar time at the Greenwich
-        meridian.[1]_ It can be calculated using
+        meridian. [SL13d]_ It can be calculated using
         `Time.mean_solar_time(longitude=0)`.
 
         References
         ----------
-        .. [1] M. Soffel and R. Langhans. Space-Time Reference Systems.
+        .. [SL13d] M. Soffel and R. Langhans. Space-Time Reference Systems.
            Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 203.
 
         Examples
@@ -386,11 +386,11 @@ class Time(object):
 
         .. math:: T = \\frac{JD - 2451545}{36525}
 
-        and :math:`JD` is the current Julian day.[1]_
+        and :math:`JD` is the current Julian day. [Mee98a]_
 
         References
         ----------
-        .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+        .. [Mee98a] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
            1998, pp. 87 - 88. isbn: 9780943396613.
 
         Examples
@@ -439,11 +439,11 @@ class Time(object):
 
         where :math:`h^h_{mSun}` is the mean solar hour angle at the observer's
         longitude and :math:`\\alpha^h_{mSun}` is the right ascension of the
-        mean Sun position.[1]_
+        mean Sun position. [SL13e]_
 
         References
         ----------
-        .. [1] M. Soffel and R. Langhans. Space-Time Reference Systems.
+        .. [SL13e] M. Soffel and R. Langhans. Space-Time Reference Systems.
            Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 205.
 
         Examples
@@ -521,11 +521,11 @@ class Time(object):
 
         where :math:`\\alpha^h_{mSun}` is the right ascension of the mean Sun
         position in hours, :math:`EoE^h` is the equation of equinoxes in hours,
-        and :math:`\Lambda` is the observer's longitude in  degrees.[1]_
+        and :math:`\Lambda` is the observer's longitude in  degrees. [SL13f]_
 
         References
         ----------
-        .. [1] M. Soffel and R. Langhans. Space-Time Reference Systems.
+        .. [SL13f] M. Soffel and R. Langhans. Space-Time Reference Systems.
            Astronomy and Astrophysics Library. Springer-Verlag, 2013, p. 205.
 
         Examples

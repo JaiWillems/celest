@@ -61,10 +61,10 @@ class TestWindows(TestCase):
             self.assertLessEqual(test_val, start)
             test_val = start
 
-    def test_encounter_stats(self):
-        """Test `Window.encounter_stats`."""
+    def test_stats(self):
+        """Test `Window.stats`."""
 
-        df = self.windows.encounter_stats()
+        df = self.windows.stats()
         self.assertIsNotNone(df)
 
     def test_to_numpy(self):

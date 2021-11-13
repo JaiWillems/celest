@@ -38,7 +38,7 @@ def nutation_angles(julian: np.ndarray) -> Tuple:
 
     .. math:: T = \\frac{JD - 2451545}{36525}
 
-    The nutation angles can then be calculated in degrees and decimals.[1]_
+    The nutation angles can then be calculated in degrees and decimals. [Mee98b]_
 
     .. math:: D = 297.85036 + 445267.111480T - 0.0019142T^2 + T^3 / 189474
 
@@ -52,8 +52,8 @@ def nutation_angles(julian: np.ndarray) -> Tuple:
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-       pp. 143–144. isbn: 9780943396613.
+    .. [Mee98b] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 143–144. isbn: 9780943396613.
 
     Examples
     --------
@@ -108,7 +108,7 @@ def nutation_components(julian: np.ndarray) -> Tuple:
     .. math:: L' = 218.3165 + 481267.8813 * T
 
     The nutation in longitude, :math:`\Delta\psi`, and nutation in obliquity,
-    :math:`\Delta\epsilon`, can then be calculated in decimal minutes.[1]_
+    :math:`\Delta\epsilon`, can then be calculated in decimal minutes. [Mee98c]_
 
     .. math:: \Delta\Psi = -17.20\sin\Omega - 1.32\sin 2L - 0.23\sin 2L' + 0.21\sin 2\Omega
 
@@ -116,8 +116,8 @@ def nutation_components(julian: np.ndarray) -> Tuple:
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-       pp. 143–144. isbn: 9780943396613.
+    .. [Mee98c] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 143–144. isbn: 9780943396613.
 
     Examples
     --------
@@ -184,12 +184,12 @@ def mean_obliquity(julian: np.ndarray) -> np.ndarray:
         2.45 * U ** 10
 
     The algorithm used is only valid for 10000 years on either side of
-    J2000.[1]_
+    J2000. [Mee98d]_
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-    pp. 147. isbn: 9780943396613.
+    .. [Mee98d] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 147. isbn: 9780943396613.
 
     Examples
     --------
@@ -240,15 +240,15 @@ def apparent_obliquity(julian: np.ndarray) -> np.ndarray:
     The apparent obliquity of the ecliptic, :math:`\epsilon` can be calculated
     as :math:`\epsilon = \epsilon_0 + \Delta\epsilon` where :math:`\epsilon_0`
     is the mean obliquity of the ecliptic and :math:`\Delta\epsilon` is the
-    nutation of obliquity.[1]_
+    nutation of obliquity. [Mee98e]_
 
     The due to the limitations of the algorithm used in the calculation of
     :math:`\epsilon_0` is only valid for 10000 years on either side of J2000.
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-       pp. 147. isbn: 9780943396613.
+    .. [Mee98e] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 147. isbn: 9780943396613.
 
     Examples
     --------
@@ -280,12 +280,12 @@ def from_julian(julian: np.ndarray) -> Tuple:
     Notes
     -----
     Refer to page 63 of Astronomical Algorithms by Jean Meeus for a detailed
-    implementation of the algorithm.[1]_
+    implementation of the algorithm. [Mee98f]_
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-       pp. 63. isbn: 9780943396613.
+    .. [Mee98f] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 63. isbn: 9780943396613.
 
     Examples
     --------
@@ -342,12 +342,12 @@ def day_of_year(julian: np.ndarray) -> np.ndarray:
     .. math:: N = INT\left(\frac{275M}{9}\right) - K\times\left(\frac{M+9}{12}\right) + D - 30
 
     where :math:`M` is the month number, :math:`D` is the day of the month,
-    and :math:`K=1` if the year is a leap year otherwise :math:`K=2`.[1]_
+    and :math:`K=1` if the year is a leap year otherwise :math:`K=2`. [Mee98g]_
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-       pp. 65. isbn: 9780943396613.
+    .. [Mee98g] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 65. isbn: 9780943396613.
 
     Examples
     --------
@@ -388,12 +388,12 @@ def equation_of_time(julian: np.ndarray) -> np.ndarray:
     where :math:`y=\tan^2\frac{\epsilon}{2}`, :math:`\epsilon` is the apparent
     obliquity of the ecliptic, :math:`L_0` is the Sun's mean longitude,
     :math:`e` is the eccentricity of the Earth's orbit, and :math:`M` is the
-    Sun's mean anomaly.[1]_
+    Sun's mean anomaly. [Mee98h]_
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-       pp. 184 - 185. isbn: 9780943396613.
+    .. [Mee98h] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 184 - 185. isbn: 9780943396613.
 
     Examples
     --------
@@ -439,12 +439,12 @@ def equation_of_equinoxes(julian: np.ndarray) -> np.ndarray:
     The equation of the equinoxes is given by
     :math:`\frac{1}{15}\Delta\psi\cos\epsilon` where :math:`\Delta\psi` is the
     nutation in longitude represented in arcseconds and, :math:`\epsilon` is
-    the true obliquity of the ecliptic.[1]_
+    the true obliquity of the ecliptic. [Mee98i]_
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell, 1998,
-       pp. 88. isbn: 9780943396613.
+    .. [Mee98i] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+       1998, pp. 88. isbn: 9780943396613.
 
     Examples
     --------
@@ -496,11 +496,11 @@ def sun_right_ascension(julian: np.ndarray) -> np.ndarray:
 
     .. math:: \tan\alpha = \frac{\cos\epsilon\sin\odot}{\cos\odot}
 
-    where :math:`\epsilon` is the mean obliquity of the ecliptic.[1]_
+    where :math:`\epsilon` is the mean obliquity of the ecliptic. [Mee98j]_
 
     References
     ----------
-    .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
+    .. [Mee98j] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
        1998, pp. 163 - 165. isbn: 9780943396613.
 
     Examples
