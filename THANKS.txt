@@ -1,3 +1,2 @@
-Mingde Yin for the pointing profiles Satellite method, feature idea generation, and code review.
-Natalia Bellefleur for the shadowed and solar power Satellite methods.
-Nishkrit Desai for mentoriship in the design process and writing of Celest.
+Mingde Yin for the satellite attitudes feature and technical guidance in CubSat mission design.
+Nishkrit Desai for technical guidance in package development, code review, and program inspiration.

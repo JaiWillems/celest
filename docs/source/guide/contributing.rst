@@ -10,7 +10,7 @@ Before you begin:
 
 * See if an `issue exists <https://github.com/JaiWillems/Celest/issues>`_ for the change you want to make.
 
-* See if we are `accepting controbutions <Types of Contributions>` for your type of issue.
+* See if we are `accepting contributions <Types of Contributions>` for your type of issue.
 
 Don't see your issue? Open one
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -149,7 +149,7 @@ For all code additions, it is encouraged to:
 
 * `Type annotate <https://docs.python.org/3/library/typing.html>`_ new function and methods.
 
-* Ensure code meets the `PEP8 style guide <https://www.python.org/dev/peps/pep-0008/>`_. A useful online checker that will point out a number of PEP8 infractions can be found [here](http://pep8online.com/).
+* Ensure code meets the `PEP8 style guide <https://www.python.org/dev/peps/pep-0008/>`_. A useful online checker that will point out several PEP8 infractions can be found [here](http://pep8online.com/).
 
 * Ensure documentation strings are created or updated per `Numpy's style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
 

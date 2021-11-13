@@ -56,10 +56,17 @@ def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
     
     Notes
     -----
+    Imaging encounters are use the off-nadir angle, measured in increasing
+    degrees from the satellite's nadir to the ground location. When the
+    off-nadir angle is used, the input `ang` provides a maximum constraint.
+    Data link encounters use the altitude angle, measured in increasing
+    degrees from the ground location's horizon to the satellite. When the
+    altitude angle is used, the input `ang` provides a minimum constraint.
 
     Examples
     --------
-
+    >>> toronto = GroundPosition(latitude=43.65, longitude=-79.38)
+    >>> toronto_dl = windows.generate(satellite, toronto, "data link", 30)
     """
 
     windows = Windows()

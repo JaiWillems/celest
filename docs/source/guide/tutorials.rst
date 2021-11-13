@@ -4,8 +4,8 @@ Tutorials
 Position and Time Conversions
 -----------------------------
 
-Celest allows for a variety of time and position representaions that may
-provide use in a mission planning context. Here, we will endevour to explore
+Celest allows for a variety of time and position representations that may
+prove useful in a mission planning context. Here, we will endeavour to explore
 the basic interactions with the Time and Coordinate classes. For details on all
 possible conversions, refer to the :ref:`Time <Time Class>` and
 :ref:`Coordinate <Coordinate Class>` documentation.
@@ -17,7 +17,7 @@ possible conversions, refer to the :ref:`Time <Time Class>` and
    from celest.encounter import GroundPosition, windows, attitudes
 
 We begin by importing the desired position and time data into the program.
-Since Celest takes in data as NumPy arrays, it is recommend to use NumPy's
+Since Celest takes in data as NumPy arrays, it is recommended to use NumPy's
 `loadtxt` or `genfromtxt` functions. The data should be loaded such that all
 array values are of a type `float`.
 
@@ -87,7 +87,7 @@ accessed using various methods. Some examples are shown below.
    # Get GRS data with ISO6709 formatted output strings.
    geo_position = position.geo(iso=True)
 
-Notice that some methods require the use of a `GroundPosition` object as
+Notice that some methods require the use of a `GroundPosition` object as a
 parameter to specify a ground location. The `GroundPosition` object can be
 imported from the encounter module.
 
@@ -98,7 +98,7 @@ The basic window generation workflow can be broken down into three stages:
 
 #. Import and prepare time and position data,
 #. Specify ground locations, and
-#. Generate and save winows.
+#. Generate and save windows.
 
 The first step is to import and prepare the time and position data. This
 includes setting up the `Satellite` object that holds the necessary but not
@@ -141,9 +141,9 @@ transmission encounters where the ground location is in view of the satellite.
 The `enc` keyword specifies the type of encounter as either and imaging
 (enc="image") or data transmission (enc="data_link") type.
 
-The `ang` keyword defines the constraint angle that boarders a
-viable/non-viable encounter region. The contraint angle type used for the
-imaging encounters is off-nadir angle measured in increasing degrees from the
+The `ang` keyword defines the constraint angle that borders a
+viable/non-viable encounter region. The constraint angle type used for the
+imaging encounters is the off-nadir angle measured in increasing degrees from the
 satellite's nadir to the ground location. The transmission encounters use the
 altitude angle of the satellite as measured in increasing degrees above the
 horizon (as seen from the ground location).
