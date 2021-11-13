@@ -1,36 +1,25 @@
-# Celest 0.2.0
+# Celest 0.1.0
 
-[![PyPI version](https://badge.fury.io/py/Celest.svg)](https://badge.fury.io/py/Celest) ![PyPI - License](https://img.shields.io/pypi/l/celest) [![Documentation Status](https://readthedocs.org/projects/celest/badge/?version=latest)](https://celest.readthedocs.io/en/latest/?badge=latest) ![PyPI - Format](https://img.shields.io/pypi/format/Celest)
+Celest is a satellite dynamics and mission planning library designed for the University of Toronto Aerospace Team which is applying the program to a hyperspectral imaging CubeSat mission. The library aims to provide the necessary tools to plan satellite-ground interactions such as ground target tracking, and calculating imaging and transmission opportunities.
 
-The Celest library is designed to provide a simple interface for satellite dynamics and pass analysis calculations.
-* **Documentation:** https://celest.readthedocs.io/en/latest/
 * **Source Code:** https://github.com/JaiWillems/Celest
-* **PyPI:** https://pypi.org/project/Celest/
 * **Bug Report or Feature Request:** https://github.com/JaiWillems/Celest/issues
-
-Celest provides:
-* Fast orbital conversions between ECI, ECEF, and Horizontal coordinate systems.
-* Satellite pass anaysis for encounter planning.
-* Supplementary satellite calculations.
 
 ## Installation
 Celest can be installed from PyPI using the following command:
+
 ```terminal
-pip install Celest
+pip install celest
 ```
 
-## Release 0.2.2 Features
-The Celest 0.2.2 release will include:
-* Test driven development,
-* Analytical pass analysis method,
-* More accurate conversions by accounting for precession, nutation, annd polar motion,
-* GCRS and ITRS coordinates and their conversions (replacing ECI and ECEF conversion),
-* Epoch selection for obliquity calculations,
-* Equinox and solstice time calculations, and
-* Moon phase, apogee and perigee calculations.
+## What can the program do?
 
-## Long Term Release Features
-Future Celest releases aim to include:
-* Encounter optimization and scheduling algorithm for the `Encounter` class,
-* Improved runtime using multiprocessing and by incorporating a c-backend, and
-* Satellite coordinate conversions for the Equatorial, Ecliptic, Galactic, and Supergalactic coordinate systems with simplicity and efficiency in mind.
+The program only requires an input data set for a satellite that contains the positions in either a gcrs, itrs, or geographical frame and the assosciated Julian times. The program can then be used to calculate various position and time representations, satellite to ground encounters, and transformations necessary for ground location tracking.
+
+## What can be expected of the project?
+
+In future releases, a high order c-implemented orbit propagator will be incorporated into the library to allow for a complete mission planning workflow from inputting orbital parameters to calculating satellite-to-ground encounter opportunities.
+
+We also intend to incorporate a window scheduling system that will be used to develop an optimal satellite itinerary for satellite mission planning.
+
+Other features that are being considered include a terminal interface, higher fidelity conversion calculations, window/data visuals, data loaders, and more robust ground tracking by incorporating forward motion compensation.

@@ -4,8 +4,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="Celest",
-    version="0.2.20",
+    name="celest",
+    version="0.1.0",
     author="Jai Willems",
     author_email="jai52h@hotmail.com",
     description="Satellite dynamics and mission planning library.",

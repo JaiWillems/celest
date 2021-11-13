@@ -20,7 +20,7 @@ What can the program do?
 ------------------------
 
 The program only requires an input data set for a satellite that contains the
-positions in either a gcrs, itrs, or geographical coordinates and the
+positions in either a gcrs, itrs, or geographical frame and the
 assosciated Julian times. The program can then be used to calculate various
 position and time representations, satellite to ground encounters, and
 transformations necessary for ground location tracking.
