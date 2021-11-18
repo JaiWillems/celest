@@ -143,12 +143,43 @@ class Windows(object):
     def __next__(self) -> Any:
 
         if self.index_head == len(self.windows):
+
             self.index_head = 0
             raise StopIteration
+
         else:
+
             index = self.windows.index[self.index_head]
             self.index_head += 1
+
             return self.windows[index]
+    
+    def __getitem__(self, key: float) -> Window:
+        """Return window closest to key time."""
+
+        inds = self.windows.index.to_numpy()
+
+        if isinstance(key, (int, float)):
+
+            ind = np.argmin(np.abs(inds - key))
+            rtn = self.windows[inds[ind]]
+        
+        elif isinstance(key, slice):
+
+            rtn = self.windows[key].to_numpy()
+        
+        elif isinstance(key, tuple):
+
+            inds_new = []
+            for k in key:
+                ind = np.argmin(np.abs(inds - k))
+                inds_new.append(inds[ind])
+            
+            inds_new = list(set(inds_new))
+            rtn = self.windows[inds_new].to_numpy()
+
+        return rtn
+
 
     def __len__(self) -> int:
         """Return number of windows."""
