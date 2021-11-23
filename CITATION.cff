@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: Citation for the Celest library.
+title: Celest
+abstract: Satellite dynamics and mission planning software.
+authors:
+  - family-names: Willems
+    given-names: Jai
+version: 0.2.0
+date-released: "2021-11-13"
+license: BSD-3-Clause
+repository-code: "https://github.com/JaiWillems/celest"
