@@ -72,6 +72,7 @@ def nutation_angles(julian: np.ndarray) -> Tuple:
 
     return D, M, N, F, O
 
+
 def nutation_components(julian: np.ndarray) -> Tuple:
     """Return the nutations in longitude and obliquity.
 
@@ -149,6 +150,7 @@ def nutation_components(julian: np.ndarray) -> Tuple:
 
     return delta_psi, delta_epsilon
 
+
 def mean_obliquity(julian: np.ndarray) -> np.ndarray:
     """Return the mean obliquity of the ecliptic in the J2000 epoch.
 
@@ -216,6 +218,7 @@ def mean_obliquity(julian: np.ndarray) -> np.ndarray:
 
     return epsilon_0
 
+
 def apparent_obliquity(julian: np.ndarray) -> np.ndarray:
     """Return the apparent obliquity of the ecliptic in the J2000 epoch.
 
@@ -261,6 +264,7 @@ def apparent_obliquity(julian: np.ndarray) -> np.ndarray:
     epsilon = epsilon_0 + delta_epsilon / 3600
 
     return epsilon
+
 
 def from_julian(julian: np.ndarray) -> Tuple:
     """Return year, month, day from Julian day data.
@@ -322,6 +326,7 @@ def from_julian(julian: np.ndarray) -> Tuple:
 
     return year, month, day
 
+
 def day_of_year(julian: np.ndarray) -> np.ndarray:
     """Return the day of the year.
 
@@ -365,6 +370,7 @@ def day_of_year(julian: np.ndarray) -> np.ndarray:
     N = N - K * ((month + 9) / 12).astype(int) + day - 30
 
     return N.astype(int)
+
 
 def equation_of_time(julian: np.ndarray) -> np.ndarray:
     """Return the Equation of Time in degrees.
@@ -419,6 +425,7 @@ def equation_of_time(julian: np.ndarray) -> np.ndarray:
     EOT = np.degrees(EOT)
 
     return EOT
+
 
 def equation_of_equinoxes(julian: np.ndarray) -> np.ndarray:
     """Return the equation of the equinoxes in arcseconds.

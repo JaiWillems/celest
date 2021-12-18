@@ -60,12 +60,13 @@ class Coordinate(object):
 
     def __init__(self, position: np.ndarray, frame: Literal["gcrs", "geo", "itrs"], time: Any) -> None:
         """Initialize attributes."""
-        
+
         if frame not in ["gcrs", "geo", "itrs"]:
             raise ValueError(f"{frame} is not a valid frame.")
-        
+
         if position.shape[0] != len(time):
-            raise ValueError(f"position and time data lengths are mismatched being {position.shape[0]} and {len(time)}")
+            raise ValueError(
+                f"position and time data lengths are mismatched being {position.shape[0]} and {len(time)}")
 
         self.time = time
 
@@ -75,7 +76,7 @@ class Coordinate(object):
 
         self.length = None
         self._set_base_position(position, frame)
-    
+
     def __len__(self) -> int:
         """Return length of position and time data."""
 
@@ -107,7 +108,7 @@ class Coordinate(object):
         geographical data is entered of shape (n, 2), the height data is
         assumed to be zero.
         """
-        
+
         basePos = position
         self.length = basePos.shape[0]
 
@@ -228,7 +229,7 @@ class Coordinate(object):
 
         return geo
 
-    def geo(self, iso: bool=False) -> np.ndarray:
+    def geo(self, iso: bool = False) -> np.ndarray:
         """Return geographical position data.
 
         Parameters
@@ -267,7 +268,8 @@ class Coordinate(object):
             if self._ITRS is not None:
                 self._GEO = self._itrs_to_geo(position=self._ITRS)
             else:
-                self._ITRS = self._gcrs_and_itrs(position=self._GCRS, frame="gcrs")
+                self._ITRS = self._gcrs_and_itrs(
+                    position=self._GCRS, frame="gcrs")
                 self._GEO = self._itrs_to_geo(position=self._ITRS)
 
         geo = _ISO6709_representation(position=self._GEO) if iso else self._GEO
@@ -309,7 +311,6 @@ class Coordinate(object):
         np.array([6.2360075])
         """
 
-        ang = np.zeros((self.length,))
         jul_data = self.time.julian()
 
         # Multiply time elapsed since J2000 by Earth rotation rate and add
@@ -433,7 +434,8 @@ class Coordinate(object):
 
         if self._ITRS is None:
             if self._GCRS is not None:
-                self._ITRS = self._gcrs_and_itrs(position=self._GCRS, frame="gcrs")
+                self._ITRS = self._gcrs_and_itrs(
+                    position=self._GCRS, frame="gcrs")
             else:
                 self._ITRS = self._geo_to_itrs(position=self._GEO)
 
@@ -653,7 +655,8 @@ class Coordinate(object):
 
         def new_vals(a, b, e, p, N, h, phi, z):
 
-            N = a / np.sqrt(np.cos(phi) ** 2 + b ** 2 / a ** 2 * np.sin(phi) ** 2)
+            N = a / np.sqrt(np.cos(phi) ** 2 + b ** 2 /
+                            a ** 2 * np.sin(phi) ** 2)
             h = p / np.cos(phi) - N
             phi = np.arctan((z / p) * (1 - (e ** 2 * N) / (N + h)) ** -1)
 
