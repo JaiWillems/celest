@@ -241,7 +241,52 @@ def bias_matrix() -> np.ndarray:
 
 
 def precession_matrix(julian: np.ndarray) -> np.ndarray:
-    pass
+    """Return precession tensor.
+
+    Parameters
+    ----------
+    julian : np.ndarray
+        Array of shape (n,) containing Julian times in the J2000 epoch.
+
+    Returns
+    -------
+    np.ndarray
+        Array of shape (3,3,n) containing a series of 3x3 precession matrices;
+        one for each time.
+
+    Notes
+    -----
+    The precession calculations use the method put forward in "Space-Time
+    Reference Systems".[SL13c]_
+
+    References
+    ----------
+    .. [SL13c] M. Soffel and R. Langhans. Space-Time Reference Systems.
+       Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 197-233.
+    """
+
+    zeta, theta, z = precession_angles(julian=julian)
+
+    ang1 = np.radians(zeta / 3600)
+    ang2 = np.radians(theta / 3600)
+    ang3 = - np.radians(z / 3600)
+
+    s1, c1 = np.sin(ang1), np.cos(ang1)
+    s2, c2 = np.sin(ang2), np.cos(ang2)
+    s3, c3 = np.sin(ang3), np.cos(ang3)
+
+    matrix = np.zeros((3, 3, julian.size))
+    matrix[0, 0, :] = - s1 * s3 + c1 * c2 * c3
+    matrix[0, 1, :] = c1 * s3 + s1 * c2 * c3
+    matrix[0, 2, :] = - s2 * c3
+    matrix[1, 0, :] = - s1 * c3 - c1 * c2 * s3
+    matrix[1, 1, :] = c1 * c3 - s1 * c2 * s3
+    matrix[1, 2, :] = s2 * s3
+    matrix[2, 0, :] = c1 * s2
+    matrix[2, 1, :] = s1 * s2
+    matrix[2, 2, :] = c2
+
+    return matrix
 
 
 def nutation_matrix(julian: np.ndarray) -> np.ndarray:
