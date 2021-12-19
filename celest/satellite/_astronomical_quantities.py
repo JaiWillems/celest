@@ -53,7 +53,7 @@ def nutation_angles(julian: np.ndarray) -> Tuple:
     References
     ----------
     .. [Mee98b] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
-       1998, pp. 143–144. isbn: 9780943396613.
+       1998, pp. 143-144. isbn: 9780943396613.
 
     Examples
     --------
@@ -118,7 +118,7 @@ def nutation_components(julian: np.ndarray) -> Tuple:
     References
     ----------
     .. [Mee98c] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
-       1998, pp. 143–144. isbn: 9780943396613.
+       1998, pp. 143-144. isbn: 9780943396613.
 
     Examples
     --------
@@ -149,6 +149,60 @@ def nutation_components(julian: np.ndarray) -> Tuple:
     delta_epsilon = E1 + E2 + E3 + E4
 
     return delta_psi, delta_epsilon
+
+
+def bias_matrix() -> np.ndarray:
+    """Generate bias matrix for GCRS and ITRS conversions.
+
+    Returns
+    -------
+    np.ndarray
+        Array of shape (3,3) representing the bias matrix.
+
+    Notes
+    -----
+    The bias matrixs is a 3-2-1 set of Euler angle rotations about
+    :math:`d\\alpha_0=-0.01460`, :math:`\xi_0=-0.0166170`, and
+    :math:`-\eta_0=0.0068192`.[SL13c]_
+
+    References
+    ----------
+    .. [SL13c] M. Soffel and R. Langhans. Space-Time Reference Systems.
+       Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 197-233.
+    """
+
+    xi = -0.0166170
+    eta = -0.0068192
+    dalpha = -0.01460
+
+    ang1 = np.radians(dalpha / 3600)
+    ang2 = np.radians(xi / 3600)
+    ang3 = np.radians(-eta / 3600)
+
+    s1, c1 = np.sin(ang1), np.cos(ang1)
+    s2, c2 = np.sin(ang2), np.cos(ang2)
+    s3, c3 = np.sin(ang3), np.cos(ang3)
+
+    matrix = np.zeros((3, 3))
+    matrix[0, 0] = c1 * c2
+    matrix[0, 1] = s1 * c2
+    matrix[0, 2] = - s2
+    matrix[1, 0] = - s1 * c3 + c1 * s2 * s3
+    matrix[1, 1] = c1 * c3 + s1 * s2 * s3
+    matrix[1, 2] = c2 * s3
+    matrix[2, 0] = s1 * s3 + c1 * s2 * c3
+    matrix[2, 1] = - c1 * s3 + s1 * s2 * c3
+    matrix[2, 2] = c2 * c3
+
+    return matrix
+
+
+def precession_matrix(julian: np.ndarray) -> np.ndarray:
+    pass
+
+
+def nutation_matrix(julian: np.ndarray) -> np.ndarray:
+    pass
 
 
 def mean_obliquity(julian: np.ndarray) -> np.ndarray:
