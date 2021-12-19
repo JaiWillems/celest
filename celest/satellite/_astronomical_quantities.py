@@ -151,6 +151,49 @@ def nutation_components(julian: np.ndarray) -> Tuple:
     return delta_psi, delta_epsilon
 
 
+def precession_angles(julian: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return precession angles.
+
+    Parameters
+    ----------
+    julian : np.ndarray
+        Array of shape (n,) containing Julian time in the J2000 epoch.
+
+    Returns
+    -------
+    np.ndarray
+        Tuple of length 3 containing the precession angles in arc seconds and
+        decimals.
+
+    Notes
+    -----
+    The convetional precession angles are those derived using the IAU 2000A
+    model.[SL13c]_
+
+    References
+    ----------
+    .. [SL13c] M. Soffel and R. Langhans. Space-Time Reference Systems.
+       Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 219.
+    """
+
+    # Get time constants.
+    t = (julian - 2451545.0) / 36525
+    t2 = t * t
+    t3 = t2 * t
+    t4 = t3 * t
+    t5 = t4 * t
+
+    # Get precession angles.
+    zeta = 2.59796176 + 2306.0809506 * t + 0.3019015 * t2 + 0.0179663 * t3 - \
+        0.0000327 * t4 - 0.0000002 * t5
+    theta = 2004.1917476 * t - 0.4269353 * t2 - 0.0418251 * t3 - \
+        0.0000601 * t4 - 0.0000001 * t5
+    z = - 2.5976176 + 2306.0803226 * t + 1.0947790 * t2 + 0.0182273 * t3 + \
+        0.0000470 * t4 - 0.0000003 * t5
+
+    return zeta, theta, z
+
+
 def bias_matrix() -> np.ndarray:
     """Generate bias matrix for GCRS and ITRS conversions.
 
