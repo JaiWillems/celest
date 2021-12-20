@@ -8,6 +8,7 @@ used for position inputs and outputs for other `Celest` functionality.
 
 from celest.core.decorators import set_module
 from celest.satellite._angle_representations import _ISO6709_representation
+from celest.satellite.nutation_precession import bias_matrix, precession_matrix, nutation_matrix
 from typing import Any, Literal, Tuple
 import numpy as np
 
@@ -339,47 +340,56 @@ class Coordinate(object):
 
         Notes
         -----
-        This method applies a simplification to converting between gcrs and
-        itrs coordinate by disregarding precession, nutation, and polar motion
-        effects (which will be incorporated in future releases). By
-        disregarding such factors, we can assume the alignment of the gcrs and
-        itrs axes and simplify the conversion to a rotation about the z-axis.
-
-        We can convert between the gcrs and itrs frames using the following
-        equations:
-
-        .. math:: \vec{V}_{gcrs} = E_3^\gamma\;\vec{V}_{itrs}
-
-        .. math:: \vec{V}_{itrs} = E_3^{-\gamma}\;\vec{V}_{gcrs}
-
-        where :math:`\gamma` is the Earth rotation angle, :math:`E_3^\theta` is
-        the rotation matrix that rotates a vector around the z-axis by an angle
-        :math:`\theta`, and :math:`\vec{V}` is a position vector in either the
-        ECI or ECEF frames. [Kok17b]_
-
-        References
-        ----------
-        .. [Kok17b] Don Koks. Changing Coordinates in the Context of Orbital
-           Mechanics. Cyber and Electronic Warfare Division, Defence Science,
-           and Technology Group, Jan.2017, p. 21.
+        This method converts between the GCRS and ITRS frames by accounting for
+        Earth rotation, precession, and nutation while disregarding polar
+        motion effects.
         """
 
-        theta = -self.era() if frame == "gcrs" else self.era()
-        theta = np.radians(theta)
+        # Get dependencies.
+        era = self.era()
+        bias_mtrx = bias_matrix()
+        precession_mtrx = precession_matrix(self.time.julian())
+        nutation_mtrx = nutation_matrix(self.time.julian())
 
-        # Construct rotational matrix.
+        n = era.size
+
+        pos_data = np.copy(position)
+
+        # Apply nutation-precession model before ERA rotation if frame is GCRS.
+        if frame == "gcrs":
+            for i in range(n):
+
+                temp = np.matmul(bias_mtrx, pos_data[i, :])
+                temp = np.matmul(precession_mtrx[:, :, i], temp)
+                pos_data[i, :] = np.matmul(nutation_mtrx[:, :, i], temp)
+
+        # Pre-process ERA angle and sign.
+        theta = np.radians(self.era())
+        theta = -theta if frame == "gcrs" else theta
+
+        # Construct ERA rotational matrix.
         A11 = np.cos(theta)
         A12 = -np.sin(theta)
         A21 = np.sin(theta)
         A22 = np.cos(theta)
 
-        # Rotate position data around z-axis by ERA.
-        output = np.zeros((self.length, 3))
-        output[:, 0] = A11 * position[:, 0] + A12 * position[:, 1]
-        output[:, 1] = A21 * position[:, 0] + A22 * position[:, 1]
-        output[:, 2] = position[:, 2]
+        # Rotate positions around z-axis by ERA.
+        col_1 = np.copy(pos_data[:, 0])
+        col_2 = np.copy(pos_data[:, 1])
+        col_3 = np.copy(pos_data[:, 2])
+        pos_data[:, 0] = A11 * col_1 + A12 * col_2
+        pos_data[:, 1] = A21 * col_1 + A22 * col_2
+        pos_data[:, 2] = col_3
 
-        return output
+        # Apply nutation-precession model after ERA rotation if frame is ITRS.
+        if frame == "itrs":
+            for i in range(n):
+
+                temp = np.matmul(np.linalg.inv(nutation_mtrx[:, :, i]), pos_data[i, :])
+                temp = np.matmul(np.linalg.inv(precession_mtrx[:, :, i]), temp)
+                pos_data[i, :] = np.matmul(np.linalg.inv(bias_mtrx), temp)
+
+        return pos_data
 
     def gcrs(self) -> np.ndarray:
         """Return cartesian gcrs position data.

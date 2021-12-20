@@ -196,7 +196,7 @@ def precession_angles(julian: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.nd
 
 
 def bias_matrix() -> np.ndarray:
-    """Generate bias matrix for GCRS and ITRS conversions.
+    r"""Generate bias matrix for GCRS and ITRS conversions.
 
     Returns
     -------
