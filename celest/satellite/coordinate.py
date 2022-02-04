@@ -9,12 +9,13 @@ used for position inputs and outputs for other `Celest` functionality.
 from celest.core.decorators import set_module
 from celest.satellite._angle_representations import _ISO6709_representation
 from celest.satellite.nutation_precession import bias_matrix, precession_matrix, nutation_matrix
+from celest.satellite.time import Time
 from typing import Any, Literal, Tuple
 import numpy as np
 
 
 @set_module('celest.satellite')
-class Coordinate(object):
+class Coordinate(Time):
     """Localize position information representations.
 
     The `Coordinate` class provides a simple user interface for converting a
@@ -27,15 +28,14 @@ class Coordinate(object):
         Base position to initialize the `Coodinate` class.
     frame : {"gcrs", "geo", "itrs"}
         Specifies the input position frame.
-    time : Time
-        Times associated with the position data in the J2000 epoch. The length
-        of the `time` parameter must match the length of the `position`
-        parameter.
+    time : np.ndarray
+        Times associated with the position data. The length of the `time`
+        parameter must match the length of the `position` parameter.
+    offset : float, optional
+        Offset to convert input time data to the J2000 epoch.
 
     Attributes
     ----------
-    time : Time
-        Times corresponding to the position data.
     length : int
         Length of the input position and time arrays.
 
@@ -59,8 +59,10 @@ class Coordinate(object):
         Return the distance to a ground location.
     """
 
-    def __init__(self, position: np.ndarray, frame: Literal["gcrs", "geo", "itrs"], time: Any) -> None:
+    def __init__(self, position: np.ndarray, frame: Literal["gcrs", "geo", "itrs"], time: np.ndarray, offset=0) -> None:
         """Initialize attributes."""
+
+        super().__init__(time, offset)
 
         if frame not in ["gcrs", "geo", "itrs"]:
             raise ValueError(f"{frame} is not a valid frame.")
@@ -68,8 +70,6 @@ class Coordinate(object):
         if position.shape[0] != len(time):
             raise ValueError(
                 f"position and time data lengths are mismatched being {position.shape[0]} and {len(time)}")
-
-        self.time = time
 
         self._GEO = None
         self._GCRS = None
@@ -312,7 +312,7 @@ class Coordinate(object):
         np.array([6.2360075])
         """
 
-        jul_data = self.time.julian()
+        jul_data = self._julian
 
         # Multiply time elapsed since J2000 by Earth rotation rate and add
         # J2000 orientation.
@@ -348,8 +348,8 @@ class Coordinate(object):
         # Get dependencies.
         era = self.era()
         bias_mtrx = bias_matrix()
-        precession_mtrx = precession_matrix(self.time.julian())
-        nutation_mtrx = nutation_matrix(self.time.julian())
+        precession_mtrx = precession_matrix(self._julian)
+        nutation_mtrx = nutation_matrix(self._julian)
 
         n = era.size
 

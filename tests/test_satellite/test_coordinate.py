@@ -27,35 +27,36 @@ class TestCoordinate(TestCase):
 
         geo = np.concatenate((self.geo, self.alt.reshape((-1, 1))), axis=1)
 
-        self.timeData = Time(self.times, 2430000)
-        self.coor_gcrs = Coordinate(self.GCRS, "gcrs", self.timeData)
-        self.coor_itrs = Coordinate(self.ITRS, "itrs", self.timeData)
-        self.coor_geo = Coordinate(geo, "geo", self.timeData)
+        # self.timeData = Time(self.times, 2430000)
+        self.offset = 2430000
+        self.coor_gcrs = Coordinate(self.GCRS, "gcrs", self.times, self.offset)
+        self.coor_itrs = Coordinate(self.ITRS, "itrs", self.times, self.offset)
+        self.coor_geo = Coordinate(geo, "geo", self.times, self.offset)
 
     def test_set_base_position(self):
         """Test `Coordinate._set_base_position`."""
 
-        coor_1 = Coordinate(self.geo, "geo", self.timeData)
+        coor_1 = Coordinate(self.geo, "geo", self.times, self.offset)
 
         self.assertEqual(coor_1._GEO.shape[1], 3)
 
-        self.assertIsNotNone(coor_1.time)
+        self.assertIsNotNone(coor_1._julian)
         self.assertIsNotNone(coor_1._GEO)
         self.assertIsNone(coor_1._GCRS)
         self.assertIsNone(coor_1._ITRS)
         self.assertEqual(self.length, coor_1.length)
 
-        coor_2 = Coordinate(self.GCRS, "gcrs", self.timeData)
+        coor_2 = Coordinate(self.GCRS, "gcrs", self.times, self.offset)
 
-        self.assertIsNotNone(coor_2.time)
+        self.assertIsNotNone(coor_2._julian)
         self.assertIsNone(coor_2._GEO)
         self.assertIsNotNone(coor_2._GCRS)
         self.assertIsNone(coor_2._ITRS)
         self.assertEqual(self.length, coor_2.length)
 
-        coor_3 = Coordinate(self.ITRS, "itrs", self.timeData)
+        coor_3 = Coordinate(self.ITRS, "itrs", self.times, self.offset)
 
-        self.assertIsNotNone(coor_3.time)
+        self.assertIsNotNone(coor_3._julian)
         self.assertIsNone(coor_3._GEO)
         self.assertIsNone(coor_3._GCRS)
         self.assertIsNotNone(coor_3._ITRS)
@@ -159,9 +160,9 @@ class TestCoordinate(TestCase):
 
         era = np.degrees(np.array([6.2360075]))
 
-        timeData = Time(np.array([2454545]))
+        times = np.array([2454545])
         basePos = np.array([[6343.82, -2640.87, -11.26]])
-        posData = Coordinate(basePos, "itrs", timeData)
+        posData = Coordinate(basePos, "itrs", times)
         calc_era = posData.era()
 
         self.assertAlmostEqual(era[0], calc_era[0], delta=0.01)
@@ -273,7 +274,7 @@ class TestCoordinate(TestCase):
         loc = EarthLocation.from_geodetic(lon*u.deg, lat*u.deg)
 
         # Prepare time and position information.
-        timeData = time.Time(self.times + 2430000, format="jd")
+        timeData = time.Time(self.times + self.offset, format="jd")
         x, y, z = self.GCRS[:, 0], self.GCRS[:, 1], self.GCRS[:, 2]
 
         # Define coordinate frames.
@@ -293,7 +294,7 @@ class TestCoordinate(TestCase):
         az = altazCoor.az.degree
 
         # Get Celest results.
-        coor = Coordinate(itrsData, "itrs", self.timeData)
+        coor = Coordinate(itrsData, "itrs", self.times, self.offset)
         groundPos = GroundPosition(lat, lon)
         calc_alt, calc_az = coor.horizontal(groundPos)
 
@@ -322,8 +323,8 @@ class TestCoordinate(TestCase):
 
         groundPos = GroundPosition(52.1579, -106.6702)
 
-        timeData = Time(self.times[210:220], 2430000)
-        coor = Coordinate(self.ITRS[210:220], "itrs", timeData)
+        times = self.times[210:220]
+        coor = Coordinate(self.ITRS[210:220], "itrs", times, self.offset)
         calc_off_nadir = coor.off_nadir(groundPos)
 
         for i in range(10):
@@ -387,8 +388,7 @@ class TestCoordinate(TestCase):
 
         groundPos = GroundPosition(52.1579, -106.6702)
 
-        timeData = Time(times, 2430000)
-        coor = Coordinate(position, "itrs", timeData)
+        coor = Coordinate(position, "itrs", times, self.offset)
         calc_dist = coor.distance(groundPos)
 
         for i in range(5):
