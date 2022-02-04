@@ -7,13 +7,14 @@ information and functionality.
 
 from celest.core.decorators import set_module
 from celest.core.interpolation import _interpolate
+from celest.satellite.coordinate import Coordinate
 from typing import Any, Literal, Tuple
 import pandas as pd
 import numpy as np
 
 
 @set_module('celest.satellite')
-class Satellite(object):
+class Satellite(Coordinate):
     """Localize satellite information and functionality.
 
     The `Satellite` class represents a satellite, be it artificial or natural,
@@ -22,15 +23,20 @@ class Satellite(object):
 
     Parameters
     ----------
-    position : Coordinate
-        Satellite time-evolving positions.
+    position : np.ndarray
+        Base position to initialize the `Coodinate` class.
+    frame : {"gcrs", "geo", "itrs"}
+        Specifies the input position frame.
+    time : np.ndarray
+        Times associated with the position data. The length of the `time`
+        parameter must match the length of the `position` parameter.
+    offset : float, optional
+        Offset to convert input time data to the J2000 epoch.
 
     Attributes
     ----------
-    time : Time
-        Times associated with the satellite positions.
-    position : Coordinate
-        Position of the satellite.
+    length : int
+        Length of the input position and time arrays.
 
     Methods
     -------
@@ -40,12 +46,10 @@ class Satellite(object):
         Save satellite time and position data.
     """
 
-    def __init__(self, position: Any) -> None:
+    def __init__(self, position: np.ndarray, frame: Literal["gcrs", "geo", "itrs"], time: np.ndarray, offset=0) -> None:
         """Initialize attributes."""
 
-        self.time = position.time
-        self.position = position
-        self.length = len(position)
+        super().__init__(position, frame, time, offset)
     
     def __len__(self):
         """Return length of satellite position and time data."""
@@ -83,8 +87,8 @@ class Satellite(object):
         """
         
         indices = np.zeros((0,), dtype=int)
-        time = self.time.julian()
-        position = self.position.gcrs()
+        time = self._julian
+        position = self.gcrs()
 
         for window in windows:
             start = window.start
@@ -99,16 +103,11 @@ class Satellite(object):
         time_interp = _interpolate(data=time, factor=factor, dt=2, indices=indices)
         position_interp = _interpolate(data=position, factor=factor, dt=2, indices=indices)
 
-        self.time._julian = time_interp
-        self.time._length = time_interp.size
-
-        self.position.time = self.time
-        self.position._GCRS = position_interp
-        self.position._ITRS = None
-        self.position._GEO = None
-        self.position.length = time_interp.size
-
-        self.length = len(self.position)
+        self._julian = time_interp
+        self._GCRS = position_interp
+        self._ITRS = None
+        self._GEO = None
+        self.length = time_interp.size
 
     def save_data(self, fname: str, delimiter: Literal[",", "\\t"], times:
                   Tuple=("julian",), positions: Tuple=("gcrs",)) -> None:
@@ -141,13 +140,13 @@ class Satellite(object):
         """
 
         key_mapping = {
-            "julian": (self.time.julian, "Julian.J2000"),
-            "ut1": (self.time.ut1, "UT1.hr"),
-            "gmst": (self.time.gmst, "GMST.hr"),
-            "gast": (self.time.gast, "GAST.hr"),
-            "itrs": (self.position.itrs, "ITRS.x.km", "ITRS.y.km", "ITRS.z.km"),
-            "gcrs": (self.position.gcrs, "GCRS.x.km", "GCRS.y.km", "GCRS.z.km"),
-            "geo": (self.position.geo, "GEO.lat.deg", "GEO.lon.deg", "GEO.height.km")
+            "julian": (self.julian, "Julian.J2000"),
+            "ut1": (self.ut1, "UT1.hr"),
+            "gmst": (self.gmst, "GMST.hr"),
+            "gast": (self.gast, "GAST.hr"),
+            "itrs": (self.itrs, "ITRS.x.km", "ITRS.y.km", "ITRS.z.km"),
+            "gcrs": (self.gcrs, "GCRS.x.km", "GCRS.y.km", "GCRS.z.km"),
+            "geo": (self.geo, "GEO.lat.deg", "GEO.lon.deg", "GEO.height.km")
         }
 
         data = {}
