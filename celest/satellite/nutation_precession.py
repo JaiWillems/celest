@@ -8,7 +8,6 @@ effects into GCRS and ITRS coordinate conversions.
 from celest.satellite._astronomical_quantities import (
     mean_obliquity, nutation_components, precession_angles
 )
-from typing import Tuple
 import numpy as np
 
 

@@ -3,7 +3,6 @@
 
 from celest.encounter.groundposition import GroundPosition
 from celest.satellite.coordinate import Coordinate
-from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest

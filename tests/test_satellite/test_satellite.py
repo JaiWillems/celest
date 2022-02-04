@@ -3,9 +3,7 @@
 
 from celest.encounter.groundposition import GroundPosition
 from celest.encounter._window_handling import Window, Windows
-from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
-from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest

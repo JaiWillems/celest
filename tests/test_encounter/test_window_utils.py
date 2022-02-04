@@ -5,10 +5,8 @@ from celest.encounter.groundposition import GroundPosition
 from celest.encounter._window_utils import _get_ang, _sun_itrs, _window_encounter_ind
 from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
-from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
-import unittest
 
 
 class TestWindowUtils(TestCase):
@@ -20,10 +18,7 @@ class TestWindowUtils(TestCase):
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
         times, itrs = data[:, 0], data[:, 10:]
 
-        timeData = Time(times, 2430000)
-        coor = Coordinate(itrs, "itrs", timeData)
-
-        self.finch = Satellite(coor)
+        self.finch = Satellite(itrs, "itrs", times, 2430000)
 
     def test_sun_itrs(self):
         """Test `Encounter._sun_itrs`.
@@ -69,18 +64,18 @@ class TestWindowUtils(TestCase):
     def test_window_encounter_ind(self):
         """Test `Encounter._window_encounter_ind`."""
 
-        julData = self.finch.time.julian()
+        julData = self.finch._julian
 
         # Check data link index generation.
         location = GroundPosition(43.6532, -79.3832)
 
         calc_enc_ind = _window_encounter_ind(self.finch, location, 30, 1, 0, 1)
 
-        altitude, _ = self.finch.position.horizontal(location=location)
-        off_nadir = self.finch.position.off_nadir(location=location)
+        altitude, _ = self.finch.horizontal(location=location)
+        off_nadir = self.finch.off_nadir(location=location)
 
         sun_itrs = _sun_itrs(julData)
-        sun_pos = Coordinate(sun_itrs, "itrs", self.finch.time)
+        sun_pos = Coordinate(sun_itrs, "itrs", self.finch._julian)
         sun_alt, _ = sun_pos.horizontal(location=location)
 
         enc_ind = np.arange(0, julData.shape[0], 1)
@@ -100,17 +95,17 @@ class TestWindowUtils(TestCase):
 
         calc_enc_ind = _window_encounter_ind(self.finch, location, 30, 0, 30, 0)
 
-        altitude, _ = self.finch.position.horizontal(location=location)
+        altitude, _ = self.finch.horizontal(location=location)
 
         enc_ind = np.arange(0, julData.shape[0], 1)
         
         alt_ind = np.where(30 <= altitude)[0]
 
-        sat_itrs = self.finch.position.itrs()
+        sat_itrs = self.finch.itrs()
 
         ground_GEO = [location.lat, location.lon]
         ground_GEO = np.repeat(np.array([ground_GEO]), julData.size, axis=0)
-        gnd_itrs = Coordinate(ground_GEO, "geo", self.finch.time).itrs()
+        gnd_itrs = Coordinate(ground_GEO, "geo", self.finch._julian).itrs()
 
         sca_angs = _get_ang(sat_itrs - gnd_itrs, sun_itrs - gnd_itrs)
         sca_ind = np.where(sca_angs > 30)[0]
