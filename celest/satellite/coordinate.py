@@ -6,7 +6,6 @@ used for position inputs and outputs for other `Celest` functionality.
 """
 
 
-from celest.core.decorators import set_module
 from celest.satellite._angle_representations import _ISO6709_representation
 from celest.satellite.nutation_precession import bias_matrix, precession_matrix, nutation_matrix
 from celest.satellite.time import Time
@@ -14,7 +13,6 @@ from typing import Any, Literal, Tuple
 import numpy as np
 
 
-@set_module('celest.satellite')
 class Coordinate(Time):
     """Localize position information representations.
 

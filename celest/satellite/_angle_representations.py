@@ -1,11 +1,9 @@
 """Define various angle representations."""
 
 
-from celest.core.decorators import set_module
 import numpy as np
 
 
-@set_module('celest.satellite')
 def sexagesimal(angles: np.ndarray) -> np.ndarray:
     """Convert decimal angles into sexagesimal angles.
 

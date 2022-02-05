@@ -6,11 +6,9 @@ location and satellite encounter relationship.
 """
 
 
-from celest.core.decorators import set_module
 import numpy as np
 
 
-@set_module('celest.encounter')
 class GroundPosition(object):
     """Localize Earth bound location information.
 

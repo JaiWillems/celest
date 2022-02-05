@@ -5,7 +5,6 @@ and ground-location encounters.
 """
 
 
-from celest.core.decorators import set_module
 from celest.core.interpolation import _interpolate
 from celest.encounter._window_handling import Window, Windows
 from celest.encounter._window_utils import _window_encounter_ind
@@ -29,7 +28,6 @@ _data_link_encounter = {
 }
 
 
-@set_module('celest.encounter.windows')
 def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
              ang: float, factor: int=5) -> Windows:
     """Return encounter windows.

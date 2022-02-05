@@ -5,7 +5,6 @@ times in Julian days and convert to various time representations.
 """
 
 
-from celest.core.decorators import set_module
 from celest.satellite._astronomical_quantities import (
     equation_of_time, from_julian, sun_right_ascension, equation_of_equinoxes
 )
@@ -13,7 +12,6 @@ from datetime import datetime, timedelta
 import numpy as np
 
 
-@set_module('celest.satellite')
 class Time(object):
     """Time representations.
 

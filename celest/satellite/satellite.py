@@ -5,7 +5,6 @@ information and functionality.
 """
 
 
-from celest.core.decorators import set_module
 from celest.core.interpolation import _interpolate
 from celest.satellite.coordinate import Coordinate
 from typing import Any, Literal, Tuple
@@ -13,7 +12,6 @@ import pandas as pd
 import numpy as np
 
 
-@set_module('celest.satellite')
 class Satellite(Coordinate):
     """Localize satellite information and functionality.
 

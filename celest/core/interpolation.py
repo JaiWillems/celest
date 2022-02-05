@@ -5,7 +5,6 @@ data without an independent data array.
 """
 
 
-from celest.core.decorators import set_module
 from scipy.interpolate import interp1d
 import numpy as np
 
