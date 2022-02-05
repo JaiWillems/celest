@@ -5,9 +5,7 @@ from celest.encounter.groundposition import GroundPosition
 from celest.encounter.windows import generate
 from celest.encounter._window_handling import Window, Windows
 from celest.encounter._window_utils import _window_encounter_ind
-from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
-from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest
@@ -22,10 +20,7 @@ class TestEncounter(TestCase):
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
         times, itrs = data[:, 0], data[:, 10:]
 
-        timeData = Time(times, 2430000)
-        coor = Coordinate(itrs, "itrs", timeData)
-
-        self.finch = Satellite(coor)
+        self.finch = Satellite(itrs, "itrs", times, 2430000)
 
     def test_windows(self):
         """Test `Encounter.windows.generate.`"""
@@ -39,7 +34,7 @@ class TestEncounter(TestCase):
         indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
 
         val_windows = Windows()
-        time = self.finch.time.julian()
+        time = self.finch._julian
         for reg in indices:
                 
             start = time[reg[0]]
@@ -61,7 +56,7 @@ class TestEncounter(TestCase):
         indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
 
         val_windows = Windows()
-        time = self.finch.time.julian()
+        time = self.finch._julian
         for reg in indices:
                 
             start = time[reg[0]]
@@ -82,7 +77,7 @@ class TestEncounter(TestCase):
         indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
 
         val_windows = Windows()
-        time = self.finch.time.julian()
+        time = self.finch._julian
         for reg in indices:
                 
             start = time[reg[0]]
@@ -104,7 +99,7 @@ class TestEncounter(TestCase):
         indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
 
         val_windows = Windows()
-        time = self.finch.time.julian()
+        time = self.finch._julian
         for reg in indices:
                 
             start = time[reg[0]]

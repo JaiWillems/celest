@@ -4,7 +4,6 @@
 from celest.encounter.groundposition import GroundPosition
 from celest.encounter._encounter_math_utils import _analytical_encounter_ind
 from celest.satellite.coordinate import Coordinate
-from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest
@@ -18,11 +17,11 @@ class TestEncounterMathUtils(TestCase):
         fname = "tests/test_data/coordinate_validation_set.txt"
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
 
-        times = data[:, 0]
-        itrs = data[:, 10:]
+        self.times = data[:, 0]
+        self.itrs = data[:, 10:]
 
-        self.timeData = Time(times, 2430000)
-        self.coor = Coordinate(itrs, "itrs", self.timeData)
+        self.offset = 2430000
+        self.coor = Coordinate(self.itrs, "itrs", self.times, self.offset)
         self.length = data.shape[0]
 
     def test_anaytical_encounter_ind(self):

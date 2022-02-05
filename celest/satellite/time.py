@@ -57,12 +57,12 @@ class Time(object):
         """Initialize attributes."""
 
         self._julian = julian + offset
-        self._length = self._julian.size
+        self.length = self._julian.size
 
     def __len__(self):
         """Return data size."""
 
-        return self._length
+        return self.length
 
     def true_solar_time(self, longitude: np.ndarray) -> np.ndarray:
         """Return the true solar time (TTs) in hours and decimals.

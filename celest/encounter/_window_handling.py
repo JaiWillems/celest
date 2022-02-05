@@ -129,6 +129,11 @@ class Window(object):
 
 
 class Windows(object):
+    """Data structure for containing `Window` objects.
+
+    This class is designed to hold encounter information and facilitate
+    user-data interactions through a series of methods.
+    """
 
     def __init__(self) -> None:
         """Initialize attributes."""
@@ -137,7 +142,7 @@ class Windows(object):
         self.index_head = 0
 
     def __iter__(self) -> Any:
-        
+
         return self
 
     def __next__(self) -> Any:
@@ -153,7 +158,7 @@ class Windows(object):
             self.index_head += 1
 
             return self.windows[index]
-    
+
     def __getitem__(self, key: float) -> Window:
         """Return window closest to key time."""
 
@@ -163,23 +168,22 @@ class Windows(object):
 
             ind = np.argmin(np.abs(inds - key))
             rtn = self.windows[inds[ind]]
-        
+
         elif isinstance(key, slice):
 
             rtn = self.windows[key].to_numpy()
-        
+
         elif isinstance(key, tuple):
 
             inds_new = []
             for k in key:
                 ind = np.argmin(np.abs(inds - k))
                 inds_new.append(inds[ind])
-            
+
             inds_new = list(set(inds_new))
             rtn = self.windows[inds_new].to_numpy()
 
         return rtn
-
 
     def __len__(self) -> int:
         """Return number of windows."""
@@ -188,7 +192,7 @@ class Windows(object):
 
     def _add_window(self, window: Window) -> None:
         """Add new window to data base.
-        
+
         Parameters
         ----------
         window : Window
@@ -199,7 +203,7 @@ class Windows(object):
         This method adds a new window to the data base by appending it to the
         internal Pandas Series object indexed by the window's start time.
         """
-        
+
         temp_series = pd.Series(window, index=[window.start])
         self.windows = self.windows.append(temp_series)
         self.windows.sort_index(inplace=True)
@@ -210,12 +214,12 @@ class Windows(object):
         This method returns statistics on the stored encounters. The statistics
         include the 5th, 50th, and 95th percentile of encounter durations as
         well as the enocounter frequency.
-        
+
         Return
         ------
         DataFrame
             Data base of encounter statistics.
-        
+
         Examples
         --------
         Assuming `toronto_img` is a `Windows` object returned from the windows
@@ -231,23 +235,24 @@ class Windows(object):
 
         if len(self.windows) == 0:
             return None
-        
+
         enc_dict = {}
         start_times = np.empty((0,))
         end_times = np.empty((0,))
-        
+
         for window in self.windows:
 
             if (window.coor, window.type) not in enc_dict.keys():
-                enc_dict[window.coor, window.type] = np.array([window.duration])
+                enc_dict[window.coor, window.type] = np.array(
+                    [window.duration])
             else:
                 arr = enc_dict[window.coor, window.type]
                 new_arr = np.append(arr, window.duration)
                 enc_dict[window.coor, window.type] = new_arr
-            
+
             start_times = np.append(start_times, window.start)
             end_times = np.append(end_times, window.end)
-        
+
         out_data = {}
         num_days = np.max(end_times) - np.min(start_times)
 
@@ -259,23 +264,23 @@ class Windows(object):
             freq = len(dt_data) / num_days
 
             out_data[enc_str] = pd.Series([qs[0], qs[1], qs[2], freq])
-        
+
         df = pd.DataFrame.from_dict(out_data)
         df.index = ["Q5 Duration (s)",
                     "Q50 Duration (s)",
                     "Q75 Duration (s)",
                     "Encounter Frequency (per day)"]
-        
+
         return df
 
     def to_numpy(self) -> np.array:
         """Return windows within a NumPy array.
-        
+
         Returns
         -------
         np.ndarray
             Array containing window data.
-        
+
         Examples
         --------
         Assuming `toronto_img` is a `Windows` object returned from the windows
@@ -293,7 +298,7 @@ class Windows(object):
 
     def save(self, fname: str, delimiter: Literal[",", "\\t"]) -> None:
         """Save encounter information.
-        
+
         Parameters
         ----------
         fname : str
@@ -301,7 +306,7 @@ class Windows(object):
         delimiter : {",", "\\t"}
             String or character separating columns.
         """
-        
+
         np_data = self.to_numpy()
 
         out_data = np.empty(shape=(np_data.shape[0] + 1, 6), dtype="<U25")
@@ -315,7 +320,7 @@ class Windows(object):
         ]
 
         for i, window in enumerate(np_data):
-            
+
             out_data[i + 1, 0] = window.coor[0]
             out_data[i + 1, 1] = window.coor[1]
             out_data[i + 1, 2] = window.start
@@ -323,4 +328,5 @@ class Windows(object):
             out_data[i + 1, 4] = window.duration
             out_data[i + 1, 5] = window.type
 
-        np.savetxt(fname, out_data, delimiter=delimiter, fmt="%s,%s,%s,%s,%s,%s")
+        np.savetxt(fname, out_data, delimiter=delimiter,
+                   fmt="%s,%s,%s,%s,%s,%s")

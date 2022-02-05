@@ -83,33 +83,32 @@ def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
     if factor > 1:
 
         if ang_type:
-            off_nadir = satellite.position.off_nadir(location)
+            off_nadir = satellite.off_nadir(location)
             ind = np.where(off_nadir < ang)[0]
 
         elif not ang_type:
-            alt, _ = satellite.position.horizontal(location)
+            alt, _ = satellite.horizontal(location)
             ind = np.where(alt > ang)[0]
 
         ind = np.split(ind, np.where(np.diff(ind) != 1)[0] + 1)
         ind = np.array(ind, dtype=object)
 
-        julian_interp = _interpolate(satellite.time.julian(), factor, 2, ind)
-        eci_interp = _interpolate(satellite.position.gcrs(), factor, 2, ind)
+        julian_interp = _interpolate(satellite._julian, factor, 2, ind)
+        eci_interp = _interpolate(satellite.gcrs(), factor, 2, ind)
 
-        satellite.position._GCRS = eci_interp
-        satellite.position._ITRS = None
-        satellite.position._GEO = None
-        satellite.position.length = eci_interp.shape[0]
-        satellite.position.time._julian = julian_interp
-        satellite.position.time._length = julian_interp.size
-        satellite.time = satellite.position.time
+        satellite._GCRS = eci_interp
+        satellite._ITRS = None
+        satellite._GEO = None
+        satellite.length = eci_interp.shape[0]
+        satellite._julian = julian_interp
+        satellite._length = julian_interp.size
 
     enc_ind = _window_encounter_ind(satellite, location, ang, ang_type, sca, lighting)
 
     window_ind = np.split(enc_ind, np.where(np.diff(enc_ind) != 1)[0] + 1)
     window_ind = np.array(window_ind, dtype=object)
 
-    times = satellite.time.julian()
+    times = satellite._julian
 
     if window_ind.size != 0:
 

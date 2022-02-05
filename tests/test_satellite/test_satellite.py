@@ -3,9 +3,7 @@
 
 from celest.encounter.groundposition import GroundPosition
 from celest.encounter._window_handling import Window, Windows
-from celest.satellite.coordinate import Coordinate
 from celest.satellite.satellite import Satellite
-from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest
@@ -22,17 +20,18 @@ class TestSatellite(TestCase):
         self.times = data[:, 0]
         self.ITRS = data[:, 10:]
 
-        self.timeData = Time(self.times, 2430000)
-        self.coor = Coordinate(self.ITRS, "itrs", self.timeData)
+        # self.timeData = Time(self.times, 2430000)
+        # self.coor = Coordinate(self.ITRS, "itrs", self.timeData)
 
-        self.finch = Satellite(self.coor)
+        self.offset = 2430000
+        self.finch = Satellite(self.ITRS, "itrs", self.times, self.offset)
 
     def test_interpolate(self):
         """Test `Satellite.interpolate`."""
 
         location = GroundPosition(0, 0)
 
-        window = Window(None, location, self.times[100] + 2430000, self.times[150] + 2430000, None, None, None, None)
+        window = Window(None, location, self.times[100] + self.offset, self.times[150] + self.offset, None, None, None, None)
         window_list = Windows()
         window_list._add_window(window)
 
@@ -60,13 +59,13 @@ class TestSatellite(TestCase):
         load_gcrs = data[:, 8:11]
         load_itrs = data[:, 11:]
 
-        julian = self.finch.time.julian()
-        ut1 = self.finch.time.ut1()
-        gmst = self.finch.time.gmst()
-        gast = self.finch.time.gast()
-        geo = self.finch.position.geo()
-        gcrs = self.finch.position.gcrs()
-        itrs = self.finch.position.itrs()
+        julian = self.finch.julian()
+        ut1 = self.finch.ut1()
+        gmst = self.finch.gmst()
+        gast = self.finch.gast()
+        geo = self.finch.geo()
+        gcrs = self.finch.gcrs()
+        itrs = self.finch.itrs()
 
         self.assertTrue(np.array_equal(load_julian, julian))
         self.assertTrue(np.array_equal(load_ut1, ut1))

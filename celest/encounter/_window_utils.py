@@ -6,7 +6,6 @@ viable encounters.
 
 from celest.encounter._encounter_math_utils import _analytical_encounter_ind
 from celest.satellite.coordinate import Coordinate
-from celest.satellite.time import Time
 from typing import Any, Literal
 from jplephem.spk import SPK
 import numpy as np
@@ -37,7 +36,7 @@ def _sun_itrs(julian: np.ndarray) -> np.ndarray:
 
     SPK.close(kernal)
 
-    sun_itrs = Coordinate(e2sun, "gcrs", Time(julian)).itrs()
+    sun_itrs = Coordinate(e2sun, "gcrs", julian).itrs()
 
     return sun_itrs
 
@@ -91,12 +90,12 @@ def _window_encounter_ind(satellite: Any, location: Any, ang: float, form:
         Array containing indices defining viable satellite encounter positions.
     """
 
-    sat_itrs = satellite.position.itrs()
-    time_data = satellite.time.julian()
+    sat_itrs = satellite.itrs()
+    time_data = satellite._julian
 
     ground_GEO = [location.lat, location.lon]
     ground_GEO = np.repeat(np.array([ground_GEO]), time_data.size, axis=0)
-    gnd_itrs = Coordinate(ground_GEO, "geo", Time(time_data)).itrs()
+    gnd_itrs = Coordinate(ground_GEO, "geo", time_data).itrs()
 
     enc_params = [sat_itrs, gnd_itrs, ang, form]
     analytical_ind = _analytical_encounter_ind(*enc_params)
