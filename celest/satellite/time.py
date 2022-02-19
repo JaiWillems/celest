@@ -29,25 +29,25 @@ class Time:
     Methods
     -------
     true_solar_time(longitude)
-        Return the true solar time (TTs) in hours and decimals.
+        Return true solar time in decimal hours.
     mean_solar_time(longitude)
-        Return the mean solar time (MTs) in hours and decimals.
+        Return mean solar time in decimal hours.
     true_hour_angle(longitude)
-        Return the true hour angle in hours and decimals.
+        Return true hour angle in decimal hours.
     mean_hour_angle(longitude)
-        Return the mean hour angle in hours and decimals.
+        Return mean hour angle in decimal hours.
     ut1()
-        Return the universal time (same as GMT) in hours and decimals.
+        Return the universal time (same as GMT) in decimal hours.
     julian()
-        Return Julian times.
+        Convenience method to return Julian times.
     datetime()
         Return `datetime.datetime` object array.
     gmst()
-        Return Greenwich Mean Sidereal Time in hours and decimals.
+        Return Greenwich Mean Sidereal Time in decimal hours.
     lmst(longitude)
-        Return Local Mean Sidereal Time in hours and decimals.
+        Return Local Mean Sidereal Time in decimal hours.
     gast()
-        Return Greenwich Apparent Sidereal Time in hours and decimals.
+        Return Greenwich Apparent Sidereal Time in decimal hours.
     last(longitude)
         Return Local Apparent Sidereal Time in hours and degrees.
 
@@ -87,23 +87,23 @@ class Time:
         return self._length
 
     def true_solar_time(self, longitude: npt.ArrayLike) -> np.ndarray:
-        """Return true solar time in hours and decimals.
+        """Return true solar time in decimal hours.
 
         Parameters
         ----------
         longitude : array_like
-            1D array containing longitude in decimal degrees. If a scalar value
-            is given, it will be applied for all times.
+            1-D array containing longitude in decimal degrees. If a scalar
+            value is given, it will be applied for all times.
 
         Returns
         -------
         np.ndarray
-            1D array containing true solar time in hours and decimals.
+            1-D array containing true solar time in decimal hours.
 
         See Also
         --------
         mean_solar_time :
-            Return mean solar time in hours and decimals.
+            Return mean solar time in decimal hours.
 
         Notes
         -----
@@ -143,23 +143,23 @@ class Time:
         return TST
 
     def mean_solar_time(self, longitude: npt.ArrayLike) -> np.ndarray:
-        """Return mean solar time in hours and decimals.
+        """Return mean solar time in decimal hours.
 
         Parameters
         ----------
         longitude : array_like
-            1D array containing longitude in decimal degrees. If a scalar value
-            is given, it will be applied for all times.
+            1-D array containing longitude in decimal degrees. If a scalar
+            value is given, it will be applied for all times.
 
         Returns
         -------
         np.ndarray
-            1D array containing mean solar time in hours and decimals.
+            1-D array containing mean solar time in decimal hours.
 
         See Also
         --------
         true_solar_time :
-            Return true solar time in hours and decimals.
+            Return true solar time in decimal hours.
 
         Notes
         -----
@@ -191,7 +191,7 @@ class Time:
         return MST
 
     def true_hour_angle(self, longitude: npt.ArrayLike) -> np.ndarray:
-        """Return true hour angle in hours and decimals.
+        """Return true hour angle in decimal hours.
 
         The true hour angle is the angle between the Sun's apparent position at
         a given time and its position at local solar noon. The value falls
@@ -201,18 +201,18 @@ class Time:
         Parameters
         ----------
         longitude : array_like
-            1D array containing longitude in decimal degrees. If a scalar value
-            is given, it will be applied for all times.
+            1-D array containing longitude in decimal degrees. If a scalar
+            value is given, it will be applied for all times.
 
         Returns
         -------
         np.ndarray
-            1D array containing true solar hour angles in hours and decimals.
+            1-D array containing true solar hour angles in decimal hours.
 
         See Also
         --------
         mean_hour_angle :
-            Return mean hour angle in hours and decimals.
+            Return mean hour angle in decimal hours.
 
         Notes
         -----
@@ -246,7 +246,7 @@ class Time:
         return HRA
 
     def mean_hour_angle(self, longitude: npt.ArrayLike) -> np.ndarray:
-        """Return mean hour angle in hours and decimals.
+        """Return mean hour angle in decimal hours.
 
         The mean hour angle is the angle between the Sun's mean position at
         a given time and its position at local solar noon. The value falls
@@ -256,18 +256,18 @@ class Time:
         Parameters
         ----------
         longitude : array_like
-            1D array containing longitude in decimal degrees. If a scalar value
-            is given, it will be applied for all times.
+            1-D array containing longitude in decimal degrees. If a scalar
+            value is given, it will be applied for all times.
 
         Returns
         -------
         np.ndarray
-            1D containing mean solar hour angles in hours and decimals.
+            1-D containing mean solar hour angles in decimal hours.
 
         See Also
         --------
         true_hour_angle :
-            Return true hour angle in hours and decimals.
+            Return true hour angle in decimal hours.
 
         Notes
         -----
@@ -298,7 +298,7 @@ class Time:
         return HRA
 
     def ut1(self) -> np.ndarray:
-        """Return the universal time (same as GMT) in hours and decimals.
+        """Return the universal time (same as GMT) in decimal hours.
 
         Due to approximations in the mean solar time calculations, the DUT1
         time correction is not accounted for which will introduce an error of
@@ -307,7 +307,7 @@ class Time:
         Returns
         -------
         np.ndarray
-            1D array containing universal time in hours and decimals.
+            1-D array containing universal time in decimal hours.
 
         Notes
         -----
@@ -339,7 +339,7 @@ class Time:
         Returns
         -------
         np.ndarray
-            1D array containing the Julian times in days and decimals.
+            1-D array containing the Julian times in decimal days.
 
         Examples
         --------
@@ -358,7 +358,7 @@ class Time:
         Returns
         -------
         np.ndarray
-            1D array containing `datetime.datetime` objects.
+            1-D array containing `datetime.datetime` objects.
 
         Examples
         --------
@@ -384,12 +384,12 @@ class Time:
         return datetime_arr
 
     def gmst(self) -> np.ndarray:
-        """Return Greenwich Mean Sidereal Time in hours and decimals.
+        """Return Greenwich Mean Sidereal Time in decimal hours.
 
         Returns
         -------
         np.ndarray
-            1D array containing Greenwich Mean Sidereal Time in hours and
+            1-D array containing Greenwich Mean Sidereal Time in hours and
             decimals.
 
         Notes
@@ -424,18 +424,18 @@ class Time:
         return gmst
 
     def lmst(self, longitude: npt.ArrayLike) -> np.ndarray:
-        """Return Local Mean Sidereal Time in hours and decimals.
+        """Return Local Mean Sidereal Time in decimal hours.
 
         Parameters
         ----------
         longitude : array_like
-            1D array containing longitude in decimal degrees. If a scalar value
-            is given, it will be applied for all times.
+            1-D array containing longitude in decimal degrees. If a scalar
+            value is given, it will be applied for all times.
 
         Returns
         -------
         np.ndarray
-            1D array containing Local Mean Sidereal Time in hours and decimals.
+            1-D array containing Local Mean Sidereal Time in decimal hours.
 
         Notes
         -----
@@ -470,12 +470,12 @@ class Time:
         return lmst
 
     def gast(self) -> np.ndarray:
-        """Return Greenwich Apparent Sidereal Time in hours and decimals.
+        """Return Greenwich Apparent Sidereal Time in decimal hours.
 
         Returns
         -------
         np.ndarray
-            1D array containing Greenwich Apparent Sidereal Time in hours and
+            1-D array containing Greenwich Apparent Sidereal Time in hours and
             degrees.
 
         Notes
@@ -486,7 +486,7 @@ class Time:
 
         .. math:: GAST^h = GMST^h + EoT^h
 
-        where :math:`EoT` is the equation of time in hours and decimals.
+        where :math:`EoT` is the equation of time in decimal hours.
 
         Examples
         --------
@@ -510,13 +510,13 @@ class Time:
         Parameters
         ----------
         longitude : array_like
-            1D array containing longitude in decimal degrees. If a scalar value
-            is given, it will be applied for all times.
+            1-D array containing longitude in decimal degrees. If a scalar
+            value is given, it will be applied for all times.
 
         Returns
         -------
         np.ndarray
-            1D array containing Local Apparent Sidereal Time in hours and
+            1-D array containing Local Apparent Sidereal Time in hours and
             degrees.
 
         Notes

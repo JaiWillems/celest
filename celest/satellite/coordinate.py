@@ -1,5 +1,3 @@
-
-
 from celest.satellite._angle_representations import _ISO6709_representation
 from celest.satellite.nutation_precession import (
     bias_matrix, precession_matrix, nutation_matrix
@@ -12,12 +10,12 @@ import numpy.typing as npt
 
 class Coordinate(Time):
     """Coordinate(position, frame, julian, offset=0)
-    
+
     Satellite coordinate transformations.
 
     The input position and time can be converted into different coordinate
     representations useful for satellite applications. Here, `julian + offset`
-    is the Julian time in J2000 epoch and is used in varios transformations.
+    is the Julian time in J2000 epoch and is used in various transformations.
 
     If `frame=="geo"`, the `position` input can have 2 columns, (latitude,
     longitude) or three columns (lattitude, longitude, altitude). If no
@@ -28,7 +26,7 @@ class Coordinate(Time):
     ----------
     position : array_like
         2-D array containing position coordinates.
-    
+
         Supported coordinate frames include the Geocentric Celestial Reference
         System (gcrs), International Terrestrial Reference System (itrs), and
         geographical (geo) system.
@@ -45,21 +43,21 @@ class Coordinate(Time):
     Methods
     -------
     geo(iso=False)
-        Return geographical position data.
+        Return geographical coordinates.
     era()
-        Return the Earth rotation angles in radians and decimals.
+        Return Earth rotation angle in decimal degrees.
     gcrs()
-        Return cartesian gcrs position data.
+        Return gcrs coordinates.
     itrs()
-        Return cartesian itrs position data.
+        Return itrs coordinates.
     horizontal(location)
-        Return horizontal position data in degrees and decimals.
+        Return horizontal coordinates in decimal degrees.
     off_nadir(location)
-        Return the off-nadir angle to a ground location.
+        Return off-nadir angle in decimal degrees.
     altitude()
-        Return the altitude above Earth's surface in kilometres.
+        Return the geodetic altitude in kilometers.
     distance(location)
-        Return the distance to a ground location.
+        Return distance to the ground location.
 
     Examples
     --------
@@ -89,7 +87,7 @@ class Coordinate(Time):
 
         if position.ndim != 2:
             raise ValueError("position input must be 2-D.")
-        
+
         if time.ndim != 1:
             raise ValueError("time input must be 1-D.")
 
@@ -116,7 +114,7 @@ class Coordinate(Time):
         ----------
         position : array_like
             2-D array containing position coordinates.
-        
+
             Supported coordinate frames include the Geocentric Celestial
             Reference System (gcrs), International Terrestrial Reference System
             (itrs), and geographical (geo) system.
@@ -152,7 +150,7 @@ class Coordinate(Time):
         ----------
         position : np.ndarray
             2-D array with columns of geodetic latitude, terrestrial longitude,
-            and geodetic altitude given in decimal degrees and kilometres.
+            and geodetic altitude given in decimal degrees and kilometers.
 
         Returns
         -------
@@ -207,7 +205,7 @@ class Coordinate(Time):
         -------
         np.ndarray
             2-D array with columns of latitude, longitude, and altitude given
-            in decimal degrees and kilometres.
+            in decimal degrees and kilometers.
 
         See Also
         --------
@@ -239,7 +237,7 @@ class Coordinate(Time):
         -------
         np.ndarray
             2-D array with columns of latitude, longitude, and altitude.
-            
+
             If `iso=True`, the output is a 1-D array containing formatted
             strings.
 
@@ -276,12 +274,12 @@ class Coordinate(Time):
         return geo
 
     def era(self) -> np.ndarray:
-        """Return Earth rotation angle in degrees and decimals.
+        """Return Earth rotation angle in decimal degrees.
 
         Returns
         -------
         np.ndarray
-            1-D array containing Earth rotation angles in degrees and decimals.
+            1-D array containing Earth rotation angles in decimal degrees.
 
         Notes
         -----
@@ -346,7 +344,7 @@ class Coordinate(Time):
 
         # Apply nutation-precession model before ERA rotation.
         if frame == "gcrs":
-            pos_data =  np.einsum('ij, kj -> ki', bias_mtrx, pos_data)
+            pos_data = np.einsum('ij, kj -> ki', bias_mtrx, pos_data)
             pos_data = np.einsum('ijk, ik -> ij', precession_mtrx, pos_data)
             pos_data = np.einsum('ijk, ik -> ij', nutation_mtrx, pos_data)
 
@@ -521,7 +519,7 @@ class Coordinate(Time):
         return alt, az
 
     def off_nadir(self, location: Any) -> np.ndarray:
-        """Return satellite off-nadir angle in decimal degrees.
+        """Return off-nadir angle in decimal degrees.
 
         The off-nadir angle is the angular distance of a ground location from
         the satellites nadir.
@@ -570,7 +568,7 @@ class Coordinate(Time):
         Returns
         -------
         np.ndarray
-            1-D array containing the geocentric radius in kilometres.
+            1-D array containing the geocentric radius in kilometers.
 
         Notes
         -----
@@ -599,7 +597,7 @@ class Coordinate(Time):
         return radius
 
     def altitude(self) -> np.ndarray:
-        """Return the geodetic altitude in kilometres.
+        """Return the geodetic altitude in kilometers.
 
         This method uses the WGS84 reference ellipsoid to calculate the
         geodetic altitude above the Earth's surface.
@@ -607,7 +605,7 @@ class Coordinate(Time):
         Returns
         -------
         np.ndarray
-            Array of shape (n,) containing satellite altitudes in kilometres.
+            Array of shape (n,) containing satellite altitudes in kilometers.
 
         Notes
         -----
@@ -617,8 +615,8 @@ class Coordinate(Time):
 
         References
         ----------
-        .. [KW98b] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in Geodesy.
-           Jan. 1998, pp. 31–33.
+        .. [KW98b] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
+           Geodesy. Jan. 1998, pp. 31–33.
 
         Examples
         --------
@@ -673,8 +671,8 @@ class Coordinate(Time):
         -------
         np.ndarray
             1-D array containing the euclidean distance of the satellite to the
-            ground location in kilometres.
-        
+            ground location in kilometers.
+
         Examples
         --------
         Calculate the satellite distances from position (52.1579, -106.6702):

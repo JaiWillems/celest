@@ -10,7 +10,7 @@ import numpy.typing as npt
 
 class Satellite(Coordinate):
     """Satellite(position, frame, julian, offset=0)
-    
+
     Satellite abstraction for satellite-ground encounters.
 
     `julian + offset` is the Julian time in the J2000 epoch associated with
@@ -20,7 +20,7 @@ class Satellite(Coordinate):
     frames require 3 columns.
 
     Parameters
-    ----------  
+    ----------
     position : array_like
         2-D array containing position coordinates.
 
@@ -49,11 +49,11 @@ class Satellite(Coordinate):
                  "itrs"], julian: npt.ArrayLike, offset=0) -> None:
 
         super().__init__(position, frame, julian, offset)
-    
+
     def __len__(self):
 
         return self._length
-    
+
     def interpolate(self, windows: Any, factor: int=5) -> None:
         """Interpolate coordinate information around window times.
 
@@ -67,13 +67,13 @@ class Satellite(Coordinate):
         factor : int, optional
             The interpolation factor will increase the number of points in
             window regions by the factor `factor`.
-        
+
         Notes
         -----
         Window defined interpolation is necessary for more precise coordinate
         information around encounter regions as might be used for satellite
         orientation calculations.
-        
+
         Examples
         --------
         If `IMG_windows` be a series of imaging encounters, we can interpolate
@@ -84,10 +84,10 @@ class Satellite(Coordinate):
 
         if not isinstance(factor, int):
             raise ValueError("factor must be integer type.")
-        
+
         if factor <= 0:
             raise ValueError("factor must be strictly positive.")
-        
+
         ind = np.zeros((0,), dtype=int)
         time = self._julian
         position = self.gcrs()
@@ -98,7 +98,7 @@ class Satellite(Coordinate):
 
             temp_ind = np.where((start < time) & (time < end))[0]
             ind = np.concatenate((ind, temp_ind))
-        
+
         ind = np.split(ind, np.where(np.diff(ind) > 1)[0])
         ind = np.array(ind, dtype=object)
 
@@ -121,11 +121,11 @@ class Satellite(Coordinate):
         fname : str
         times : Tuple, optional
             Tuple containing time representations to save.
-            
+
             Available times include "julian", "ut1", "gmst", and "gast".
         positions : Tuple, optional
             Tuple containing position representations to save.
-            
+
             Available positions include "gcrs", "itrs", and "geo".
         fmt : str or sequence of strings, optional
             A single format or sequence of formats, or a multiformat string

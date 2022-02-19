@@ -1,8 +1,3 @@
-"""Astronomical quantities for astronomical calculations.
-
-This module contains the functionality to cary out advanced astronomical
-calculations.
-"""
 
 
 from typing import Tuple
@@ -10,10 +5,10 @@ import numpy as np
 
 
 def nutation_angles(julian: np.ndarray) -> Tuple:
-    """Return the five Earth nutation angles.
+    """Return five Earth nutation angles.
 
-    This method takes a Julian day array and calculates the five nutation
-    angles at each time. The calculated angles include the mean elongation of
+    This method calculates the five nutation angles for each time in the
+    `julian` array. The calculated angles include the mean elongation of
     the Moon from the Sun (D), mean anomaly of the Sun (M), mean anomaly of
     the Moon (N), Moon's argument of latitude (F), and the longitude of the
     ascending node of the Moon's mean orbit on the ecliptic measured from the
@@ -22,14 +17,13 @@ def nutation_angles(julian: np.ndarray) -> Tuple:
     Parameters
     ----------
     jullian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     tuple
-        Returns a tuple, `(D, M, N, F, O)`, where the items are Numpy arrays
-        of shape (n,) containing the Earth nutation angles in degrees and
-        decimals.
+        Tuple of the form, `(D, M, N, F, O)`, where each item are 1-D NumPy
+        arrays containing the Earth nutation angles in decimal degrees.
 
     Notes
     -----
@@ -38,7 +32,7 @@ def nutation_angles(julian: np.ndarray) -> Tuple:
 
     .. math:: T = \\frac{JD - 2451545}{36525}
 
-    The nutation angles can then be calculated in degrees and decimals. [Mee98b]_
+    The nutation angles can then be calculated in decimal degrees. [Mee98b]_
 
     .. math:: D = 297.85036 + 445267.111480T - 0.0019142T^2 + T^3 / 189474
 
@@ -79,41 +73,19 @@ def nutation_components(julian: np.ndarray) -> Tuple:
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     tuple
-        Returns a tuple, `(longitude, obliquity)`, where the items are NumPy
-        arrays of shape (n,) containing the nutation components of longitude
-        and obliquity in seconds and decimals.
+        Tuple of the form, `(longitude, obliquity)`, containing 1-D NumPy
+        arrays with the nutation components of longitude and obliquity in
+        decimal seconds.
 
     Notes
     -----
-    The time in Julian centeries since J2000, :math:`T`, can be calculated
-    from the Julian day, :math:`JD`, from the following:
-
-    .. math:: T = \\frac{JD - 2451545}{36525}
-
-    The longitude of the ascending node of the Moon's orbit on the ecliptic
-    measured from the mean equinox can be calculated in decimal degrees
-    using the following:
-
-    .. math:: \Omega = 125.04452 - 1934.136261T + 0.0020708T^2 + T^3 / 450000
-
-    The mean longitudes of the Sun, :math:`L`, and Moon, :math:`L'`, can be
-    calculated in decimal degrees using the following:
-
-    .. math:: L = 280.4665 + 36000.7698 * T
-
-    .. math:: L' = 218.3165 + 481267.8813 * T
-
-    The nutation in longitude, :math:`\Delta\psi`, and nutation in obliquity,
-    :math:`\Delta\epsilon`, can then be calculated in decimal minutes. [Mee98c]_
-
-    .. math:: \Delta\Psi = -17.20\sin\Omega - 1.32\sin 2L - 0.23\sin 2L' + 0.21\sin 2\Omega
-
-    .. math:: \Delta\epsilon = 9.20\cos\Omega + 0.57\cos 2L + 0.10\cos 2L' - 0.09\cos 2\Omega
+    The methods to calculate the nutations in longitude and obliquity are taken
+    from "Astronomical Algorithms" by Jean Meeus. [Mee98c]_
 
     References
     ----------
@@ -151,24 +123,23 @@ def nutation_components(julian: np.ndarray) -> Tuple:
     return delta_psi, delta_epsilon
 
 
-def precession_angles(julian: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def precession_angles(julian: np.ndarray) -> Tuple:
     """Return precession angles.
 
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian time in the J2000 epoch.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
-    np.ndarray
-        Tuple of length 3 containing the precession angles in arc seconds and
-        decimals.
+    Tuple
+        Tuple containing precession angles in decimal arcseconds.
 
     Notes
     -----
     The convetional precession angles are those derived using the IAU 2000A
-    model.[SL13c]_
+    model. [SL13c]_
 
     References
     ----------
@@ -195,41 +166,29 @@ def precession_angles(julian: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.nd
 
 
 def mean_obliquity(julian: np.ndarray) -> np.ndarray:
-    """Return the mean obliquity of the ecliptic in the J2000 epoch.
+    """Return the ecliptic's mean obliquity in the J2000 epoch.
 
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Returns an array of shape (n,) containing the mean obliquity of the
-        ecliptic in degrees and decimals.
+        1-D array containing the ecliptic's mean obliquity in degrees and
+        decimals.
 
     See Also
     --------
     apparent_obliquity :
-        Return the apparent obliquity of the ecliptic in the J2000 epoch.
+        Return the ecliptic's apparent obliquity in the J2000 epoch.
 
     Notes
     -----
-    The time in Julian centeries since J2000, :math:`T`, can be calculated
-    from the Julian day, :math:`JD`, from the following:
-
-    .. math:: T = \\frac{JD - 2451545}{36525}
-
-    If we define :math:`U = T / 100`, then the mean obliquity of the ecliptic.
-    :math:`\epsilon_o` can be found by the following:
-
-    .. math:: \epsilon_0 = 84381.448 - 4680.93 * U - 1.55 * U ** 2 +
-        1999.25 * U ** 3 - 51.38 * U ** 4 - 249.67 * U ** 5 -
-        39.05 * U ** 6 + 7.12 * U ** 7 + 27.87 * U ** 8 + 5.79 * U ** 9 +
-        2.45 * U ** 10
-
-    The algorithm used is only valid for 10000 years on either side of
-    J2000. [Mee98d]_
+    The methods to calculate the mean obliquity of the ecliptic are given in
+    "Astronomical Algorithms" by Jean Meeus and are only valid for 10000 years
+    on either side of J2000. [Mee98d]_
 
     References
     ----------
@@ -263,33 +222,29 @@ def mean_obliquity(julian: np.ndarray) -> np.ndarray:
 
 
 def apparent_obliquity(julian: np.ndarray) -> np.ndarray:
-    """Return the apparent obliquity of the ecliptic in the J2000 epoch.
+    """Return the ecliptic's apparent obliquity in the J2000 epoch.
 
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Returns an array of shape (n,) containing the apparent obliquity of
-        the ecliptic in degrees and decimals.
+        1-D array containing the ecliptic's apparent obliquity in degrees and
+        decimals.
 
     See Also
     --------
     mean_obliquity :
-        Return the mean obliquity of the ecliptic in the J2000 epoch.
+        Return the ecliptic's mean obliquity in the J2000 epoch.
 
     Notes
     -----
-    The apparent obliquity of the ecliptic, :math:`\epsilon` can be calculated
-    as :math:`\epsilon = \epsilon_0 + \Delta\epsilon` where :math:`\epsilon_0`
-    is the mean obliquity of the ecliptic and :math:`\Delta\epsilon` is the
-    nutation of obliquity. [Mee98e]_
-
-    The due to the limitations of the algorithm used in the calculation of
-    :math:`\epsilon_0` is only valid for 10000 years on either side of J2000.
+    The methods to calculate the apparent obliquity of the ecliptic are given
+    in "Astronomical Algorithms" by Jean Meeus and are only valid for 10000
+    years on either side of J2000. [Mee98e]_
 
     References
     ----------
@@ -310,19 +265,18 @@ def apparent_obliquity(julian: np.ndarray) -> np.ndarray:
 
 
 def from_julian(julian: np.ndarray) -> Tuple:
-    """Return year, month, day from Julian day data.
+    """Return year, month, day from Julian times.
 
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     Tuple
-        Returns a tuple, `(year, month, day)`, where the items are NumPy
-        arrays of shape (n,) containing the year, month, and decimal days of
-        the input Julian data.
+        Returns a tuple, `(year, month, day)`, containing 1-D NumPy arrays
+        representing the year, month, and decimal days of the input times.
 
     Notes
     -----
@@ -356,16 +310,16 @@ def from_julian(julian: np.ndarray) -> Tuple:
     day = B - D - (30.6001 * E).astype(int) + F
 
     month = E
-    ind_1 = np.where(month < 14)[0]
-    ind_2 = np.where((month == 14) | (month == 15))[0]
-    month[ind_1] = month[ind_1] - 1
-    month[ind_2] = month[ind_2] - 13
+    idx1 = np.where(month < 14)[0]
+    idx2 = np.where((month == 14) | (month == 15))[0]
+    month[idx1] = month[idx1] - 1
+    month[idx2] = month[idx2] - 13
 
     year = C
-    ind_1 = np.where(month > 2)[0]
-    ind_2 = np.where((month == 1) | (month == 2))[0]
-    year[ind_1] = year[ind_1] - 4716
-    year[ind_2] = year[ind_2] - 4715
+    idx1 = np.where(month > 2)[0]
+    idx2 = np.where((month == 1) | (month == 2))[0]
+    year[idx1] = year[idx1] - 4716
+    year[idx2] = year[idx2] - 4715
 
     return year, month, day
 
@@ -376,21 +330,17 @@ def day_of_year(julian: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n,) containing the day of the year.
+        1-D array containing the day of the year.
 
     Notes
     -----
-    The day of the year, :math:`N` can be calculated from the following:
-
-    .. math:: N = INT\left(\frac{275M}{9}\right) - K\times\left(\frac{M+9}{12}\right) + D - 30
-
-    where :math:`M` is the month number, :math:`D` is the day of the month,
-    and :math:`K=1` if the year is a leap year otherwise :math:`K=2`. [Mee98g]_
+    The day of year is calculated using the methods in "Astronomical
+    Algorithms" by Jean Meeus. [Mee98g]_
 
     References
     ----------
@@ -416,28 +366,22 @@ def day_of_year(julian: np.ndarray) -> np.ndarray:
 
 
 def equation_of_time(julian: np.ndarray) -> np.ndarray:
-    """Return the Equation of Time in degrees.
+    """Return the equation of time in decimal degrees.
 
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n,) containing the Equation of Time in decimal degrees.
+        1-D array containing the Equation of Time in decimal degrees.
 
     Notes
     -----
-    The equation of time in radians can be calculated from the following:
-
-    .. math:: E = y\sin 2L_0 - 2e\sin M + 4ey\sin M\cos 2L_0 - \frac{1}{2}y^2\sin 4L_0 - \frac{5}{4}e^2\sin 2M
-
-    where :math:`y=\tan^2\frac{\epsilon}{2}`, :math:`\epsilon` is the apparent
-    obliquity of the ecliptic, :math:`L_0` is the Sun's mean longitude,
-    :math:`e` is the eccentricity of the Earth's orbit, and :math:`M` is the
-    Sun's mean anomaly. [Mee98h]_
+    The equation of time is calculated using the methods described in
+    "Astronomical Algorithms" by Jean Meeus. [Mee98h]_
 
     References
     ----------
@@ -471,18 +415,17 @@ def equation_of_time(julian: np.ndarray) -> np.ndarray:
 
 
 def equation_of_equinoxes(julian: np.ndarray) -> np.ndarray:
-    """Return the equation of the equinoxes in arcseconds.
+    """Return the equation of the equinoxes in decimal arcseconds.
 
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n,) containing the Equation of Equinoxes in decimal
-        arcseconds.
+        1-D array containing the equation of equinoxes in decimal arcseconds.
 
     Notes
     -----
@@ -519,34 +462,18 @@ def sun_right_ascension(julian: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in decimal days.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n,) containing the right ascension of the mean sun in
-        degrees and decimals.
+        1-D array containing containing the right ascension of the mean sun in
+        decimal degrees.
 
     Notes
     -----
-    To calculate the right ascension of the Sun, we must first calculate the
-    following dependencies:
-
-    .. math:: L0 = 280^\circ.46646 + 36000^\circ.76983t_U + 0^\circ.0003032t_U^2
-    .. math:: M = 357^\circ.52911 + 35999^\circ.05029t_U - 0^\circ.0001537t_U^2
-
-    .. math:: C = (1^\circ.914602 - 0^\circ.004817t_U - 0^\circ.000014t_U^2)\sin(m)
-                + (0^\circ.019993 - 0^\circ.000101t_U)\sin(2m)
-                + 0^\circ.000289\sin(3m)
-
-    \odot = L0 + C
-
-    where :math:`t_U = \frac{JD-2451545.0}{36525}` and `JD` is the Julian day.
-    We can then calculate the right ascension, :math:`\alpha`, as
-
-    .. math:: \tan\alpha = \frac{\cos\epsilon\sin\odot}{\cos\odot}
-
-    where :math:`\epsilon` is the mean obliquity of the ecliptic. [Mee98j]_
+    The right ascension of the Sun is calculated using the methods discussed in
+    "Astronomical Algorithms" by Jean Meeus. [Mee98j]_
 
     References
     ----------

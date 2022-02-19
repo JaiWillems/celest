@@ -1,8 +1,3 @@
-"""Nutation and precession calculations for coordinate conversions.
-
-This module contains the functionality to incorporate nutation and precession
-effects into GCRS and ITRS coordinate conversions.
-"""
 
 
 from celest.satellite._astronomical_quantities import (
@@ -17,7 +12,7 @@ def bias_matrix() -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Array of shape (3,3) representing the bias matrix.
+        2-D array representing the bias matrix.
 
     Notes
     -----
@@ -31,17 +26,15 @@ def bias_matrix() -> np.ndarray:
        Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 197-233.
     """
 
-    xi = -0.0166170
-    eta = -0.0068192
-    dalpha = -0.01460
+    xi, eta, dalpha = -0.0166170, -0.0068192, -0.01460
 
-    ang1 = np.radians(dalpha / 3600)
-    ang2 = np.radians(xi / 3600)
-    ang3 = np.radians(-eta / 3600)
+    a1 = np.radians(dalpha / 3600)
+    a2 = np.radians(xi / 3600)
+    a3 = np.radians(-eta / 3600)
 
-    s1, c1 = np.sin(ang1), np.cos(ang1)
-    s2, c2 = np.sin(ang2), np.cos(ang2)
-    s3, c3 = np.sin(ang3), np.cos(ang3)
+    s1, c1 = np.sin(a1), np.cos(a1)
+    s2, c2 = np.sin(a2), np.cos(a2)
+    s3, c3 = np.sin(a3), np.cos(a3)
 
     matrix = np.zeros((3, 3))
     matrix[0, 0] = c1 * c2
@@ -63,18 +56,18 @@ def precession_matrix(julian: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in the J2000 epoch.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Array of shape (3,3,n) containing a series of 3x3 precession matrices;
-        one for each input time.
+        3-D array of shape (n,3,3) containing 3x3 precession matrices
+        associated with each time along the 0 axis.
 
     Notes
     -----
-    The precession calculations use the methodology put forward in "Space-Time
-    Reference Systems".[SL13c]_
+    The precession matrix is implemented as defined in "Space-Time Reference
+    Systems". [SL13c]_
 
     References
     ----------
@@ -84,25 +77,25 @@ def precession_matrix(julian: np.ndarray) -> np.ndarray:
 
     zeta, theta, z = precession_angles(julian=julian)
 
-    ang1 = np.radians(zeta / 3600)
-    ang2 = np.radians(theta / 3600)
-    ang3 = - np.radians(z / 3600)
+    a1 = np.radians(zeta / 3600)
+    a2 = np.radians(theta / 3600)
+    a3 = - np.radians(z / 3600)
 
-    s1, c1 = np.sin(ang1), np.cos(ang1)
-    s2, c2 = np.sin(ang2), np.cos(ang2)
-    s3, c3 = np.sin(ang3), np.cos(ang3)
+    s1, c1 = np.sin(a1), np.cos(a1)
+    s2, c2 = np.sin(a2), np.cos(a2)
+    s3, c3 = np.sin(a3), np.cos(a3)
 
     # Construct matrix.
-    matrix = np.zeros((3, 3, julian.size))
-    matrix[0, 0, :] = - s1 * s3 + c1 * c2 * c3
-    matrix[0, 1, :] = c1 * s3 + s1 * c2 * c3
-    matrix[0, 2, :] = - s2 * c3
-    matrix[1, 0, :] = - s1 * c3 - c1 * c2 * s3
-    matrix[1, 1, :] = c1 * c3 - s1 * c2 * s3
-    matrix[1, 2, :] = s2 * s3
-    matrix[2, 0, :] = c1 * s2
-    matrix[2, 1, :] = s1 * s2
-    matrix[2, 2, :] = c2
+    matrix = np.zeros((julian.size, 3, 3))
+    matrix[:, 0, 0] = - s1 * s3 + c1 * c2 * c3
+    matrix[:, 0, 1] = c1 * s3 + s1 * c2 * c3
+    matrix[:, 0, 2] = - s2 * c3
+    matrix[:, 1, 0] = - s1 * c3 - c1 * c2 * s3
+    matrix[:, 1, 1] = c1 * c3 - s1 * c2 * s3
+    matrix[:, 1, 2] = s2 * s3
+    matrix[:, 2, 0] = c1 * s2
+    matrix[:, 2, 1] = s1 * s2
+    matrix[:, 2, 2] = c2
 
     return matrix
 
@@ -113,18 +106,18 @@ def nutation_matrix(julian: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian times in the J2000 epoch.
+        1-D array containing Julian times in the J2000 epoch.
 
     Returns
     -------
     np.ndarray
-        Array of shape (3,3,n) containing a series of 3x3 nutation matrices;
-        one for each input time.
+        3-D array of shape (n,3,3) containing 3x3 nutation matrices associated
+        with each time along the 0 axis.
 
     Notes
     -----
-    The Nutation calculations use the methodology put forward in "Space-Time
-    Reference Systems".[SL13c]_
+    The nutation matrix is implemented as defined in "Space-Time Reference
+    Systems". [SL13c]_
 
     References
     ----------
@@ -142,24 +135,24 @@ def nutation_matrix(julian: np.ndarray) -> np.ndarray:
     eps_A = 3600 * mean_obliquity(julian) - 46.84024 * t - 0.00059 * t2 + \
         0.001813 * t3
 
-    ang1 = np.radians(eps_A / 3600)
-    ang2 = - np.radians(delta_psi / 3600)
-    ang3 = - np.radians(eps_A / 3600 + delta_eps / 3600)
+    a1 = np.radians(eps_A / 3600)
+    a2 = - np.radians(delta_psi / 3600)
+    a3 = - np.radians(eps_A / 3600 + delta_eps / 3600)
 
-    s1, c1 = np.sin(ang1), np.cos(ang1)
-    s2, c2 = np.sin(ang2), np.cos(ang2)
-    s3, c3 = np.sin(ang3), np.cos(ang3)
+    s1, c1 = np.sin(a1), np.cos(a1)
+    s2, c2 = np.sin(a2), np.cos(a2)
+    s3, c3 = np.sin(a3), np.cos(a3)
 
     # Construct matrix.
-    matrix = np.zeros((3, 3, julian.size))
-    matrix[0, 0, :] = c2
-    matrix[0, 1, :] = s1 * s2
-    matrix[0, 2, :] = - c1 * s2
-    matrix[1, 0, :] = s2 * s3
-    matrix[1, 1, :] = c1 * c3 - s1 * c2 * s3
-    matrix[1, 2, :] = s1 * c3 + c1 * c2 * s3
-    matrix[2, 0, :] = s2 * c3
-    matrix[2, 1, :] = - c1 * s3 - s1 * c2 * c3
-    matrix[2, 2, :] = - s1 * s3 + c1 * c2 * c3
+    matrix = np.zeros((julian.size, 3, 3))
+    matrix[:, 0, 0] = c2
+    matrix[:, 0, 1] = s1 * s2
+    matrix[:, 0, 2] = - c1 * s2
+    matrix[:, 1, 0] = s2 * s3
+    matrix[:, 1, 1] = c1 * c3 - s1 * c2 * s3
+    matrix[:, 1, 2] = s1 * c3 + c1 * c2 * s3
+    matrix[:, 2, 0] = s2 * c3
+    matrix[:, 2, 1] = - c1 * s3 - s1 * c2 * c3
+    matrix[:, 2, 2] = - s1 * s3 + c1 * c2 * c3
 
     return matrix
