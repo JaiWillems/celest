@@ -1,8 +1,3 @@
-"""Satellite orbital representations and coordinate conversions.
-
-This module contains the `Satellite` class to localize satellite-related
-information and functionality.
-"""
 
 
 from celest.core.interpolation import _interpolate
@@ -10,31 +5,37 @@ from celest.satellite.coordinate import Coordinate
 from typing import Any, Literal, Tuple
 import pandas as pd
 import numpy as np
+import numpy.typing as npt
 
 
 class Satellite(Coordinate):
-    """Localize satellite information and functionality.
+    """Satellite(position, frame, julian, offset=0)
+    
+    Satellite abstraction for satellite-ground encounters.
 
-    The `Satellite` class represents a satellite, be it artificial or natural,
-    and allows for the position to be represented with time through multiple
-    representations.
+    `julian + offset` is the Julian time in the J2000 epoch associated with
+    input positions. If `frame=="geo"`, the `position` input can have 2
+    columns, (latitude, longitude) or three columns (lattitude, longitude,
+    altitude). If no geodetic altitude is provided, it is assumed zero. Other
+    frames require 3 columns.
 
     Parameters
-    ----------
-    position : np.ndarray
-        Base position to initialize the `Coodinate` class.
-    frame : {"gcrs", "geo", "itrs"}
-        Specifies the input position frame.
-    time : np.ndarray
-        Times associated with the position data. The length of the `time`
-        parameter must match the length of the `position` parameter.
-    offset : float, optional
-        Offset to convert input time data to the J2000 epoch.
+    ----------  
+    position : array_like
+        2-D array containing position coordinates.
 
-    Attributes
-    ----------
-    length : int
-        Length of the input position and time arrays.
+        Supported coordinate frames include the Geocentric Celestial Reference
+        System (gcrs), International Terrestrial Reference System (itrs), and
+        geographical (geo) system.
+    frame : {"gcrs", "geo", "itrs"}
+        Frame specifier for the input position.
+    julian : array_like
+        1-D array containing time data in Julian days.
+
+        If times are not in the J2000 epoch, a non-zero offset must be pased
+        in to add to the julian times.
+    offset : float, optional
+        Offset to convert input time data to the J2000 epoch, default is zero.
 
     Methods
     -------
@@ -44,47 +45,50 @@ class Satellite(Coordinate):
         Save satellite time and position data.
     """
 
-    def __init__(self, position: np.ndarray, frame: Literal["gcrs", "geo", "itrs"], time: np.ndarray, offset=0) -> None:
-        """Initialize attributes."""
+    def __init__(self, position: npt.ArrayLike, frame: Literal["gcrs", "geo",
+                 "itrs"], julian: npt.ArrayLike, offset=0) -> None:
 
-        super().__init__(position, frame, time, offset)
+        super().__init__(position, frame, julian, offset)
     
     def __len__(self):
-        """Return length of satellite position and time data."""
 
-        return self.length
+        return self._length
     
     def interpolate(self, windows: Any, factor: int=5) -> None:
-        """Interpolate satellite data for window times and positions.
-        
-        This method takes a series of windows and will interpolate the
-        satellites position and time data in the regions corresponding with
-        window times.
+        """Interpolate coordinate information around window times.
+
+        This method interpolates position and time data around input encounter
+        times to gain greater precision where needed.
 
         Parameters
         ----------
         windows : WindowList
-            Windows defining the regions to interpolate.
+            Windows defining interpolation regions.
         factor : int, optional
             The interpolation factor will increase the number of points in
-            window regions by the factor `factor`. A strictly positive value
-            should be used.
+            window regions by the factor `factor`.
         
         Notes
         -----
-        The desire for window defined interpolation stems from the need for
-        more detailed data around encounter opportunities to get more precise
-        start and end times as well as positions for satellite orientations.
+        Window defined interpolation is necessary for more precise coordinate
+        information around encounter regions as might be used for satellite
+        orientation calculations.
         
         Examples
         --------
         If `IMG_windows` be a series of imaging encounters, we can interpolate
-        within such regions as follows:
+        within such regions:
 
         >>> satellite.interpolate(windows=IMG_windows, factor=5)
         """
+
+        if not isinstance(factor, int):
+            raise ValueError("factor must be integer type.")
         
-        indices = np.zeros((0,), dtype=int)
+        if factor <= 0:
+            raise ValueError("factor must be strictly positive.")
+        
+        ind = np.zeros((0,), dtype=int)
         time = self._julian
         position = self.gcrs()
 
@@ -93,48 +97,60 @@ class Satellite(Coordinate):
             end = window.end
 
             temp_ind = np.where((start < time) & (time < end))[0]
-            indices = np.concatenate((indices, temp_ind))
+            ind = np.concatenate((ind, temp_ind))
         
-        indices = np.split(indices, np.where(np.diff(indices) > 1)[0])
-        indices = np.array(indices, dtype=object)
+        ind = np.split(ind, np.where(np.diff(ind) > 1)[0])
+        ind = np.array(ind, dtype=object)
 
-        time_interp = _interpolate(data=time, factor=factor, dt=2, indices=indices)
-        position_interp = _interpolate(data=position, factor=factor, dt=2, indices=indices)
+        time_interp = _interpolate(time, factor, 2, ind)
+        position_interp = _interpolate(position, factor, 2, ind)
 
         self._julian = time_interp
         self._GCRS = position_interp
         self._ITRS = None
         self._GEO = None
-        self.length = time_interp.size
+        self._length = time_interp.size
 
-    def save_data(self, fname: str, delimiter: Literal[",", "\\t"], times:
-                  Tuple=("julian",), positions: Tuple=("gcrs",)) -> None:
-        """Save satellite time and position data.
+    def save_data(self, fname: str, times: Tuple=("julian",), positions:
+                  Tuple=("gcrs",), fmt="%.18e", delimiter=" ", newline="\n",
+                  header="", footer="", comments="# ", encoding=None) -> None:
+        """Save satellite data.
 
         Parameters
         ----------
         fname : str
-            File name of the output file as either a .txt or .csv file.
-        delimiter : str
-            String of length 1 representing the field delimiter for the output
-            file.
         times : Tuple, optional
-            List containing the types of time data to save. Possible list
-            values include "julian", "ut1", "gmst", and "gast".
+            Tuple containing time representations to save.
+            
+            Available times include "julian", "ut1", "gmst", and "gast".
         positions : Tuple, optional
-            List containing the types of position data to save. Possible
-            list values include "gcrs", "itrs", and "geo".
+            Tuple containing position representations to save.
+            
+            Available positions include "gcrs", "itrs", and "geo".
+        fmt : str or sequence of strings, optional
+            A single format or sequence of formats, or a multiformat string
+            (in which case the delimiter is ignored).
+        delimiter : str, optional
+            String or character separating columns.
+        newline : str, optional
+            String or character separating lines.
+        header : str, optional
+            String to be written at the start of the file.
+        footer : str, optional
+            String to be written at the end of the file.
+        comments : str, optional
+            String to preappend to the header and footer to mark them as
+            comments.
+        encoding : {None, str}, optional
+            Encoding used to encode the output file.
 
-        Notes
-        -----
-        It is recommended to use a tab delimiter for .txt files and comma
-        delimiters for .csv files. The method will return an error if the
-        fileName already exists in the current working directory.
+            Refer to NumPy's `savetxt` documentation for more information on
+            encoding options.
 
         Examples
         --------
         >>> positions = ["gcrs", "itrs"]
-        >>> finch.save_data(fname="data.csv", delimiter=",", positions=positions)
+        >>> finch.save_data(fname="data.csv", positions=positions, delimiter=",")
         """
 
         key_mapping = {
