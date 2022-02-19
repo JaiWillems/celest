@@ -1,43 +1,34 @@
-"""Encounter indices utilities.
-
-This module contains the geometric utilities necessary for analytical pass
-analysis implementation.
-"""
 
 
 from typing import Literal
 import numpy as np
 
 
-def _cone_constraint(theta: np.array, U: np.array, X: np.array) -> np.array:
-    """Return an array of indices for `X` points that fall within a cone.
+def _cone_constraint(theta: np.ndarray, U: np.ndarray, X: np.ndarray) -> np.ndarray:
+    """Return indices for `X` points falling within a cone.
 
-    This method defines a double-sided cone with an apex located at `U` and an
-    aperture angle `theta` and returns the indices for `X` points that fall
-    within this geometry.
+    The cone geometry is defined with the apex located at `U`, an axis parallel
+    to `U` and an aperture angle `theta`.
 
     Parameters
     ----------
-    theta : np.array
-        Array of size (n,) containing cone aperture angles in degrees.
-    U : np.array
-        Array of shape (n, 3) containing the cartesian coordinates of the apex.
-    X : np.array
-        Array of shape (n, 3) containing the cartesian coordinate points to
-        check.
+    theta : np.ndarray
+        1-D array containing cone aperture angles in decimal degrees.
+    U : np.ndarray
+        1-D array containing cartesian coordinates of the apex.
+    X : np.ndarray
+        2-D array containing cartesian coordinates to check.
 
     Returns
     -------
-    np.array
-        Array of indices corresponding to points that fall within the cone.
+    np.ndarray
+        1-D array of indices corresponding to points that fall within the cone.
     """
 
-    U_norm = np.repeat(np.linalg.norm(U, axis=1).reshape((-1, 1)), 3, axis=1)
-    D = np.divide(U, U_norm)
-    Y = X - U
+    U_norm = np.linalg.norm(U, axis=1)
 
-    d1, d2, d3 = D[:, 0], D[:, 1], D[:, 2]
-    y1, y2, y3 = Y[:, 0], Y[:, 1], Y[:, 2]
+    d1, d2, d3 = (U / U_norm).T
+    y1, y2, y3 = (X - U).T
 
     ct2 = np.cos(np.radians(theta)) ** 2
 
@@ -52,18 +43,23 @@ def _cone_constraint(theta: np.array, U: np.array, X: np.array) -> np.array:
     return ind
 
 
-def _plane_constraint(U: np.array, X: np.array) -> np.array:
-    """Return an array of indices containing points that fall above a plane.
+def _plane_constraint(U: np.ndarray, X: np.ndarray) -> np.ndarray:
+    """Return indices for `X` points falling above the plane.
+
+    The plane geometry is defined as the plane centered at and normal to the
+    `U` vector. 
 
     Parameters
     ----------
-    U, X : np.array
-        Arrays of shape (n, 3) containing cartesian vectors defining a plane.
+    U : np.ndarray
+        1-D array containing cartesian coordinates of the plane normal.
+    X : np.ndarray
+        2-D array containing cartesian coordinates to check.
 
     Returns
     -------
-    np.array
-        Array of points that fall above the plane.
+    np.ndarray
+        1-D array of indices corresponding to points that fall above the plane.
 
     Notes
     -----
@@ -74,10 +70,8 @@ def _plane_constraint(U: np.array, X: np.array) -> np.array:
     .. math:: 0\leq\left(\textbf{X}-\textbf{U}\right)^T\cdot\textbf{U}
     """
 
-    Y = X - U
-
-    u1, u2, u3 = U[:, 0], U[:, 1], U[:, 2]
-    y1, y2, y3 = Y[:, 0], Y[:, 1], Y[:, 2]
+    u1, u2, u3 = U.T
+    y1, y2, y3 = (X - U).T
 
     point = y1 * u1 + y2 * u2 + y3 * u3
 
@@ -86,38 +80,34 @@ def _plane_constraint(U: np.array, X: np.array) -> np.array:
     return ind
 
 
-def _aperature_theta(ang: float, form: Literal[0, 1], n: int=None, U:
-                    np.array=None, X: np.array=None) -> np.array:
+def _aperature_theta(ang: float, form: Literal[0, 1], U: np.ndarray=None,
+                     X: np.ndarray=None) -> Literal[np.ndarray, float]:
     """Calculate cone aperature angles from constraint angles.
 
-    This method calculates the aperture angles for the cone that defines a
-    quasi-valid encounter region based on the input angle type.
+    The cone aperature angles are linked to the constraint angles to define a
+    quasi-valid encounter region.
 
     Parameters
     ----------
     ang : float
         The constraint angle in degrees.
     form : {0, 1}
-        Defines the angle as altitude if `angType=0` and off-nadir if
-        `angType=1`.
-    n : int, optional
-        Length of returned theta array.
-    U : np.array, optional
-        Array of shape (n, 3) containing the cartesian coordinates of the apex.
-    X : np.array, optional
-        Array of shape (n, 3) containing the cartesian coordinate points to
-        check.
+        Specifies `ang` as either altitude (`angType=0`) or off-nadir
+        (`angType=1`).
+    U : np.ndarray, optional
+        1-D array containing cartesian coordinates of the apex.
+    X : np.ndarray
+        2-D array containing cartesian coordinates to check.
 
     Returns
     -------
-    np.array
-        Array of shape (n,) containing theta angles in degrees.
+    np.ndarray or float
+        If the altitude angle is selected, the output will be a scalar value.
+        For off-nadir constraint angles, the output will be a 1-D array
+        containing the aperture angles in degrees.
 
     Notes
     -----
-    The `n` parameter is necessary when `angType=0`. The `U` and `X` parameters
-    are necessary when `angtype=1`.
-
     If the constraint angle type is an altitude angle, then :math:`\theta` can
     be calculated from :math:`\theta=90\degree-a\degree` where :math:`a` is the
     altitude constraint angle.
@@ -137,53 +127,44 @@ def _aperature_theta(ang: float, form: Literal[0, 1], n: int=None, U:
         ang = np.radians(ang)
 
         num = np.linalg.norm(X - U, axis=1)
-        denom = np.linalg.norm(U, axis=1)
+        denom = np.linalg.norm(U)
 
         theta = ang + np.arcsin(np.sin(ang) * num / denom)
         theta = np.degrees(theta)
-
     else:
-        theta = np.full((n,), 90 - ang)
+        theta = 90 - ang
 
     return theta
 
 
-def _analytical_encounter_ind(sat_position: np.array, gnd_position: np.array,
-                             ang: float, form: Literal[0, 1]) -> np.array:
+def _analytical_encounter_ind(sat_position: np.ndarray, gnd_position: np.ndarray,
+                              ang: float, form: Literal[0, 1]) -> np.ndarray:
     """Return encounter indices.
 
-    This method returns the encounter indices corresponding only to valid
-    satellite positions. It does not consider the sun constraint angle or
-    lighting conditions.
+    The encounter indices are the position/time indices of the satellite where
+    it satisfies both the cone and plane geometry constraints.
 
     Parameters
     ----------
-    sat_position : np.array
-        Array of shape (n, 3) containing satellite ECEF positions.
-    gnd_position : np.array
-        Array of shape (n, 3) containing ground location ECEF positions.
+    sat_position : np.ndarray
+        2-D array containing x, y, z itrs coordinates of the satellite.
+    gnd_position : np.ndarray
+        1-D array containing the x, y, z itrs coordinates of the ground
+        location.
     ang : float
         Constraint angle in degrees.
     angType : {0, 1}
-        Defines the angle as altitude if `angType=0` and off-nadir if
-        `angType=1`.
+        Specifies `ang` as either altitude (`angType=0`) or off-nadir
+        (`angType=1`).
 
     Returns
     -------
-    np.array
+    np.ndarray
         Array of indices defining valid encounter positions.
-
-    Notes
-    -----
-    This method finds all indices that fall within a single-sided cone
-    extending above the Earth's surface with the apex at a ground location of
-    interest and its aperture angle defined by the constraint angle.
     """
 
-    n = sat_position.shape[0]
-    U = gnd_position
-    X = sat_position
-    theta = _aperature_theta(ang, form, n, U, X)
+    U, X = gnd_position, sat_position
+    theta = _aperature_theta(ang, form, U, X)
 
     ind_1 = _cone_constraint(theta, U, X)
     ind_2 = _plane_constraint(U, X)

@@ -1,8 +1,4 @@
-"""Window generation dependencies.
 
-This module contains implementation specific functions used in identifying
-viable encounters.
-"""
 
 from celest.encounter._encounter_math_utils import _analytical_encounter_ind
 from celest.satellite.coordinate import Coordinate
@@ -18,12 +14,12 @@ def _sun_itrs(julian: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     julian : np.ndarray
-        Array of shape (n,) containing Julian time data.
+        1-D array containing Julian times in the J2000 Epoch.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n, 3) containing Sun ECEF positions.
+        2-D array containing columns of x, y, z itrs position data of the sun.
     """
 
     ephem = pkg_resources.resource_filename(__name__, '../data/de421.bsp')
@@ -40,19 +36,19 @@ def _sun_itrs(julian: np.ndarray) -> np.ndarray:
 
     return sun_itrs
 
+
 def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     """Calculate degree angle bewteen two vectors.
 
     Parameters
     ----------
     u, v : np.ndarray
-        Arrays of shape (n,3) with rows of XYZ cartesian data.
+        2-D arrays containing row-vectors.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n,) containing the degree angle between the two
-        arrays.
+        1-D array containing the degree angle between rows of `u` and `v`.
     """
 
     num = np.sum(u * v, axis=1)
@@ -61,10 +57,11 @@ def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
 
     return ang
 
+
 def _window_encounter_ind(satellite: Any, location: Any, ang: float, form:
                           Literal[0, 1], sca: float=0, lighting:
                           Literal[-1, 0, 1]=0) -> np.ndarray:
-    """Return indices for possible encounters.
+    """Return valid encounter indices.
 
     Parameters
     ----------
@@ -75,27 +72,25 @@ def _window_encounter_ind(satellite: Any, location: Any, ang: float, form:
     ang : float
         Encounter constraint angle.
     form : {0, 1}
-        Angle type used where 0 is for the altitude angle and 1 is for the
-        off-nadir angle.
+        Specifies the constraing angle as the altitude angle if 0 or the
+        off-nadir angle if 1.
     sca : float, optional
-        Solar constraint angle, by default 0
+        Solar constraint angle, by default 0.
     lighting : {-1, 0, 1}, optional
-        lighting conditions for encounters where -1 is for night time
-        encounters, 0 is for all-time encoutners, and 1 is for day time
-        encounters, by default 0
+        Encounter lighting conditions where -1 is for night encounters, 1 is
+        for day encounters, and 0 is for no constraint; default is 0.
 
     Returns
     -------
     np.ndarray
-        Array containing indices defining viable satellite encounter positions.
+        1-D array containing viable satellite encounter positions.
     """
 
     sat_itrs = satellite.itrs()
     time_data = satellite._julian
 
-    ground_GEO = [location.lat, location.lon]
-    ground_GEO = np.repeat(np.array([ground_GEO]), time_data.size, axis=0)
-    gnd_itrs = Coordinate(ground_GEO, "geo", time_data).itrs()
+    ground_GEO = np.array([[location.lat, location.lon, 0]])
+    gnd_itrs = satellite._geo_to_itrs(ground_GEO)
 
     enc_params = [sat_itrs, gnd_itrs, ang, form]
     analytical_ind = _analytical_encounter_ind(*enc_params)

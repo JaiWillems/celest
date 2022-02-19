@@ -1,76 +1,55 @@
-"""Localize ground position information.
-
-This module contains the `GoundPosition` class which stores ground location
-data and is an instrumental part of encounter planning by managing the ground
-location and satellite encounter relationship.
-"""
 
 
 import numpy as np
 
 
 class GroundPosition(object):
-    """Localize Earth bound location information.
+    """GroundPosition(latitude, longitude)
 
-    The `GoundPosition` class stores ground location information and is an
-    instrumental part of encounter planning functionality.
+    Localize Earth surface location information.
 
     Parameters
     ----------
     latitude : float
-        Locations geodetic lattitude in degrees and decimals.
+        Lattitude of the location in decimal degrees.
     longitude : float
-        Locations geodetic longitude in degrees and decimals.
+        Longitude of the location in decimal degrees.
 
     Attributes
     ----------
-    lat : float
-        Geodetic latitude for the location given in degrees and decimals.
-    lon : float
-        Geodetic longitude for the location given in degrees and decimals.
+    lat, lon : float
+        Latitude and longitude of the location in decimal degrees.
     radius : float
-        Earth's radius at the given coordinates.
+        Earth radius at (`latitude`, `longitude`).
     """
 
     def __init__(self, latitude: float, longitude: float) -> None:
-        """Initialize attributes."""
 
         self.lat = latitude
         self.lon = longitude
         self.radius = self._radius(latitude)
 
     def __str__(self) -> str:
-        """Define information string."""
 
-        output = [
-            f"coor={(self.lat, self.lon)}",
-            f"radius={round(self.radius, 5)}"
-        ]
-
-        return ", ".join(output)
+        return f"coor={(self.lat, self.lon)}, radius={round(self.radius, 5)}"
 
     def _radius(self, latitude: float) -> float:
-        """Calculate the Earth's geocentric radius using WGS84.
+        """Calculate geocentric radius using WGS84.
 
         Parameters
         ----------
         latitude : float
-            Latitude of the ground location in degrees and decimals.
+            Location's latitude in decimal degrees.
 
         Returns
         -------
         float
-            Earth's geocentric radius in kilometres and decimals.
+            Earth's geocentric radius in decimal kilometers.
 
         Notes
         -----
-        By using an Earth ellipsoid with the WGS84 parameters of
-        :math:`a=6378.137` and :math:`b=6356.7523142`, the geocentric radius
-        can be calculated using the following formulation:
-
-        .. math:: r = \sqrt{\frac{(a^2\cos(\beta))^2 + (b^2\sin(\beta))^2}{(a\cos(\beta))^2 + (b\sin(\beta))^2}}
-
-        where :math:`\beta` is the observer's latitude.[1]_
+        The WGS84 Earth ellipsoid model is used as discussed in "Earth Radius
+        by Latitude (WGS 84)" by Timur. [1]_
 
         References
         ----------

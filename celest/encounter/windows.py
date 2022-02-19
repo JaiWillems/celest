@@ -1,8 +1,3 @@
-"""Generate window sets for specified encounters.
-
-This module contains functions to generate window sets for various satellite
-and ground-location encounters.
-"""
 
 
 from celest.core.interpolation import _interpolate
@@ -37,9 +32,9 @@ def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
     satellite : Satellite
         Satellite taking part in ground interactions.
     location : GroundPosition
-        Ground location of imaging site or ground station.
+        Ground location taking part in the encounters.
     enc : {"image", "data link"}
-        Type of encounter as being an imaging or data link encounter.
+        Encounter type specifier as an imaging or data link encounter.
     ang : float
         Encounter contraint angle in degrees.
     factor : int, optional
@@ -51,15 +46,13 @@ def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
     Windows
         The encounter opportunities between the satellite and ground location
         of the type specified.
-    
+
     Notes
     -----
-    Imaging encounters are use the off-nadir angle, measured in increasing
-    degrees from the satellite's nadir to the ground location. When the
-    off-nadir angle is used, the input `ang` provides a maximum constraint.
-    Data link encounters use the altitude angle, measured in increasing
-    degrees from the ground location's horizon to the satellite. When the
-    altitude angle is used, the input `ang` provides a minimum constraint.
+    Imaging encounters use the off-nadir angle; when the off-nadir angle is
+    used, the input `ang` provides a maximum constraint. Data link encounters
+    use the altitude angle; When the altitude angle is used, the input `ang`
+    provides a minimum constraint.
 
     Examples
     --------
@@ -119,5 +112,5 @@ def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
             window = Window(satellite, location, start, end, enc, ang, lighting, sca)
 
             windows._add_window(window)
-            
+
     return windows
