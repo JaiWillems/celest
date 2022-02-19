@@ -1,4 +1,3 @@
-"""Testing module for the window data structures."""
 
 
 from celest.encounter.groundposition import GroundPosition
@@ -11,18 +10,15 @@ import unittest
 class TestWindow(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
         location = GroundPosition(43.6532, 79.3832)
         self.window = Window("", location, 21282.4, 21282.5, "image", 30, 1, 7)
 
     def test_str(self):
-        """Test `Window.__str__`."""
 
         print(self.window)
 
     def test_copy(self):
-        """Test `Window.copy`."""
 
         wind_copy = self.window.copy()
 
@@ -36,7 +32,6 @@ class TestWindow(TestCase):
 class TestWindows(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
         location = GroundPosition(43.6532, 79.3832)
         self.windows = Windows()
@@ -52,9 +47,8 @@ class TestWindows(TestCase):
         self.windows._add_window(self.wind_three)
         self.windows._add_window(self.wind_four)
         self.windows._add_window(self.wind_five)
-    
+
     def test_getitem(self):
-        """Test `Window.__getitem__`."""
 
         # Test int/float indexing.
         self.assertEqual(self.windows[1310], self.wind_one)
@@ -82,7 +76,6 @@ class TestWindows(TestCase):
         self.assertTrue(np.array_equiv(self.windows[1322.3:1325], val_wind))
 
     def test_add_window(self):
-        """Test `Window._add_window`."""
 
         test_val = 0
         for window in self.windows:
@@ -91,14 +84,12 @@ class TestWindows(TestCase):
             test_val = start
 
     def test_stats(self):
-        """Test `Window.stats`."""
 
         df = self.windows.stats()
         self.assertIsNotNone(df)
 
     def test_to_numpy(self):
-        """Test `Window.to_numpy`."""
-        
+
         np_arr = self.windows.to_numpy()
         self.assertIsInstance(np_arr, np.ndarray)
 

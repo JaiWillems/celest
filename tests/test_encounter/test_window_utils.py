@@ -1,4 +1,3 @@
-"""Testing module for the window utility functions."""
 
 
 from celest.encounter.groundposition import GroundPosition
@@ -12,13 +11,12 @@ import numpy as np
 class TestWindowUtils(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
         fname = "tests/test_data/coordinate_validation_set.txt"
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
-        times, itrs = data[:, 0], data[:, 10:]
+        julian, itrs = data[:, 0], data[:, 10:]
 
-        self.finch = Satellite(itrs, "itrs", times, 2430000)
+        self.finch = Satellite(itrs, "itrs", julian, 2430000)
 
     def test_sun_itrs(self):
         """Test `Encounter._sun_itrs`.
@@ -27,15 +25,15 @@ class TestWindowUtils(TestCase):
         -----
         Test cases are generated using the `Astropy` Python package.
         """
-        
+
         from astropy.coordinates import get_body, ITRS
         from astropy import time, units
 
         julData = np.array([2455368.75, 2459450.85, 2456293.5416666665])
         astropy_time = time.Time(julData, format="jd")
-        
+
         sun_pos = get_body("sun", astropy_time)
-        sun_pos.representation_type="cartesian"
+        sun_pos.representation_type = "cartesian"
 
         itrsCoor = sun_pos.transform_to(ITRS(obstime=astropy_time))
 
@@ -53,7 +51,7 @@ class TestWindowUtils(TestCase):
 
         vec_one = np.array([[56, 92, 76], [9238, 8479, 9387], [2, 98, 23]])
         vec_two = np.array([[36, 29, 38], [2703, 947, 8739], [9827, 921, 1]])
-        ang = np.array([16.28, 37, 83.65])
+        ang = [16.28, 37, 83.65]
 
         calc_ang = _get_ang(vec_one, vec_two)
 
@@ -65,12 +63,12 @@ class TestWindowUtils(TestCase):
         """Test `Encounter._window_encounter_ind`."""
 
         julData = self.finch._julian
-
-        # Check data link index generation.
         location = GroundPosition(43.6532, -79.3832)
 
+        # Get imaging encounter test indices.
         calc_enc_ind = _window_encounter_ind(self.finch, location, 30, 1, 0, 1)
 
+        # Get imaging encounter validation indices.
         altitude, _ = self.finch.horizontal(location=location)
         off_nadir = self.finch.off_nadir(location=location)
 
@@ -79,38 +77,37 @@ class TestWindowUtils(TestCase):
         sun_alt, _ = sun_pos.horizontal(location=location)
 
         enc_ind = np.arange(0, julData.shape[0], 1)
-        
+
         alt_ind = np.where(altitude >= 0)[0]
         off_nadir_ind = np.where(off_nadir <= 30)
         sun_ind = np.where(sun_alt >= 0)
-        
+
         enc_ind = np.intersect1d(enc_ind, alt_ind)
         enc_ind = np.intersect1d(enc_ind, off_nadir_ind)
         enc_ind = np.intersect1d(enc_ind, sun_ind)
 
+        # Check imaging encounter indices.
         self.assertTrue(np.array_equal(calc_enc_ind, enc_ind))
 
-        # Check data link index generation.
-        location = GroundPosition(43.6532, -79.3832)
-
+        # Get data link encounter test indices.
         calc_enc_ind = _window_encounter_ind(self.finch, location, 30, 0, 30, 0)
 
+        # Get data link encounter validation indices.
         altitude, _ = self.finch.horizontal(location=location)
 
         enc_ind = np.arange(0, julData.shape[0], 1)
-        
         alt_ind = np.where(30 <= altitude)[0]
 
         sat_itrs = self.finch.itrs()
 
-        ground_GEO = [location.lat, location.lon]
-        ground_GEO = np.repeat(np.array([ground_GEO]), julData.size, axis=0)
-        gnd_itrs = Coordinate(ground_GEO, "geo", self.finch._julian).itrs()
+        ground_GEO = np.array([[location.lat, location.lon, 0]])
+        gnd_itrs = sun_pos._geo_to_itrs(ground_GEO)
 
         sca_angs = _get_ang(sat_itrs - gnd_itrs, sun_itrs - gnd_itrs)
         sca_ind = np.where(sca_angs > 30)[0]
-        
+
         enc_ind = np.intersect1d(enc_ind, alt_ind)
         enc_ind = np.intersect1d(enc_ind, sca_ind)
 
+        # Check data link encounter indices.
         self.assertTrue(np.array_equal(calc_enc_ind, enc_ind))

@@ -1,4 +1,3 @@
-"""Testing module for the encounter mathematical basis."""
 
 
 from celest.encounter.groundposition import GroundPosition
@@ -12,7 +11,6 @@ import unittest
 class TestEncounterMathUtils(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
         fname = "tests/test_data/coordinate_validation_set.txt"
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
@@ -29,8 +27,7 @@ class TestEncounterMathUtils(TestCase):
 
         # Set up shared parameters.
         lat, lon = 43.6532, -79.3832
-        GEO_data = self.coor._geo_to_itrs(np.array([[lat, lon, 0]]))
-        gnd_itrs = np.repeat(GEO_data, self.length, 0)
+        gnd_itrs = self.coor._geo_to_itrs(np.array([[lat, lon, 0]]))
         sat_itrs = self.coor.itrs()
 
         sat_itrs = self.coor.itrs()
