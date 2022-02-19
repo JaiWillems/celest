@@ -1,4 +1,3 @@
-"""Testing module for the encounter generation function."""
 
 
 from celest.encounter.groundposition import GroundPosition
@@ -14,7 +13,6 @@ import unittest
 class TestEncounter(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
         fname = "tests/test_data/coordinate_validation_set.txt"
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
@@ -23,7 +21,6 @@ class TestEncounter(TestCase):
         self.finch = Satellite(itrs, "itrs", times, 2430000)
 
     def test_windows(self):
-        """Test `Encounter.windows.generate.`"""
 
         location_1 = GroundPosition(43.6532, -79.3832)
         location_2 = GroundPosition(52.1579, -106.6702)
@@ -36,13 +33,13 @@ class TestEncounter(TestCase):
         val_windows = Windows()
         time = self.finch._julian
         for reg in indices:
-                
+
             start = time[reg[0]]
             end = time[reg[-1]]
-                
+
             window = Window(self.finch, location_1, start, end, "image", 30, 1, 0)
             val_windows._add_window(window)
-        
+
         self.assertEqual(len(val_windows), len(windows_1))
 
         windows_val, windows_calc = val_windows.windows, windows_1.windows
@@ -58,13 +55,13 @@ class TestEncounter(TestCase):
         val_windows = Windows()
         time = self.finch._julian
         for reg in indices:
-                
+
             start = time[reg[0]]
             end = time[reg[-1]]
-                
+
             window = Window(self.finch, location_1, start, end, "data_link", 10, 0, 30)
             val_windows._add_window(window)
-        
+
         self.assertEqual(len(val_windows), len(windows_2))
 
         windows_val, windows_calc = val_windows.windows, windows_2.windows
@@ -79,20 +76,19 @@ class TestEncounter(TestCase):
         val_windows = Windows()
         time = self.finch._julian
         for reg in indices:
-                
+
             start = time[reg[0]]
             end = time[reg[-1]]
-                
+
             window = Window(self.finch, location_2, start, end, "image", 30, 1, 0)
             val_windows._add_window(window)
-        
+
         self.assertEqual(len(val_windows), len(windows_3))
 
         windows_val, windows_calc = val_windows.windows, windows_3.windows
         for val, calc in zip(windows_val, windows_calc):
             self.assertEqual(val.start, calc.start)
             self.assertEqual(val.end, calc.end)
-        
 
         windows_4 = generate(self.finch, location_2, "data_link", 10)
         indices = _window_encounter_ind(self.finch, location_2, 10, 0, 30, 0)
@@ -101,13 +97,13 @@ class TestEncounter(TestCase):
         val_windows = Windows()
         time = self.finch._julian
         for reg in indices:
-                
+
             start = time[reg[0]]
             end = time[reg[-1]]
-                
+
             window = Window(self.finch, location_1, start, end, "data_link", 30, 1, 0)
             val_windows._add_window(window)
-        
+
         self.assertEqual(len(val_windows), len(windows_4))
 
         windows_val, windows_calc = val_windows.windows, windows_4.windows

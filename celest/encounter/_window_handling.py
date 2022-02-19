@@ -1,64 +1,51 @@
-"""Window information localization and handling.
-
-This module contains the `Window` class to isolate window information in
-addition to the `Windows` class to handle `Window` objects in a linked
-list structure.
-"""
 
 
-from typing import Any, Literal
 from celest.encounter.groundposition import GroundPosition
-import pandas as pd
+from typing import Any, Literal
 import numpy as np
+import pandas as pd
 
 
-class Window(object):
-    """Isolate window information.
+class Window:
+    """Window(satellite, location, start, end, enc, ang, lighting, sca)
+
+    Encounter information.
 
     Parameters
     ----------
     satellite : Satellite
-        Satellite associated with the encounter window.
+        Satellite for ground location encounter.
     location : GroundPosition
-        Ground location for imaging or ground station communcations.
-    start : float
-        Window start time in Julian.
-    end : float
-        Window end time in Julian.
+        Ground location for satellite encounter.
+    start, end: float
+        Window start and end times in J2000 Julian.
     enc : {"data link", "image"}
-        Type of encounter.
+        Encounter type.
     ang : float
         Encounter constraint angle.
     lighting : {-1, 0, 1}
-        Lighting constraint to specify night only, any time, or day only
-        encounters.
+        Lighting constraint for night only, all time, or day only encounters.
     sca : float
-        Solar constraint angle.
+        Solar constraint angle in degrees.
 
     Attributes
     ----------
     satellite : Satellite
-        Satellite associated with the encounter window.
+        Satellite for ground location encounter.
     coor : tuple
-        Ground location coordinate tuple in the (lat, lon) format.
-    start : float
-        Window start time in Julian.
-    end : float
-        Window end time in Julian.
+        Ground location (lat, lon) coordinates.
+    start, end : float
+        Window start and end times in J2000 Julian.
     dt : float
         Window duration in seconds.
     type : {"data link", "image"}
-        Type of encounter.
-    angle_type : {"A", "N"}
-        Employed constraint angle as either being the off-nadir or altitude
-        angle.
+        Encounter type.
     ang : float
-        Encounter constraint angle.
+        Encounter constraint angle in degrees.
     lighting : {-1, 0, 1}
-        Lighting constraint to specify night only, any time, or day only
-        encounters.
+        Lighting constraint for night only, all time, or day only encounters.
     sca : float
-        Solar constraint angle.
+        Solar constraint angle in degrees.
 
     Methods
     -------
@@ -69,7 +56,6 @@ class Window(object):
     def __init__(self, satellite: Any, location: Any, start: float, end: float,
                  enc: Literal["data link", "image"], ang: float, lighting:
                  Literal[-1, 0, 1], sca: float) -> None:
-        """Initialize attributes."""
 
         self.satellite = satellite
         self.coor = (location.lat, location.lon)
@@ -79,17 +65,15 @@ class Window(object):
         self.duration = 86400 * (end - start)
 
         self.type = enc
-        self.angle_type = "N" if enc == "image" else "A"
         self.ang = ang
         self.lighting = lighting
         self.sca = sca
 
     def __str__(self) -> str:
-        """Define `Window` information string."""
 
         str_1 = str(self.coor) + " "
         str_2 = self.type + " "
-        str_3 = "ang:" + self.angle_type + str(self.ang) + " "
+        str_3 = "ang:" + str(self.ang) + " "
         str_4 = "lighting:" + str(self.lighting) + " "
         str_5 = "sca:" + str(self.sca) + " "
         str_6 = "start:" + str(self.start) + " "
@@ -105,7 +89,6 @@ class Window(object):
         Returns
         -------
         Window
-            Return `Window` with the same attributes as `self`.
 
         Examples
         --------
@@ -129,14 +112,13 @@ class Window(object):
 
 
 class Windows(object):
-    """Data structure for containing `Window` objects.
+    """Data structure to hold `Window` objects.
 
     This class is designed to hold encounter information and facilitate
-    user-data interactions through a series of methods.
+    user-data interactions.
     """
 
     def __init__(self) -> None:
-        """Initialize attributes."""
 
         self.windows = pd.Series(dtype="object")
         self.index_head = 0
@@ -148,19 +130,23 @@ class Windows(object):
     def __next__(self) -> Any:
 
         if self.index_head == len(self.windows):
-
             self.index_head = 0
             raise StopIteration
-
         else:
-
             index = self.windows.index[self.index_head]
             self.index_head += 1
 
             return self.windows[index]
 
     def __getitem__(self, key: float) -> Window:
-        """Return window closest to key time."""
+        """Return window closest to key time.
+
+        This method allows for window indexing. If a scalar index is provided,
+        the window with the closest start time will be returned. If the index
+        is a range, all windows that have start times within the range will be
+        returned. If the index is a tuple, then all the windows with start
+        times closes to each tuple entry will be returned.
+        """
 
         inds = self.windows.index.to_numpy()
 
@@ -186,7 +172,6 @@ class Windows(object):
         return rtn
 
     def __len__(self) -> int:
-        """Return number of windows."""
 
         return len(self.windows)
 
@@ -196,7 +181,6 @@ class Windows(object):
         Parameters
         ----------
         window : Window
-            Window to add to data base.
 
         Notes
         -----
@@ -212,8 +196,8 @@ class Windows(object):
         """Return enocunter statistics.
 
         This method returns statistics on the stored encounters. The statistics
-        include the 5th, 50th, and 95th percentile of encounter durations as
-        well as the enocounter frequency.
+        include the 5th, 50th, and 95th percentile of encounter durations and
+        enocounter frequency.
 
         Return
         ------
@@ -225,7 +209,8 @@ class Windows(object):
         Assuming `toronto_img` is a `Windows` object returned from the windows
         generation function.
 
-        >>> toronto_img.stats()
+        >>> stats = toronto_img.stats()
+        >>> print(stats)
                                        (45, -73), image
         Q5 Duration (s)                      108.468446
         Q50 Duration (s)                     167.687443
@@ -273,7 +258,7 @@ class Windows(object):
 
         return df
 
-    def to_numpy(self) -> np.array:
+    def to_numpy(self) -> np.ndarray:
         """Return windows within a NumPy array.
 
         Returns

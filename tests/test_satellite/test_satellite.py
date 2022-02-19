@@ -1,4 +1,3 @@
-"""Testing module for the `Satellite` class."""
 
 
 from celest.encounter.groundposition import GroundPosition
@@ -12,16 +11,12 @@ import unittest
 class TestSatellite(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
         fname = "tests/test_data/coordinate_validation_set.txt"
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
 
         self.times = data[:, 0]
         self.ITRS = data[:, 10:]
-
-        # self.timeData = Time(self.times, 2430000)
-        # self.coor = Coordinate(self.ITRS, "itrs", self.timeData)
 
         self.offset = 2430000
         self.finch = Satellite(self.ITRS, "itrs", self.times, self.offset)
@@ -31,14 +26,13 @@ class TestSatellite(TestCase):
 
         location = GroundPosition(0, 0)
 
-        window = Window(None, location, self.times[100] + self.offset, self.times[150] + self.offset, None, None, None, None)
+        window = Window(None, location, self.times[100] + self.offset,
+                        self.times[150] + self.offset, None, None, None, None)
         window_list = Windows()
         window_list._add_window(window)
 
         len_i = len(self.finch)
-
         self.finch.interpolate(windows=window_list, factor=5)
-
         len_f = len(self.finch)
 
         self.assertGreater(len_f, len_i)
@@ -48,7 +42,7 @@ class TestSatellite(TestCase):
 
         times = ("julian", "ut1", "gmst", "gast")
         positions = ("geo", "gcrs", "itrs")
-        self.finch.save_data("test_data.csv", ",", times, positions)
+        self.finch.save_data("test_data.csv", times, positions, delimiter=",")
 
         data = np.loadtxt("test_data.csv", delimiter=",", skiprows=1)
         load_julian = data[:, 1]

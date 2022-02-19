@@ -1,4 +1,3 @@
-"""Test module for the `GroundPosition` class."""
 
 
 from celest.encounter.groundposition import GroundPosition
@@ -18,7 +17,7 @@ class TestGroundPosition(TestCase):
 
     def test_radius(self):
         """Test `GroundPosition._WGS84_radius`.
-        
+
         Notes
         -----
         Validation against online calculator methodology.[1]_

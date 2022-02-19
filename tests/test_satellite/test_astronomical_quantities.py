@@ -1,4 +1,3 @@
-"""Testing module for the `AstronomicalQuantities` calculations."""
 
 
 from celest.satellite._astronomical_quantities import *
@@ -194,7 +193,7 @@ class TestAstronomicalQuantities(TestCase):
         for i in range(julian.size-1):
             with self.subTest(i=i):
                 self.assertAlmostEqual(EOE[i], true_EOE[i], delta=0.0001)
-    
+
     def test_sun_right_ascension(self):
         """Test `AstronomicalQuantities.sun_right_ascension`.
 
