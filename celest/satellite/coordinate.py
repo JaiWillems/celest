@@ -1,41 +1,46 @@
-"""Localize position information representations.
-
-This module provides the `Coordinate` class to allow for a simple interface
-for converting a position type into various representations. The class is also
-used for position inputs and outputs for other `Celest` functionality.
-"""
 
 
 from celest.satellite._angle_representations import _ISO6709_representation
-from celest.satellite.nutation_precession import bias_matrix, precession_matrix, nutation_matrix
+from celest.satellite.nutation_precession import (
+    bias_matrix, precession_matrix, nutation_matrix
+)
 from celest.satellite.time import Time
 from typing import Any, Literal, Tuple
 import numpy as np
+import numpy.typing as npt
 
 
 class Coordinate(Time):
-    """Localize position information representations.
+    """Coordinate(position, frame, julian, offset=0)
+    
+    Satellite coordinate transformations.
 
-    The `Coordinate` class provides a simple user interface for converting a
-    position type into various representations. The class is also used for
-    position inputs and outputs for other `Celest` functionality.
+    The input position and time can be converted into different coordinate
+    representations useful for satellite applications. Here, `julian + offset`
+    is the Julian time in J2000 epoch and is used in varios transformations.
+
+    If `frame=="geo"`, the `position` input can have 2 columns, (latitude,
+    longitude) or three columns (lattitude, longitude, altitude). If no
+    geodetic altitude is provided, it is assumed zero. Other frames require 3
+    columns.
 
     Parameters
     ----------
-    position : np.ndarray
-        Base position to initialize the `Coodinate` class.
+    position : array_like
+        2-D array containing position coordinates.
+    
+        Supported coordinate frames include the Geocentric Celestial Reference
+        System (gcrs), International Terrestrial Reference System (itrs), and
+        geographical (geo) system.
     frame : {"gcrs", "geo", "itrs"}
-        Specifies the input position frame.
-    time : np.ndarray
-        Times associated with the position data. The length of the `time`
-        parameter must match the length of the `position` parameter.
-    offset : float, optional
-        Offset to convert input time data to the J2000 epoch.
+        Frame specifier for the input position.
+    julian : array_like
+        1-D array containing time data in Julian days.
 
-    Attributes
-    ----------
-    length : int
-        Length of the input position and time arrays.
+        If times are not in the J2000 epoch, a non-zero offset must be pased
+        in to add to the julian times.
+    offset : float, optional
+        Offset to convert input time data to the J2000 epoch, default is zero.
 
     Methods
     -------
@@ -55,240 +60,232 @@ class Coordinate(Time):
         Return the altitude above Earth's surface in kilometres.
     distance(location)
         Return the distance to a ground location.
+
+    Examples
+    --------
+    Initialize `Coordinate` using gcrs positions:
+
+    >>> julian = [30462.50, 30462.50]
+    >>> position = [[-4681.50824149 -5030.09119386     0.        ]
+    ...             [-4714.35351825 -4978.74325953   454.41492765]]
+    >>> c = Coordinate(position=position, frame="gcrs", julian=julian, offset=0)
+
+    Get horizontal coordinates for the ground location at (43.65, -79.38):
+
+    >>> location = GroundPosition(latitude=43.65, longitude=-79.38)
+    >>> altitude, azimuth = c.horizontal(location=location)
     """
 
-    def __init__(self, position: np.ndarray, frame: Literal["gcrs", "geo", "itrs"], time: np.ndarray, offset=0) -> None:
-        """Initialize attributes."""
+    def __init__(self, position: npt.ArrayLike, frame:
+                 Literal["gcrs", "geo", "itrs"], julian: npt.ArrayLike,
+                 offset=0) -> None:
 
-        super().__init__(time, offset)
+        super().__init__(julian, offset)
+
+        time, position = [np.array(i) for i in [julian, position]]
 
         if frame not in ["gcrs", "geo", "itrs"]:
             raise ValueError(f"{frame} is not a valid frame.")
 
-        if position.shape[0] != len(time):
-            raise ValueError(
-                f"position and time data lengths are mismatched being {position.shape[0]} and {len(time)}")
+        if position.ndim != 2:
+            raise ValueError("position input must be 2-D.")
+        
+        if time.ndim != 1:
+            raise ValueError("time input must be 1-D.")
+
+        if position.shape[0] != time.size:
+            raise ValueError(f"position and time data lengths are mismatched: "
+                             f"lengths are {position.shape[0]} and {len(time)}")
 
         self._GEO = None
         self._GCRS = None
         self._ITRS = None
 
-        self.length = None
+        self._length = None
         self._set_base_position(position, frame)
 
     def __len__(self) -> int:
-        """Return length of position and time data."""
 
-        return self.length
+        return self._length
 
     def _set_base_position(self, position: np.ndarray, frame:
                            Literal["gcrs", "geo", "itrs"]) -> None:
         """Initialize base position.
 
-        This method takes an input position to initialize the object's base
-        position.
-
         Parameters
         ----------
-        position : np.ndarray
-            Array of shape (n, 2) or (n, 3) containing the inputted position
-            data.
+        position : array_like
+            2-D array containing position coordinates.
+        
+            Supported coordinate frames include the Geocentric Celestial
+            Reference System (gcrs), International Terrestrial Reference System
+            (itrs), and geographical (geo) system.
         frame : {"gcrs", "geo", "itrs"}
-            String defining the type of input position data as the Geocentric
-            Celestial Reference System (gcrs), International Terrestrial
-            Reference System (itrs), or geographical (geo) data.
+            Frame specifier for the input position.
 
         Notes
         -----
-        The input data must be of shape (n, 3) if `type="itrs"` or `type="gcrs"`
-        where the columns are XYZ cartesian data. The data can be of the shape
-        (n, 2) or (n, 3) if `type="geo"` where the columns are geodetic
-        latitude, terrestrial longitude, and geodetic altitude. When
-        geographical data is entered of shape (n, 2), the height data is
-        assumed to be zero.
+        GCRS and ITRS positions shall have 3 columns representing XYZ cartesian
+        points. GEO positions can have either 2 or 3 columns where the first
+        two represent geodetic latitude and terrestrial longitude; the last
+        column represent geodetic altitude and is assumed zero if not passed
+        in.
         """
 
-        basePos = position
-        self.length = basePos.shape[0]
+        self._length = position.shape[0]
+
+        if position.shape[1] == 2:
+            height = np.zeros((self._length, 1))
+            position = np.concatenate((position, height), axis=1)
 
         if frame == "geo":
-            if basePos.shape[1] == 2:
-                height = np.zeros((self.length, 1))
-                basePos = np.concatenate((basePos, height), axis=1)
-
-            self._GEO = basePos
-
+            self._GEO = position
         elif frame == "gcrs":
-            self._GCRS = basePos
-
-        elif frame == "itrs":
-            self._ITRS = basePos
+            self._GCRS = position
+        else:
+            self._ITRS = position
 
     def _geo_to_itrs(self, position: np.ndarray) -> np.ndarray:
-        """Convert geographical to itrs coordinates.
+        """Geographical to itrs transformation.
 
         Parameters
         ----------
         position : np.ndarray
-            Array of shape (n, 3) containing geographical coordinates of a
-            position with columns of geodetic latitude, terrestrial longitude,
+            2-D array with columns of geodetic latitude, terrestrial longitude,
             and geodetic altitude given in decimal degrees and kilometres.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n, 3) containing the XYZ itrs position data.
+            2-D array with columns of x, y, z cartesian coordinates in ITRS.
 
         See Also
         --------
-        _itrs_to_geo : Convert itrs to geographical coordinates.
+        _itrs_to_geo : Itrs to geographical transformation.
 
         Notes
         -----
-        This method uses an ellipsoid based model of the Earth to convert a
-        geographical position to itrs cartesian coordinates using the methods
-        described in "Coordinate Systems in Geodesy" by E. J. Krakiwsky and
-        D.E. Wells as presented by Christopher Lum. [KW98a]_ [Lum20]_
+        An Earth ellipsoid model is used for the geographical to itrs
+        conversion using the methods described in "Coordinate Systems in
+        Geodesy" by E. J. Krakiwsky and D.E. Wells as presented by Christopher
+        Lum. [KW98a]_ [Lum20]_
 
         References
         ----------
-        .. [KW98a] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in Geodesy.
-           Jan. 1998.
+        .. [KW98a] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
+           Geodesy. Jan. 1998.
         .. [Lum20] Christopher Lum. Geodetic Coordinates: Computing Latitude and
            Longitude.June 2020.url:https://www.youtube.com/watch?v=4BJ-GpYbZlU.
         """
 
-        a = 6378.137
-        b = 6356.752314245
+        a = 6378.137  # WGS84 major axis in km.
+        b = 6356.752314245  # WGS84 minor axis in km.
 
-        lat, lon = np.radians(position[:, 0]), np.radians(position[:, 1])
+        lat, lon = np.copy(np.radians(position[:, 0:2])).T
+        clat, slat = np.cos(lat), np.sin(lat)
+        clon, slon = np.cos(lon), np.sin(lon)
 
         e = np.sqrt(1 - b ** 2 / a ** 2)
-        N = a / np.sqrt(1 - e ** 2 * np.sin(lat) ** 2)
+        n = a / np.sqrt(1 - e ** 2 * slat ** 2)
         h = position[:, 2]
 
-        x = ((N + h) * np.cos(lat) * np.cos(lon)).reshape((-1, 1))
-        y = ((N + h) * np.cos(lat) * np.sin(lon)).reshape((-1, 1))
-        z = ((N * (1 - e ** 2) + h) * np.sin(lat)).reshape((-1, 1))
-        itrs = np.concatenate((x, y, z), axis=1)
+        x = ((n + h) * clat * clon).reshape((-1, 1))
+        y = ((n + h) * clat * slon).reshape((-1, 1))
+        z = ((n * (1 - e ** 2) + h) * slat).reshape((-1, 1))
 
-        return itrs
+        return np.concatenate((x, y, z), axis=1)
 
     def _itrs_to_geo(self, position: np.ndarray) -> np.ndarray:
-        """Convert itrs to geographical coordinates.
+        """Itrs to geographical transformation.
 
         Parameters
         ----------
         position : np.ndarray
-            Array of shape (n, 3) with rows containing XYZ itrs position data.
+            2-D array with columns of x, y, z cartesian coordinates in ITRS.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n, 3) with columns of geodetic latitude,
-            terrestrial longitude, and geodetic altitude data in degrees and
-            kilometres.
+            2-D array with columns of latitude, longitude, and altitude given
+            in decimal degrees and kilometres.
 
         See Also
         --------
-        _GEO_to_itrs : Convert geographical to itrs coordinates.
-
-        Notes
-        -----
-        Let :math:`x`, :math:`y`, and :math:`z` be the itrs vector components.
-        We can then calculate the latitude, :math:`\phi`, using the following
-        equation:
-
-        .. math:: \phi = 90^\circ - \cos^{-1}\left(\frac{z}{R_\bigoplus}\right)
-
-        where :math:`R_\bigoplus` is the geocentric radius of the Earth. We can
-        also calculate the longitude, :math:`\lambda` using the following:
-
-        .. math::\lambda = \tan^{-1}_2\left(y, x\right)
+        _geo_to_itrs : Geographical to itrs transformation.
         """
 
         # Cartesian coordinates.
-        x = position[:, 0]
-        y = position[:, 1]
-        z = position[:, 2]
+        x, y, z = position.T
 
-        # Convert to spherical coordinates.
-        radius = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-        theta = np.degrees(np.arccos(z / radius))
-        phi = np.degrees(np.arctan2(y, x))
+        # Calculate latitude and longitude.
+        radius = np.linalg.norm(position, axis=1)
+        lat = np.degrees(np.pi / 2 - np.arccos(z / radius)).reshape(-1, 1)
+        lon = np.degrees(np.arctan2(y, x)).reshape(-1, 1)
 
         # Get Geodetic altitude.
-        alt = self.altitude()
+        alt = self.altitude().reshape(-1, 1)
 
-        # Fomulate output array.
-        lat = (90 - theta).reshape(-1, 1)
-        lon = phi.reshape(-1, 1)
-        alt = alt.reshape(-1, 1)
-        geo = np.concatenate((lat, lon, alt), axis=1)
+        return np.concatenate((lat, lon, alt), axis=1)
 
-        return geo
-
-    def geo(self, iso: bool = False) -> np.ndarray:
-        """Return geographical position data.
+    def geo(self, iso: bool=False) -> np.ndarray:
+        """Return geographical coordinates.
 
         Parameters
         ----------
         iso : bool, optional
-            Formats the output as ISO6709 sexagesimal position strings if true.
+            Formats output as ISO6709 sexagesimal position strings if true.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n, 3) with columns of geodetic latitude,
-            terrestrial longitude, and geodetic altitude data. If
-            `iso=True`, the output is an array of shape (n,) containing
-            standard representation position strings.
+            2-D array with columns of latitude, longitude, and altitude.
+            
+            If `iso=True`, the output is a 1-D array containing formatted
+            strings.
 
         See Also
         --------
-        itrs : Return itrs position data.
-        gcrs : Return gcrs position data.
+        itrs : Return itrs coordinates.
+        gcrs : Return gcrs coordinates.
 
         Examples
         --------
-        >>> time = Time(julian=np.array([2454545]))
-        >>> position = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(position=position, frame="itrs", time=time)
-        >>> coor.geo()
+        Initialize object and get geographical data:
+
+        >>> julian=[2454545]
+        >>> position = [[6343.82, -2640.87, -11.26]]
+        >>> c = Coordinate(position=position, frame="itrs", julian=julian)
+        >>> c.geo()
         np.array([[-9.38870528e-02, -2.26014826e+01, 5.04126976e+02]])
 
-        We can generate user-friendly position strings by setting `iso=True`.
+        Return formatted output strings by setting `iso=True`:
 
-        >>> coor.geo(iso=True)
+        >>> c.geo(iso=True)
         np.array(['00°05′37.99″S 22°36′05.34″W 504.12697'])
         """
 
         if self._GEO is None:
             if self._ITRS is not None:
-                self._GEO = self._itrs_to_geo(position=self._ITRS)
+                self._GEO = self._itrs_to_geo(self._ITRS)
             else:
-                self._ITRS = self._gcrs_and_itrs(
-                    position=self._GCRS, frame="gcrs")
-                self._GEO = self._itrs_to_geo(position=self._ITRS)
+                self._ITRS = self._gcrs_and_itrs(self._GCRS, "gcrs")
+                self._GEO = self._itrs_to_geo(self._ITRS)
 
-        geo = _ISO6709_representation(position=self._GEO) if iso else self._GEO
+        geo = _ISO6709_representation(self._GEO) if iso else self._GEO
 
         return geo
 
     def era(self) -> np.ndarray:
-        """Return the Earth rotation angles in degrees and decimals.
+        """Return Earth rotation angle in degrees and decimals.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n,) containing Earth rotation angles in degrees and
-            decimals.
+            1-D array containing Earth rotation angles in degrees and decimals.
 
         Notes
         -----
-        The Earth rotation angle denotes the diurnal rotation component of the
-        coordinate misalignment between the ECI and ECEF frames. The angle can
-        be calculated from the following formulation:
+        The Earth rotation angle is calculated using the following:
 
         .. math:: \gamma^\circ = 360.9856123035484\Delta T + 280.46
 
@@ -303,45 +300,43 @@ class Coordinate(Time):
 
         Examples
         --------
-        >>> time = Time(julian=np.array([2454545]))
-        >>> position = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(position=position, type="itrs", time=time)
-        >>> coor.era()
+        >>> julian = [2454545]
+        >>> position = [[6343.82, -2640.87, -11.26]]
+        >>> c = Coordinate(position=position, type="itrs", julian=julian)
+        >>> c.era()
         np.array([6.2360075])
         """
 
-        jul_data = self._julian
-
         # Multiply time elapsed since J2000 by Earth rotation rate and add
         # J2000 orientation.
-        dJulian = jul_data - 2451545
+        dJulian = self._julian - 2451545
         ang = (360.9856123035484 * dJulian + 280.46) % 360
 
         return ang
 
     def _gcrs_and_itrs(self, position: np.ndarray, frame: Literal["itrs", "gcrs"]) -> np.ndarray:
-        """Convert between gcrs and itrs positions.
+        """Transform between gcrs and itrs coordinates.
 
         Parameters
         ----------
         position : np.ndarray
-            Array of shape (n, 3) representing the input data as XYZ cartesian
-            data.
+            2-D array containing x, y, z cartesian coordinates.
         frame : {"itrs", "gcrs"}
-            The type of input data.
+            Input data frame.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n, 3) representing the output data as XYZ cartesian
-            data.
+            2-D array containing the transformed x, y, z cartesian data.
 
         Notes
         -----
-        This method converts between the GCRS and ITRS frames by accounting for
-        Earth rotation, precession, and nutation while disregarding polar
-        motion effects.
+        The conversion between the gcrs and itrs frames accounts for Earth
+        rotation, precession, and nutation. Polar motion effects are ignored
+        due to poor predictive nature.
         """
+
+        pos_data = np.copy(position)
 
         # Get dependencies.
         era = self.era()
@@ -349,245 +344,238 @@ class Coordinate(Time):
         precession_mtrx = precession_matrix(self._julian)
         nutation_mtrx = nutation_matrix(self._julian)
 
-        n = era.size
-
-        pos_data = np.copy(position)
-
-        # Apply nutation-precession model before ERA rotation if frame is GCRS.
+        # Apply nutation-precession model before ERA rotation.
         if frame == "gcrs":
-            for i in range(n):
-
-                temp = np.matmul(bias_mtrx, pos_data[i, :])
-                temp = np.matmul(precession_mtrx[:, :, i], temp)
-                pos_data[i, :] = np.matmul(nutation_mtrx[:, :, i], temp)
+            pos_data =  np.einsum('ij, kj -> ki', bias_mtrx, pos_data)
+            pos_data = np.einsum('ijk, ik -> ij', precession_mtrx, pos_data)
+            pos_data = np.einsum('ijk, ik -> ij', nutation_mtrx, pos_data)
 
         # Pre-process ERA angle and sign.
-        theta = np.radians(self.era())
+        theta = np.radians(era)
         theta = -theta if frame == "gcrs" else theta
 
-        # Construct ERA rotational matrix.
-        A11 = np.cos(theta)
-        A12 = -np.sin(theta)
-        A21 = np.sin(theta)
-        A22 = np.cos(theta)
+        # Rotate position by the ERA rotational matrix.
+        c, s = np.cos(theta), np.sin(theta)
+        c1, c2, c3 = np.copy(pos_data).T
 
-        # Rotate positions around z-axis by ERA.
-        col_1 = np.copy(pos_data[:, 0])
-        col_2 = np.copy(pos_data[:, 1])
-        col_3 = np.copy(pos_data[:, 2])
-        pos_data[:, 0] = A11 * col_1 + A12 * col_2
-        pos_data[:, 1] = A21 * col_1 + A22 * col_2
-        pos_data[:, 2] = col_3
+        pos_data[:, 0] = c * c1 - s * c2
+        pos_data[:, 1] = s * c1 + c * c2
+        pos_data[:, 2] = c3
 
         # Apply nutation-precession model after ERA rotation if frame is ITRS.
         if frame == "itrs":
-            for i in range(n):
-
-                temp = np.matmul(np.linalg.inv(nutation_mtrx[:, :, i]), pos_data[i, :])
-                temp = np.matmul(np.linalg.inv(precession_mtrx[:, :, i]), temp)
-                pos_data[i, :] = np.matmul(np.linalg.inv(bias_mtrx), temp)
+            pos_data = np.einsum('ijk, ik -> ij',
+                                 np.linalg.inv(nutation_mtrx), pos_data)
+            pos_data = np.einsum('ijk, ik -> ij',
+                                 np.linalg.inv(precession_mtrx), pos_data)
+            pos_data = np.einsum('ij, kj -> ki',
+                                 np.linalg.inv(bias_mtrx), pos_data)
 
         return pos_data
 
     def gcrs(self) -> np.ndarray:
-        """Return cartesian gcrs position data.
+        """Return gcrs coordinates.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n,3) with columns of XYZ gcrs position data.
+            2-D array containing x, y, z cartesian coordinates in the gcrs
+            frame.
 
         See Also
         --------
-        itrs : Return cartesian itrs position data.
-        geo : Return geographical position data.
+        itrs : Return itrs coordinates.
+        geo : Return geographical coordinates.
 
         Examples
         --------
-        >>> time = Time(julian=np.array([2454545]))
-        >>> position = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(position=position, type="itrs", time=time)
-        >>> coor.gcrs()
+        Calculate gcrs coordinates from itrs coordinates:
+
+        >>> juluian = [2454545]
+        >>> position = [[6343.82, -2640.87, -11.26]]
+        >>> c = Coordinate(position=position, type="itrs", julian=julian)
+        >>> c.gcrs()
         np.array([[6212.21719598, -2937.10811161, -11.26]])
         """
 
         if self._GCRS is None:
             if self._ITRS is None:
                 self._ITRS = self._geo_to_itrs(self._GEO)
-            self._GCRS = self._gcrs_and_itrs(self._ITRS, frame="itrs")
+            self._GCRS = self._gcrs_and_itrs(self._ITRS, "itrs")
 
         return self._GCRS
 
     def itrs(self) -> np.ndarray:
-        """Return cartesian itrs position data.
+        """Return itrs coordinates.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n,3) with columns of XYZ itrs position data.
+            2-D array containing x, y, z itrs coordinates.
 
         See Also
         --------
-        gcrs : Return cartesian gcrs position data.
-        geo : Return geographical position data.
+        gcrs : Return gcrs coordinates.
+        geo : Return geographical coordinates.
 
         Examples
         --------
-        >>> time = Time(julian=np.array([2454545]))
-        >>> position = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(position=position, type="gcrs", time=time)
-        >>> coor.itrs()
+        Calculate itrs coordinates from gcrs coordinates:
+
+        >>> julian = [2454545]
+        >>> position = [[6343.82, -2640.87, -11.26]]
+        >>> c = Coordinate(position=position, type="gcrs", julian=julian)
+        >>> c.itrs()
         np.array([[6461.30569276, -2338.75507354, -11.26]])
         """
 
         if self._ITRS is None:
             if self._GCRS is not None:
-                self._ITRS = self._gcrs_and_itrs(
-                    position=self._GCRS, frame="gcrs")
+                self._ITRS = self._gcrs_and_itrs(self._GCRS, "gcrs")
             else:
-                self._ITRS = self._geo_to_itrs(position=self._GEO)
+                self._ITRS = self._geo_to_itrs(self._GEO)
 
         return self._ITRS
 
     def _get_ang(self, u: np.ndarray, v: np.ndarray) -> np.ndarray:
-        """Calculate degree angle bewteen two vectors.
+        """Return the degree angle bewteen two vectors.
 
         Parameters
         ----------
         u, v : np.ndarray
-            Arrays of shape (n,3) with rows of XYZ cartesian data.
+            1-D or 2-D arrays containing row vectors.
+
+            If the dimensions of `u` and `v` do not match, the 1-D array will
+            be broadcast to have the same number of rows as the 2-D array.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n,) containing the degree angle between the two
-            arrays.
+            1-D array containing the degree angle between to vector arrays.
         """
 
-        num = np.sum(u * v, axis=1)
-        denom = np.linalg.norm(u, axis=1) * np.linalg.norm(v, axis=1)
-        ang = np.degrees(np.arccos(num / denom))
+        ua = 1 if u.ndim == 2 else 0
+        va = 1 if v.ndim == 2 else 0
+
+        n = np.sum(u * v, axis=1)
+        d = np.linalg.norm(u, axis=ua) * np.linalg.norm(v, axis=va)
+        ang = np.degrees(np.arccos(n / d))
 
         return ang
 
     def horizontal(self, location: Any) -> Tuple:
-        """Return horizontal position data in degrees and decimals.
+        """Return horizontal coordinates in decimal degrees.
 
-        In this method, the azimuth is calculated as increasing degrees
-        clockwise from North and ranges from 0 to 360 degrees. The altitude is
-        calculated as increasing degrees above the observer's local horizon and
-        ranges from 0 to 90 degrees.
+        The azimuth angle ranges from 0 to 360 degrees measured clockwise from
+        North. The altitude angle is ranges from 0 to 90 degrees measured
+        above the local horizon.
 
         Parameters
         ----------
         location : GroundPosition
-            Ground location defining the center of the horizontal system.
+            Eath bound origin of the horizontal system.
 
         Returns
         -------
         tuple
-            Tuple of length two containing the altitude and azimuth data as
-            decimals and degrees in NumPy arrays of shape (n,).
+            Tuple containing two 1-D arrays representing the altitude and
+            azimuth angles.
 
         Examples
         --------
-        >>> time = Time(julian=np.array([2454545]))
-        >>> position = np.array([[6343.82, -2640.87, -11.26]])
+        Calculate the horizontal coordinates at (52.1579, -106.6702):
+
+        >>> julian=[2454545]
+        >>> position = [[6343.82, -2640.87, -11.26]]
         >>> location = GroundPosition(52.1579, -106.6702)
-        >>> coor = Coordinate(position=position, frame="ecef", time=time)
-        >>> coor.horizontal(location=location)
+        >>> c = Coordinate(position=position, frame="ecef", julian=julian)
+        >>> c.horizontal(location=location)
         (array([-40.8786098]), array([94.73615482]))
         """
 
         if self._ITRS is None:
             self.itrs()
 
-        # Convert observer position into cartesian coordinates.
+        # Get origin of horizontal system.
         lat, lon, radius = location.lat, location.lon, location.radius
-        GEO_data = self._geo_to_itrs(np.array([[lat, lon, 0]]))
-        obs = np.repeat(GEO_data, self.length, 0)
+        loc = self._geo_to_itrs(np.array([[lat, lon, 0]])).reshape((3,))
 
-        # Determine line of sight vector then altitude.
-        LOS = self._ITRS - obs
-        Alt = 90 - self._get_ang(LOS, obs)
+        # Calculate altitude angle.
+        los = self._ITRS - loc
+        alt = 90 - self._get_ang(los, loc)
 
-        # Find surface tangent vector passing through z-axis.
-        k_hat = np.repeat(np.array([[0, 0, 1]]), self.length, axis=0)
-        beta = np.radians(lat)
-        tangent = (k_hat.T * radius / np.sin(beta)).T - obs
+        # Find Earth tangent passing through horizontal origin and z-axis.
+        st = [0, 0, radius / np.sin(np.radians(lat))] - loc
 
         # Find LOS projection on tangent plane.
-        norm_proj = (obs.T * np.sum(LOS * obs, axis=1) / radius ** 2).T
-        proj_LOS = LOS - norm_proj
+        lld = np.sum(los * loc, axis=1)
+        los_on_n = np.einsum('i, j -> ji', loc, lld) / radius ** 2
+        los_proj = los - los_on_n
 
         # Determing azimuth.
-        reference = np.cross(tangent, obs)
-        neg_ind = np.where(np.sum(proj_LOS * reference, axis=1) < 0)[0]
-        Az = self._get_ang(tangent, proj_LOS)
-        Az[neg_ind] = 360 - self._get_ang(tangent[neg_ind], proj_LOS[neg_ind])
+        direc = np.cross(st, loc)
+        neg_ind = np.where(np.sum(los_proj * direc, axis=1) < 0)
+        az = self._get_ang(st, los_proj)
+        az[neg_ind] = 360 - self._get_ang(st, los_proj[neg_ind])
 
-        return Alt, Az
+        return alt, az
 
     def off_nadir(self, location: Any) -> np.ndarray:
-        """Return the off-nadir angle to a ground location.
+        """Return satellite off-nadir angle in decimal degrees.
 
-        This method calculates the off-nadir angle, in degrees and decimals, to
-        the input ground position at each satellite position.
+        The off-nadir angle is the angular distance of a ground location from
+        the satellites nadir.
 
         Parameters
         ----------
         location : GroundPosition
-            Calculate off-nadir angles for the specified ground location.
+            Ground location of interest.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n,) containing off-nadir angle data in degrees and
-            decimals.
+            1-D array containing off-nadir angles in decimal degrees.
 
-        Notes
-        -----
-        The off-nadir angle is the acute angle measured in increasing degrees
-        from the satellites nadir to the line joining the satellite to the
-        ground location of interest.
+        Examples
+        --------
+        Calculate the off-nadir angle for the location (52.1579, -106.6702):
+
+        >>> toronto = GroundPosition(52.1579, -106.6702)
+
+        >>> julian = [30462.70517808 30462.70583972]
+        >>> position = [[-1148.75741119 -5527.65458256  3930.33125383]
+        ...             [-1186.47076862 -5258.03277545  4276.52904538]]
+        >>> c = Coordinate(position=position, frame="itrs", julian=julian, offset=2430000)
+        >>> c.off_nadir(location=toronto)
+        array([67.08711357 65.27748945])
         """
 
         if self._ITRS is None:
             self.itrs()
 
         lat, lon = location.lat, location.lon
-        geo_data = self._geo_to_itrs(np.array([[lat, lon, 0]]))
-        obs = np.repeat(geo_data, self.length, 0)
-
-        LOS = np.subtract(self._ITRS, obs)
-        ang = self._get_ang(LOS, self._ITRS)
+        loc = self._geo_to_itrs(np.array([[lat, lon, 0]]))
+        ang = self._get_ang(self._ITRS - loc, self._ITRS)
 
         return ang
 
     def _WGS84_radius(self, lattitude: np.ndarray) -> np.ndarray:
-        """Calculate the Earth's geocentric radius using WGS84.
+        """Return Earth's geocentric radius using WGS84.
 
         Parameters
         ----------
         latitude : np.ndarray
-            Array of shape (n,) representing the geocentric latitude of a
-            ground location in degrees and decimals.
+            1-D array containing lattitude in decimal degrees.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n,) containing the Earth's geocentric radius in
-            kilometres.
+            1-D array containing the geocentric radius in kilometres.
 
         Notes
         -----
-        By using an Earth ellipsoid with the WGS84 parameters of
-        :math:`a=6378.137` and :math:`b=6356.7523142`, the geocentric radius
-        can be calculated using the following formulation:
-
-        .. math:: r = \sqrt{\frac{(a^2\cos(\beta))^2 + (b^2\sin(\beta))^2}{(a\cos(\beta))^2 + (b\sin(\beta))^2}}
-
-        where :math:`\beta` is the observer's latitude. [Tim18]_
+        The radius is calculated using the WGS84 Earth ellipsoid model as
+        detailed by "Earth Radius by Latitude" by Timur. [Tim18]_
 
         References
         ----------
@@ -602,16 +590,16 @@ class Coordinate(Time):
         a = 6378.137
         b = 6356.752314245
 
-        c_phi, s_phi = np.cos(phi), np.sin(phi)
+        c, s = np.cos(phi), np.sin(phi)
 
-        num = (a ** 2 * c_phi) ** 2 + (b ** 2 * s_phi) ** 2
-        denom = (a * c_phi) ** 2 + (b * s_phi) ** 2
+        num = (a ** 2 * c) ** 2 + (b ** 2 * s) ** 2
+        denom = (a * c) ** 2 + (b * s) ** 2
         radius = np.sqrt(num / denom)
 
         return radius
 
     def altitude(self) -> np.ndarray:
-        """Return the geodetic altitude above Earth's surface in kilometres.
+        """Return the geodetic altitude in kilometres.
 
         This method uses the WGS84 reference ellipsoid to calculate the
         geodetic altitude above the Earth's surface.
@@ -634,64 +622,70 @@ class Coordinate(Time):
 
         Examples
         --------
-        >>> time = Time(julian=np.array([2454545]))
-        >>> position = np.array([[6343.82, -2640.87, -11.26]])
-        >>> coor = Coordinate(position=position, type="itrs", time=time)
-        >>> coor.altitude()
+        >>> julian=[2454545]
+        >>> position = [[6343.82, -2640.87, -11.26]]
+        >>> c = Coordinate(position=position, type="itrs", julian=julian)
+        >>> c.altitude()
         np.array([504.1269764])
         """
 
         if self._ITRS is None:
             self.itrs()
 
-        itrs_data = self._ITRS
-        x = itrs_data[:, 0]
-        y = itrs_data[:, 1]
-        z = itrs_data[:, 2]
+        x, y, z = self._ITRS.T
 
-        a = 6378.137
-        b = 6356.752314245
+        # Define WGS84 Parameters.
+        a, b = 6378.137, 6356.752314245
 
-        epsilon = 10e-10
+        tol = 10e-10
 
         e = np.sqrt(1 - b ** 2 / a ** 2)
         p = np.sqrt(x ** 2 + y ** 2)
 
-        N = a
         h = np.sqrt(x ** 2 + y ** 2 + z ** 2) - np.sqrt(a * b)
-        phi = np.arctan((z / p) * (1 - (e ** 2 * N) / (N + h)) ** -1)
+        phi = np.arctan((z / p) * (1 - (e ** 2 * a) / (a + h)) ** -1)
 
         def new_vals(a, b, e, p, N, h, phi, z):
 
-            N = a / np.sqrt(np.cos(phi) ** 2 + b ** 2 /
-                            a ** 2 * np.sin(phi) ** 2)
+            N = a / np.sqrt(np.cos(phi) ** 2 + b ** 2 / a ** 2 * np.sin(phi) ** 2)
             h = p / np.cos(phi) - N
             phi = np.arctan((z / p) * (1 - (e ** 2 * N) / (N + h)) ** -1)
 
             return N, h, phi
 
-        Np, hp, phip = new_vals(a, b, e, p, N, h, phi, z)
+        Np, hp, phip = new_vals(a, b, e, p, a, h, phi, z)
 
-        while (np.mean(hp - h) > a * epsilon) and (np.mean(phip - phi) > epsilon):
+        while (np.mean(hp - h) > a * tol) and (np.mean(phip - phi) > tol):
 
-            N, h, phi = Np, hp, phip
-            Np, hp, phip = new_vals(a, b, e, p, N, h, phi, z)
+            n, h, phi = Np, hp, phip
+            Np, hp, phip = new_vals(a, b, e, p, n, h, phi, z)
 
         return h
 
     def distance(self, location: Any) -> np.ndarray:
-        """Return the distance to a ground location.
+        """Return distance to the ground location.
 
         Parameters
         ----------
         location : GroundPosition
-            Calculate distances to the specified ground location.
 
         Returns
         -------
         np.ndarray
-            Array of shape (n,) containing distances in kilometres between the
-            satellite and ground location for each satellite position.
+            1-D array containing the euclidean distance of the satellite to the
+            ground location in kilometres.
+        
+        Examples
+        --------
+        Calculate the satellite distances from position (52.1579, -106.6702):
+
+        >>> times = [30462.5, 30462.50069444]
+        >>> position = [[6343.81620221, -2640.87223125, -11.25541802],
+        ...             [6295.64583763, -2718.09271472, 443.08232543]]
+        >>> location = GroundPosition(52.1579, -106.6702)
+        >>> c = Coordinate(position=position, frame="itrs", julian=julian, offset=2430000)
+        >>> c.distance(location=location)
+        np.array([9070.49268746, 8776.7179543])
         """
 
         if self._ITRS is None:
@@ -699,10 +693,6 @@ class Coordinate(Time):
 
         lat, lon = location.lat, location.lon
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]]))
-        gnd_itrs = np.repeat(gnd_itrs, self.length, 0)
-
-        # Find LOS vector norm.
-        LOS = self._ITRS - gnd_itrs
-        distances = np.linalg.norm(LOS, axis=1)
+        distances = np.linalg.norm(self._ITRS - gnd_itrs, axis=1)
 
         return distances
