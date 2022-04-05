@@ -1,8 +1,11 @@
+
+
 from celest.satellite._angle_representations import _ISO6709_representation
 from celest.satellite.nutation_precession import (
     bias_matrix, precession_matrix, nutation_matrix
 )
 from celest.satellite.time import Time
+from polare import Stroke
 from typing import Any, Literal, Tuple
 import numpy as np
 import numpy.typing as npt
@@ -17,15 +20,16 @@ class Coordinate(Time):
     representations useful for satellite applications. Here, `julian + offset`
     is the Julian time in J2000 epoch and is used in various transformations.
 
-    If `frame=="geo"`, the `position` input can have 2 columns, (latitude,
-    longitude) or three columns (lattitude, longitude, altitude). If no
-    geodetic altitude is provided, it is assumed zero. Other frames require 3
-    columns.
+    If `frame=="geo"`, the `position` input can have two columns, (latitude,
+    longitude) or three columns (latitude, longitude, altitude). If no
+    geodetic altitude is provided, it is assumed to be zero. Other frames
+    require three columns.
 
     Parameters
     ----------
     position : array_like
-        2-D array containing position coordinates.
+        2-D array containing position coordinates. Axis 0 is the time series
+        axis.
 
         Supported coordinate frames include the Geocentric Celestial Reference
         System (gcrs), International Terrestrial Reference System (itrs), and
@@ -42,21 +46,21 @@ class Coordinate(Time):
 
     Methods
     -------
-    geo(iso=False)
+    geo(iso=False, stroke=False)
         Return geographical coordinates.
-    era()
+    era(stroke=False)
         Return Earth rotation angle in decimal degrees.
-    gcrs()
+    gcrs(stroke=False)
         Return gcrs coordinates.
-    itrs()
+    itrs(stroke=False)
         Return itrs coordinates.
-    horizontal(location)
+    horizontal(location, stroke=False)
         Return horizontal coordinates in decimal degrees.
-    off_nadir(location)
+    off_nadir(location, stroke=False)
         Return off-nadir angle in decimal degrees.
-    altitude()
+    altitude(stroke=False)
         Return the geodetic altitude in kilometers.
-    distance(location)
+    distance(location, stroke=False)
         Return distance to the ground location.
 
     Examples
@@ -80,7 +84,7 @@ class Coordinate(Time):
 
         super().__init__(julian, offset)
 
-        time, position = [np.array(i) for i in [julian, position]]
+        time, position = np.array(julian), np.array(position)
 
         if frame not in ["gcrs", "geo", "itrs"]:
             raise ValueError(f"{frame} is not a valid frame.")
@@ -95,11 +99,16 @@ class Coordinate(Time):
             raise ValueError(f"position and time data lengths are mismatched: "
                              f"lengths are {position.shape[0]} and {len(time)}")
 
-        self._GEO = None
+        kind_dict = {1: "zero", 2: "linear", 3: "quadratic"}
+        if position.shape[0] > 3:
+            self._kind = "cubic"
+        else:
+            self._kind = kind_dict[position.shape[0]]
+
         self._GCRS = None
         self._ITRS = None
-
         self._length = None
+
         self._set_base_position(position, frame)
 
     def __len__(self) -> int:
@@ -116,18 +125,18 @@ class Coordinate(Time):
             2-D array containing position coordinates.
 
             Supported coordinate frames include the Geocentric Celestial
-            Reference System (gcrs), International Terrestrial Reference System
-            (itrs), and geographical (geo) system.
+            Reference System (gcrs), International Terrestrial Reference
+            System (itrs), and geographical (geo) system.
         frame : {"gcrs", "geo", "itrs"}
             Frame specifier for the input position.
 
         Notes
         -----
-        GCRS and ITRS positions shall have 3 columns representing XYZ cartesian
-        points. GEO positions can have either 2 or 3 columns where the first
-        two represent geodetic latitude and terrestrial longitude; the last
-        column represent geodetic altitude and is assumed zero if not passed
-        in.
+        GCRS and ITRS positions shall have 3 columns representing XYZ
+        cartesian points. GEO positions can have either 2 or 3 columns where
+        the first two represent geodetic latitude and terrestrial longitude;
+        the last column represent geodetic altitude and is assumed zero if not
+        passed in.
         """
 
         self._length = position.shape[0]
@@ -136,12 +145,16 @@ class Coordinate(Time):
             height = np.zeros((self._length, 1))
             position = np.concatenate((position, height), axis=1)
 
-        if frame == "geo":
-            self._GEO = position
-        elif frame == "gcrs":
-            self._GCRS = position
+        if frame == "gcrs":
+            x, y, z = [Stroke(self._julian, position[:, i], self._kind) for i in range(3)]
+            self._GCRS = np.array([x, y, z])
+        elif frame == "itrs":
+            x, y, z = [Stroke(self._julian, position[:, i], self._kind) for i in range(3)]
+            self._ITRS = np.array([x, y, z])
         else:
-            self._ITRS = position
+            itrs = self._geo_to_itrs(position)
+            x, y, z = [Stroke(self._julian, itrs[:, i], self._kind) for i in range(3)]
+            self._ITRS = np.array([x, y, z])
 
     def _geo_to_itrs(self, position: np.ndarray) -> np.ndarray:
         """Geographical to itrs transformation.
@@ -150,7 +163,7 @@ class Coordinate(Time):
         ----------
         position : np.ndarray
             2-D array with columns of geodetic latitude, terrestrial longitude,
-            and geodetic altitude given in decimal degrees and kilometers.
+            and geodetic altitude given in decimal degrees and kilometres.
 
         Returns
         -------
@@ -173,7 +186,7 @@ class Coordinate(Time):
         .. [KW98a] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
            Geodesy. Jan. 1998.
         .. [Lum20] Christopher Lum. Geodetic Coordinates: Computing Latitude and
-           Longitude.June 2020.url:https://www.youtube.com/watch?v=4BJ-GpYbZlU.
+           Longitude. June 2020.url:https://www.youtube.com/watch?v=4BJ-GpYbZlU.
         """
 
         a = 6378.137  # WGS84 major axis in km.
@@ -205,41 +218,45 @@ class Coordinate(Time):
         -------
         np.ndarray
             2-D array with columns of latitude, longitude, and altitude given
-            in decimal degrees and kilometers.
+            in decimal degrees and kilometres.
 
         See Also
         --------
         _geo_to_itrs : Geographical to itrs transformation.
         """
 
-        # Cartesian coordinates.
-        x, y, z = position.T
-
         # Calculate latitude and longitude.
-        radius = np.linalg.norm(position, axis=1)
-        lat = np.degrees(np.pi / 2 - np.arccos(z / radius)).reshape(-1, 1)
-        lon = np.degrees(np.arctan2(y, x)).reshape(-1, 1)
+        x, y, z = position
+        lat = np.degrees(np.arctan(z / np.sqrt(x ** 2 + y ** 2)))
+        lon = np.degrees(np.arctan2(y, x))
 
-        # Get Geodetic altitude.
-        alt = self.altitude().reshape(-1, 1)
+        return lat, lon
 
-        return np.concatenate((lat, lon, alt), axis=1)
-
-    def geo(self, iso: bool=False) -> np.ndarray:
+    def geo(self, iso: bool=False, stroke=False) -> np.ndarray:
         """Return geographical coordinates.
+
+        The method can not return the data as both a stroke and iso
+        formatted strings. If both `iso=True` and `stroke=True`, the method
+        will return a tuple of stroke objects.
 
         Parameters
         ----------
         iso : bool, optional
             Formats output as ISO6709 sexagesimal position strings if true.
+        stroke : bool, optional
+            Formats output as a tuple of stroke objects if true. Otherwise,
+            the output is a tuple of 1-D arrays.
 
         Returns
         -------
-        np.ndarray
-            2-D array with columns of latitude, longitude, and altitude.
+        tuple
+            Tuple of latitude, longitude, and altitude given in decimal
+            degrees.
 
             If `iso=True`, the output is a 1-D array containing formatted
             strings.
+
+            If `stroke=True`, the output is a tuple of stroke objects.
 
         See Also
         --------
@@ -262,24 +279,44 @@ class Coordinate(Time):
         np.array(['00°05′37.99″S 22°36′05.34″W 504.12697'])
         """
 
-        if self._GEO is None:
-            if self._ITRS is not None:
-                self._GEO = self._itrs_to_geo(self._ITRS)
-            else:
-                self._ITRS = self._gcrs_and_itrs(self._GCRS, "gcrs")
-                self._GEO = self._itrs_to_geo(self._ITRS)
+        if self._ITRS is None:
+            x, y, z = self._GCRS
+            x, y, z = [i(self._julian).reshape((-1, 1)) for i in [x, y, z]]
+            gcrs = np.concatenate((x, y, z), axis=1)
 
-        geo = _ISO6709_representation(self._GEO) if iso else self._GEO
+            itrs = self._gcrs_and_itrs(gcrs, "gcrs")
+            x, y, z = [Stroke(self._julian, itrs[:, i], self._kind) for i in range(3)]
+            self._ITRS = np.array([x, y, z])
 
-        return geo
+        lat, lon = self._itrs_to_geo(self._ITRS)
+        alt = self.altitude(stroke=True)
 
-    def era(self) -> np.ndarray:
+        if stroke:
+            return lat, lon, alt
+
+        lat, lon, alt = lat(self._julian), lon(self._julian), alt(self._julian)
+
+        if iso:
+            return _ISO6709_representation(lat, lon, alt)
+        else:
+            return lat, lon, alt
+
+    def era(self, stroke=False) -> np.ndarray:
         """Return Earth rotation angle in decimal degrees.
+
+        Parameters
+        ----------
+        stroke : bool, optional
+            Formats output as a stroke objects if true. Otherwise, the output
+            is a 1-D array.
 
         Returns
         -------
-        np.ndarray
-            1-D array containing Earth rotation angles in decimal degrees.
+        Union[np.ndarray, Stroke]
+            Earth rotation angle in decimal degrees.
+
+            If `stroke=True`, the output is a stroke object. Otherwise, the
+            output is a 1-D array.
 
         Notes
         -----
@@ -310,9 +347,13 @@ class Coordinate(Time):
         dJulian = self._julian - 2451545
         ang = (360.9856123035484 * dJulian + 280.46) % 360
 
-        return ang
+        if stroke:
+            return Stroke(self._julian, ang, self._kind)
+        else:
+            return ang
 
-    def _gcrs_and_itrs(self, position: np.ndarray, frame: Literal["itrs", "gcrs"]) -> np.ndarray:
+    def _gcrs_and_itrs(self, position: np.ndarray, frame:
+                       Literal["itrs", "gcrs"]) -> np.ndarray:
         """Transform between gcrs and itrs coordinates.
 
         Parameters
@@ -331,7 +372,7 @@ class Coordinate(Time):
         -----
         The conversion between the gcrs and itrs frames accounts for Earth
         rotation, precession, and nutation. Polar motion effects are ignored
-        due to poor predictive nature.
+        due to their poor predictive nature.
         """
 
         pos_data = np.copy(position)
@@ -371,14 +412,22 @@ class Coordinate(Time):
 
         return pos_data
 
-    def gcrs(self) -> np.ndarray:
+    def gcrs(self, stroke=False) -> np.ndarray:
         """Return gcrs coordinates.
+
+        Parameters
+        ----------
+        stroke : bool, optional
+            Formats output as a tuple of stroke objects if true. Otherwise,
+            the output is a tuple of 1-D arrays.
 
         Returns
         -------
-        np.ndarray
-            2-D array containing x, y, z cartesian coordinates in the gcrs
-            frame.
+        tuple
+            Tuple containing x, y, z cartesian coordinates in the gcrs frame.
+
+            The coordinates are stroke objects if `stroke=True`. Otherwise,
+            1-D arrays are returned.
 
         See Also
         --------
@@ -397,19 +446,33 @@ class Coordinate(Time):
         """
 
         if self._GCRS is None:
-            if self._ITRS is None:
-                self._ITRS = self._geo_to_itrs(self._GEO)
-            self._GCRS = self._gcrs_and_itrs(self._ITRS, "itrs")
+            itrs = np.array([self._ITRS[i](self._julian) for i in range(3)]).T
+            gcrs = self._gcrs_and_itrs(itrs, "itrs")
+            x, y, z = [Stroke(self._julian, gcrs[:, i], self._kind) for i in range(3)]
+            self._GCRS = np.array([x, y, z])
 
-        return self._GCRS
+        x, y, z = self._GCRS[0], self._GCRS[1], self._GCRS[2]
+        if stroke:
+            return x, y, z
+        else:
+            return x(self._julian), y(self._julian), z(self._julian)
 
-    def itrs(self) -> np.ndarray:
+    def itrs(self, stroke=False) -> np.ndarray:
         """Return itrs coordinates.
+
+        Parameters
+        ----------
+        stroke : bool, optional
+            Formats output as a tuple of stroke objects if true. Otherwise,
+            the output is a tuple of 1-D arrays.
 
         Returns
         -------
-        np.ndarray
-            2-D array containing x, y, z itrs coordinates.
+        tuple
+            Tuple containing x, y, z cartesian data in the itrs frame.
+
+            The coordinates are stroke objects if `stroke=True`. Otherwise,
+            1-D arrays are returned.
 
         See Also
         --------
@@ -428,12 +491,16 @@ class Coordinate(Time):
         """
 
         if self._ITRS is None:
-            if self._GCRS is not None:
-                self._ITRS = self._gcrs_and_itrs(self._GCRS, "gcrs")
-            else:
-                self._ITRS = self._geo_to_itrs(self._GEO)
+            gcrs = np.array([self._GCRS[i](self._julian) for i in range(3)]).T
+            itrs = self._gcrs_and_itrs(gcrs, "gcrs")
+            x, y, z = [Stroke(self._julian, itrs[:, i], self._kind) for i in range(3)]
+            self._ITRS = np.array([x, y, z])
 
-        return self._ITRS
+        x, y, z = self._ITRS[0], self._ITRS[1], self._ITRS[2]
+        if stroke:
+            return x, y, z
+        else:
+            return x(self._julian), y(self._julian), z(self._julian)
 
     def _get_ang(self, u: np.ndarray, v: np.ndarray) -> np.ndarray:
         """Return the degree angle bewteen two vectors.
@@ -452,21 +519,17 @@ class Coordinate(Time):
             1-D array containing the degree angle between to vector arrays.
         """
 
-        ua = 1 if u.ndim == 2 else 0
-        va = 1 if v.ndim == 2 else 0
+        ua = None if u.ndim == 1 else 1
+        va = None if v.ndim == 1 else 1
 
-        n = np.sum(u * v, axis=1)
+        n = np.sum(u * v, axis=(ua or va))
         d = np.linalg.norm(u, axis=ua) * np.linalg.norm(v, axis=va)
         ang = np.degrees(np.arccos(n / d))
 
         return ang
 
-    def horizontal(self, location: Any) -> Tuple:
-        """Return horizontal coordinates in decimal degrees.
-
-        The azimuth angle ranges from 0 to 360 degrees measured clockwise from
-        North. The altitude angle is ranges from 0 to 90 degrees measured
-        above the local horizon.
+    def _altitude(self, location: Any) -> Stroke:
+        """Return the altitude angle of a satellite.
 
         Parameters
         ----------
@@ -475,9 +538,73 @@ class Coordinate(Time):
 
         Returns
         -------
+        Stroke
+            Stroke containing the altitude of the satellite.
+        """
+
+        # Get origin of horizontal system.
+        lat, lon, radius = location.lat, location.lon, location.radius
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]])).reshape((3,))
+
+        return 90 - self._get_ang(self._ITRS - gnd_itrs, gnd_itrs)
+
+    def _azimuth(self, location: Any) -> Stroke:
+        """Return the azimuth angle of the satellite.
+
+        Parameters
+        ----------
+        location : GroundPosition
+            Eath bound origin of the horizontal system.
+
+        Returns
+        -------
+        Stroke
+            Stroke containing the azimuth of the satellite.
+        """
+
+        # Get origin of horizontal system.
+        lat, lon, radius = location.lat, location.lon, location.radius
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]])).reshape((3,))
+
+        los = self._ITRS - gnd_itrs
+
+        # Find Earth tangent passing through horizontal origin and z-axis.
+        st = [0, 0, radius / np.sin(np.radians(lat))] - gnd_itrs
+
+        # Find LOS projection on tangent plane.
+        los_on_n = np.sum(los * gnd_itrs)
+        los_proj = los - np.array([los_on_n * gnd_itrs[i] for i in range(3)]) / radius ** 2
+
+        # Determing azimuth.
+        direc = np.cross(st, gnd_itrs)
+        neg_ind = np.sum(los_proj * direc) < 0
+        az = self._get_ang(st, los_proj)
+        az = 360 * neg_ind - 1 * (2 * neg_ind - 1) * az
+
+        return az
+
+    def horizontal(self, location: Any, stroke=False) -> Tuple:
+        """Return horizontal coordinates in decimal degrees.
+
+        The azimuth angle ranges from 0 to 360 degrees, measured clockwise
+        from North. The altitude angle ranges from 0 to 90 degrees measured
+        above the local horizon.
+
+        Parameters
+        ----------
+        location : GroundPosition
+            Eath bound origin of the horizontal system.
+        stroke : bool, optional
+            Formats output as a tuple of stroke objects if true. Otherwise,
+            the output is a tuple of 1-D arrays.
+
+        Returns
+        -------
         tuple
-            Tuple containing two 1-D arrays representing the altitude and
-            azimuth angles.
+            Tuple containing the altitude and azimuth angles.
+
+            The angles are stroke objects if `stroke=True`. Otherwise, 1-D
+            arrays are returned.
 
         Examples
         --------
@@ -494,31 +621,16 @@ class Coordinate(Time):
         if self._ITRS is None:
             self.itrs()
 
-        # Get origin of horizontal system.
-        lat, lon, radius = location.lat, location.lon, location.radius
-        loc = self._geo_to_itrs(np.array([[lat, lon, 0]])).reshape((3,))
+        # Calculate the altitude and azimuth angles.
+        alt = self._altitude(location)
+        az = self._azimuth(location)
 
-        # Calculate altitude angle.
-        los = self._ITRS - loc
-        alt = 90 - self._get_ang(los, loc)
+        if stroke:
+            return alt, az
+        else:
+            return alt(self._julian), az(self._julian)
 
-        # Find Earth tangent passing through horizontal origin and z-axis.
-        st = [0, 0, radius / np.sin(np.radians(lat))] - loc
-
-        # Find LOS projection on tangent plane.
-        lld = np.sum(los * loc, axis=1)
-        los_on_n = np.einsum('i, j -> ji', loc, lld) / radius ** 2
-        los_proj = los - los_on_n
-
-        # Determing azimuth.
-        direc = np.cross(st, loc)
-        neg_ind = np.where(np.sum(los_proj * direc, axis=1) < 0)
-        az = self._get_ang(st, los_proj)
-        az[neg_ind] = 360 - self._get_ang(st, los_proj[neg_ind])
-
-        return alt, az
-
-    def off_nadir(self, location: Any) -> np.ndarray:
+    def off_nadir(self, location: Any, stroke=False) -> np.ndarray:
         """Return off-nadir angle in decimal degrees.
 
         The off-nadir angle is the angular distance of a ground location from
@@ -528,11 +640,17 @@ class Coordinate(Time):
         ----------
         location : GroundPosition
             Ground location of interest.
+        stroke : bool, optional
+            Formats output as a stroke objects if true. Otherwise, the output
+            is a 1-D arrays.
 
         Returns
         -------
-        np.ndarray
-            1-D array containing off-nadir angles in decimal degrees.
+        Union[Stroke, np.ndarray]
+            Off-nadir angles in decimal degrees.
+
+            The off-nadir angles are returned as a stroke object if
+            `stroke=True`. Otherwise, a 1-D array is returned.
 
         Examples
         --------
@@ -553,9 +671,12 @@ class Coordinate(Time):
 
         lat, lon = location.lat, location.lon
         loc = self._geo_to_itrs(np.array([[lat, lon, 0]]))
-        ang = self._get_ang(self._ITRS - loc, self._ITRS)
+        ang = self._get_ang((self._ITRS - loc).reshape((3,)), self._ITRS)
 
-        return ang
+        if stroke:
+            return ang
+        else:
+            return ang(self._julian)
 
     def _WGS84_radius(self, lattitude: np.ndarray) -> np.ndarray:
         """Return Earth's geocentric radius using WGS84.
@@ -563,12 +684,12 @@ class Coordinate(Time):
         Parameters
         ----------
         latitude : np.ndarray
-            1-D array containing lattitude in decimal degrees.
+            1-D array containing latitude in decimal degrees.
 
         Returns
         -------
         np.ndarray
-            1-D array containing the geocentric radius in kilometers.
+            1-D array containing the geocentric radius in kilometres.
 
         Notes
         -----
@@ -596,21 +717,30 @@ class Coordinate(Time):
 
         return radius
 
-    def altitude(self) -> np.ndarray:
+    def altitude(self, stroke=False) -> np.ndarray:
         """Return the geodetic altitude in kilometers.
 
         This method uses the WGS84 reference ellipsoid to calculate the
         geodetic altitude above the Earth's surface.
 
+        Parameters
+        ----------
+        stroke : bool, optional
+            Formats output as a stroke object if true. Otherwise, the output
+            is a 1-D array.
+
         Returns
         -------
-        np.ndarray
-            Array of shape (n,) containing satellite altitudes in kilometers.
+        Union[Stroke, np.ndarray]
+            Geodetic altitude in kilometres.
+
+            The geodetic altitude is returned as a stroke object if
+            `stroke=True`. Otherwise, a 1-D array is returned.
 
         Notes
         -----
-        This method uses an ellipsoid based model of the Earth to calculate the
-        ellipsoid height in an iterative manner described in "Coordinate
+        This method uses an ellipsoid based model of the Earth to calculate
+        the ellipsoid height in an iterative manner described in "Coordinate
         Systems in Geodesy" by E. J. Krakiwsky and D.E. Wells. [KW98b]_
 
         References
@@ -630,12 +760,12 @@ class Coordinate(Time):
         if self._ITRS is None:
             self.itrs()
 
-        x, y, z = self._ITRS.T
-
         # Define WGS84 Parameters.
         a, b = 6378.137, 6356.752314245
 
         tol = 10e-10
+
+        x, y, z = self._ITRS
 
         e = np.sqrt(1 - b ** 2 / a ** 2)
         p = np.sqrt(x ** 2 + y ** 2)
@@ -653,25 +783,33 @@ class Coordinate(Time):
 
         Np, hp, phip = new_vals(a, b, e, p, a, h, phi, z)
 
-        while (np.mean(hp - h) > a * tol) and (np.mean(phip - phi) > tol):
+        while (np.mean((hp - h)(self._julian)) > a * tol) or (np.mean((phip - phi)(self._julian)) > tol):
 
             n, h, phi = Np, hp, phip
             Np, hp, phip = new_vals(a, b, e, p, n, h, phi, z)
 
-        return h
+        if stroke:
+            return h
+        else:
+            return h(self._julian)
 
-    def distance(self, location: Any) -> np.ndarray:
+    def distance(self, location: Any, stroke=False) -> np.ndarray:
         """Return distance to the ground location.
 
         Parameters
         ----------
         location : GroundPosition
+        stroke : bool, optional
+            Formats output as a stroke object if true. Otherwise, the output
+            is a 1-D array.
 
         Returns
         -------
-        np.ndarray
-            1-D array containing the euclidean distance of the satellite to the
-            ground location in kilometers.
+        Union[Stroke, np.ndarray]
+            Distance in kilometres.
+
+            The distance is returned as a stroke object if `stroke=True`.
+            Otherwise, a 1-D array is returned.
 
         Examples
         --------
@@ -691,6 +829,9 @@ class Coordinate(Time):
 
         lat, lon = location.lat, location.lon
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]]))
-        distances = np.linalg.norm(self._ITRS - gnd_itrs, axis=1)
+        distance = np.linalg.norm(self._ITRS - gnd_itrs)
 
-        return distances
+        if stroke:
+            return distance
+        else:
+            return distance(self._julian)
