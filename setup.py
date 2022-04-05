@@ -25,6 +25,7 @@ setuptools.setup(
         "julian",
         "numpy",
         "pandas",
+        "polare",
         "scipy"
     ],
     classifiers=[
