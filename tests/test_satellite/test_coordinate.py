@@ -2,6 +2,7 @@
 
 from celest.encounter.groundposition import GroundPosition
 from celest.satellite.coordinate import Coordinate
+from polare import Stroke
 from unittest import TestCase
 import numpy as np
 import unittest
@@ -34,18 +35,14 @@ class TestCoordinate(TestCase):
 
         coor_1 = Coordinate(self.geo, "geo", self.times, self.offset)
 
-        self.assertEqual(coor_1._GEO.shape[1], 3)
-
         self.assertIsNotNone(coor_1._julian)
-        self.assertIsNotNone(coor_1._GEO)
         self.assertIsNone(coor_1._GCRS)
-        self.assertIsNone(coor_1._ITRS)
+        self.assertIsNotNone(coor_1._ITRS)
         self.assertEqual(self._length, coor_1._length)
 
         coor_2 = Coordinate(self.GCRS, "gcrs", self.times, self.offset)
 
         self.assertIsNotNone(coor_2._julian)
-        self.assertIsNone(coor_2._GEO)
         self.assertIsNotNone(coor_2._GCRS)
         self.assertIsNone(coor_2._ITRS)
         self.assertEqual(self._length, coor_2._length)
@@ -53,7 +50,6 @@ class TestCoordinate(TestCase):
         coor_3 = Coordinate(self.ITRS, "itrs", self.times, self.offset)
 
         self.assertIsNotNone(coor_3._julian)
-        self.assertIsNone(coor_3._GEO)
         self.assertIsNone(coor_3._GCRS)
         self.assertIsNotNone(coor_3._ITRS)
         self.assertEqual(self._length, coor_3._length)
@@ -69,11 +65,13 @@ class TestCoordinate(TestCase):
         calc_itrs = self.coor_geo._geo_to_itrs(self.tri_geo)
 
         for i in range(self._length):
-
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_itrs[i, 0], self.ITRS[i, 0], delta=0.001)
-                self.assertAlmostEqual(calc_itrs[i, 1], self.ITRS[i, 1], delta=0.001)
-                self.assertAlmostEqual(calc_itrs[i, 2], self.ITRS[i, 2], delta=0.001)
+                self.assertAlmostEqual(calc_itrs[i, 0], self.ITRS[i, 0],
+                                       delta=0.001)
+                self.assertAlmostEqual(calc_itrs[i, 1], self.ITRS[i, 1],
+                                       delta=0.001)
+                self.assertAlmostEqual(calc_itrs[i, 2], self.ITRS[i, 2],
+                                       delta=0.001)
 
     def test_itrs_to_geo(self):
         """Test `Coordinate._itrs_to_geo`.
@@ -83,25 +81,27 @@ class TestCoordinate(TestCase):
         Test cases generated using a GMAT data set.
         """
 
-        calc_geo = self.coor_itrs._itrs_to_geo(self.ITRS)
+        itrs = np.array([Stroke(self.times, self.ITRS[:, i]) for i in range(3)])
+        calc_lat, calc_lon = self.coor_itrs._itrs_to_geo(itrs)
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_geo[i, 0], self.geo[i, 0], delta=0.18)
-                self.assertAlmostEqual(calc_geo[i, 1], self.geo[i, 1], delta=0.00001)
-                self.assertAlmostEqual(calc_geo[i, 2], self.alt[i], delta=0.06)
+                self.assertAlmostEqual(calc_lat(self.times[i]), self.geo[i, 0],
+                                       delta=0.18)
+                self.assertAlmostEqual(calc_lon(self.times[i]), self.geo[i, 1],
+                                       delta=0.00001)
 
     def test_geo(self):
         """Test `Coordinate.geo`."""
 
-        calc_geo_1 = self.coor_gcrs.geo()
-        calc_geo_2 = self.coor_itrs.geo()
+        lat1, lon1, alt1 = self.coor_gcrs.geo()
+        lat2, lon2, alt2 = self.coor_itrs.geo()
 
         for i in range(self._length):
             with self.subTest(i=i):
 
                 eps = 1
-                calc_lon, test_lon = calc_geo_1[i, 1], self.geo[i, 1]
+                calc_lon, test_lon = lon1[i], self.geo[i, 1]
                 cond_one = abs(180 - calc_lon) < eps and abs(180 + test_lon) < eps
                 cond_two = abs(180 + calc_lon) < eps and abs(180 - test_lon) < eps
 
@@ -110,15 +110,15 @@ class TestCoordinate(TestCase):
                 elif cond_two:
                     calc_lon = (calc_lon + 360) % 360
 
-                self.assertAlmostEqual(calc_geo_1[i, 0], self.geo[i, 0], delta=0.5)
+                self.assertAlmostEqual(lat1[i], self.geo[i, 0], delta=0.5)
                 self.assertAlmostEqual(calc_lon, test_lon, delta=0.9)
-                self.assertAlmostEqual(calc_geo_1[i, 2], self.alt[i], delta=0.1)
+                self.assertAlmostEqual(alt1[i], self.alt[i], delta=0.1)
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_geo_2[i, 0], self.geo[i, 0], delta=0.18)
-                self.assertAlmostEqual(calc_geo_2[i, 1], self.geo[i, 1], delta=0.00001)
-                self.assertAlmostEqual(calc_geo_2[i, 2], self.alt[i], delta=0.06)
+                self.assertAlmostEqual(lat2[i], self.geo[i, 0], delta=0.18)
+                self.assertAlmostEqual(lon2[i], self.geo[i, 1], delta=0.00001)
+                self.assertAlmostEqual(alt2[i], self.alt[i], delta=0.06)
 
     def test_era(self):
         """Test `Coordinate.era`.
@@ -152,51 +152,69 @@ class TestCoordinate(TestCase):
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_itrs[i, 0], self.ITRS[i, 0], delta=0.35)
-                self.assertAlmostEqual(calc_itrs[i, 1], self.ITRS[i, 1], delta=0.35)
-                self.assertAlmostEqual(calc_itrs[i, 2], self.ITRS[i, 2], delta=0.35)
+                self.assertAlmostEqual(calc_itrs[i, 0], self.ITRS[i, 0],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_itrs[i, 1], self.ITRS[i, 1],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_itrs[i, 2], self.ITRS[i, 2],
+                                       delta=0.35)
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_gcrs[i, 0], self.GCRS[i, 0], delta=0.35)
-                self.assertAlmostEqual(calc_gcrs[i, 1], self.GCRS[i, 1], delta=0.35)
-                self.assertAlmostEqual(calc_gcrs[i, 2], self.GCRS[i, 2], delta=0.35)
+                self.assertAlmostEqual(calc_gcrs[i, 0], self.GCRS[i, 0],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_gcrs[i, 1], self.GCRS[i, 1],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_gcrs[i, 2], self.GCRS[i, 2],
+                                       delta=0.35)
 
     def test_gcrs(self):
         """Test `Coordinate.gcrs`."""
 
-        calc_gcrs_1 = self.coor_itrs.gcrs()
-        calc_gcrs_2 = self.coor_geo.gcrs()
+        calc_gcrs_x1, calc_gcrs_y1, calc_gcrs_z1 = self.coor_itrs.gcrs()
+        calc_gcrs_x2, calc_gcrs_y2, calc_gcrs_z2 = self.coor_geo.gcrs()
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_gcrs_1[i, 0], self.GCRS[i, 0], delta=0.35)
-                self.assertAlmostEqual(calc_gcrs_1[i, 1], self.GCRS[i, 1], delta=0.35)
-                self.assertAlmostEqual(calc_gcrs_1[i, 2], self.GCRS[i, 2], delta=0.35)
+                self.assertAlmostEqual(calc_gcrs_x1[i], self.GCRS[i, 0],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_gcrs_y1[i], self.GCRS[i, 1],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_gcrs_z1[i], self.GCRS[i, 2],
+                                       delta=0.35)
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_gcrs_2[i, 0], self.GCRS[i, 0], delta=0.35)
-                self.assertAlmostEqual(calc_gcrs_2[i, 1], self.GCRS[i, 1], delta=0.35)
-                self.assertAlmostEqual(calc_gcrs_2[i, 2], self.GCRS[i, 2], delta=0.35)
+                self.assertAlmostEqual(calc_gcrs_x2[i], self.GCRS[i, 0],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_gcrs_y2[i], self.GCRS[i, 1],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_gcrs_z2[i], self.GCRS[i, 2],
+                                       delta=0.35)
 
     def test_itrs(self):
         """Test `Coordinate.itrs`."""
 
-        calc_itrs_1 = self.coor_gcrs.itrs()
-        calc_itrs_2 = self.coor_geo.itrs()
+        calc_itrs_x1, calc_itrs_y1, calc_itrs_z1 = self.coor_gcrs.itrs()
+        calc_itrs_x2, calc_itrs_y2, calc_itrs_z2 = self.coor_geo.itrs()
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_itrs_1[i, 0], self.ITRS[i, 0], delta=0.35)
-                self.assertAlmostEqual(calc_itrs_1[i, 1], self.ITRS[i, 1], delta=0.35)
-                self.assertAlmostEqual(calc_itrs_1[i, 2], self.ITRS[i, 2], delta=0.35)
+                self.assertAlmostEqual(calc_itrs_x1[i], self.ITRS[i, 0],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_itrs_y1[i], self.ITRS[i, 1],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_itrs_z1[i], self.ITRS[i, 2],
+                                       delta=0.35)
 
         for i in range(self._length):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_itrs_2[i, 0], self.ITRS[i, 0], delta=0.35)
-                self.assertAlmostEqual(calc_itrs_2[i, 1], self.ITRS[i, 1], delta=0.35)
-                self.assertAlmostEqual(calc_itrs_2[i, 2], self.ITRS[i, 2], delta=0.35)
+                self.assertAlmostEqual(calc_itrs_x2[i], self.ITRS[i, 0],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_itrs_y2[i], self.ITRS[i, 1],
+                                       delta=0.35)
+                self.assertAlmostEqual(calc_itrs_z2[i], self.ITRS[i, 2],
+                                       delta=0.35)
 
     def test_get_ang(self):
         """Test `Coordinate._get_ang`."""
@@ -252,7 +270,7 @@ class TestCoordinate(TestCase):
         groundPos = GroundPosition(lat, lon)
         calc_alt, calc_az = coor.horizontal(groundPos)
 
-        for i in range(calc_alt.size-5000):
+        for i in range(calc_alt.size):
             with self.subTest(i=i):
                 self.assertAlmostEqual(alt[i], calc_alt[i], delta=0.25)
                 self.assertAlmostEqual(az[i], calc_az[i], delta=7.5)
@@ -282,7 +300,7 @@ class TestCoordinate(TestCase):
             with self.subTest(i=i):
                 self.assertAlmostEqual(off_nadir[i], calc_off_nadir[i], delta=0.3)
 
-    def test_wgs84_radius(self):
+    def test_WGS84_radius(self):
         """Test `Coordinate._WGS84_radius`.
 
         Notes
@@ -302,11 +320,14 @@ class TestCoordinate(TestCase):
         denom = (a * clat) ** 2 + (b * slat) ** 2
         radius = np.sqrt(num / denom)
 
-        calc_radius = self.coor_geo._WGS84_radius(self.geo[:, 0])
+        lat = Stroke(self.times, self.geo[:, 0], "cubic")
 
-        for i in range(5):
+        calc_radius = self.coor_geo._WGS84_radius(lat)
+
+        for i in range(radius.size):
             with self.subTest(i=i):
-                self.assertAlmostEqual(radius[i], calc_radius[i], delta=0.001)
+                self.assertAlmostEqual(radius[i], calc_radius(self.times[i]),
+                                       delta=0.001)
 
     def test_altitude(self):
         """Test `Coordinate.altitude`.
