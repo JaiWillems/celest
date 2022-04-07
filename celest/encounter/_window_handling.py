@@ -7,7 +7,7 @@ import pandas as pd
 
 
 class Window:
-    """Window(satellite, location, start, end, enc, ang, lighting, sca)
+    """Window(satellite, location, start, end, enc, ang, lighting)
 
     Encounter information.
 
@@ -25,8 +25,6 @@ class Window:
         Encounter constraint angle.
     lighting : {-1, 0, 1}
         Lighting constraint for night only, all time, or day only encounters.
-    sca : float
-        Solar constraint angle in degrees.
 
     Attributes
     ----------
@@ -44,8 +42,6 @@ class Window:
         Encounter constraint angle in degrees.
     lighting : {-1, 0, 1}
         Lighting constraint for night only, all time, or day only encounters.
-    sca : float
-        Solar constraint angle in degrees.
 
     Methods
     -------
@@ -55,7 +51,7 @@ class Window:
 
     def __init__(self, satellite: Any, location: Any, start: float, end: float,
                  enc: Literal["data link", "image"], ang: float, lighting:
-                 Literal[-1, 0, 1], sca: float) -> None:
+                 Literal[-1, 0, 1]) -> None:
 
         self.satellite = satellite
         self.coor = (location.lat, location.lon)
@@ -67,7 +63,6 @@ class Window:
         self.type = enc
         self.ang = ang
         self.lighting = lighting
-        self.sca = sca
 
     def __str__(self) -> str:
 
@@ -75,11 +70,10 @@ class Window:
         str_2 = self.type + " "
         str_3 = "ang:" + str(self.ang) + " "
         str_4 = "lighting:" + str(self.lighting) + " "
-        str_5 = "sca:" + str(self.sca) + " "
-        str_6 = "start:" + str(self.start) + " "
-        str_7 = "end:" + str(self.end)
+        str_5 = "start:" + str(self.start) + " "
+        str_6 = "end:" + str(self.end)
 
-        str_final = str_1 + str_2 + str_3 + str_4 + str_5 + str_6 + str_7
+        str_final = str_1 + str_2 + str_3 + str_4 + str_5 + str_6
 
         return str_final
 
@@ -104,9 +98,8 @@ class Window:
         enc = self.type
         ang = self.ang
         lighting = self.lighting
-        sca = self.sca
 
-        return_window = Window(sat, gnd, start, end, enc, ang, lighting, sca)
+        return_window = Window(sat, gnd, start, end, enc, ang, lighting)
 
         return return_window
 

@@ -22,7 +22,7 @@ def _constraint_highlighter(decision_var, constraint, ang):
         Constraint type.
 
         The constraint is applied with the decision variable on the left and
-        constraint angle on the right. For example, `constraint="gt"`
+        the constraint angle on the right. For example, `constraint="gt"`
         implies `decision_var > ang`.
     ang : float
         Constraint angle in units equivalent to `decision_var`.
@@ -47,8 +47,8 @@ def _constraint_highlighter(decision_var, constraint, ang):
         raise ValueError("Invalid constraint type.")
 
 
-def _sun_itrs(julian):
-    """Return the sun's itrs coordinates.
+def _sun_coor(julian):
+    """Return the sun's coordinates.
 
     Parameters
     ----------
@@ -57,8 +57,8 @@ def _sun_itrs(julian):
 
     Returns
     -------
-    np.ndarray
-        2-D array containing columns of x, y, z itrs position data of the sun.
+    Coordinate
+        Coordinate object containing the sun's position.
     """
 
     ephem = pkg_resources.resource_filename(__name__, '../data/de421.bsp')
@@ -71,23 +71,21 @@ def _sun_itrs(julian):
 
     SPK.close(kernal)
 
-    sun_itrs = Coordinate(e2sun, "gcrs", julian)
+    sun_coor = Coordinate(e2sun, "gcrs", julian)
 
-    return sun_itrs
+    return sun_coor
 
 
-def _root_find(t, f, lg, rg, tol):
+def _root_find(f, tl, tr, tol):
     """Return root of f(t) between lg and rg.
 
     Parameters
     ----------
-    t : float
-        Independent variable of `f`.
     f : Stroke
         Stroke object representing the function to be evaluated.
-    lg : float
+    tl : float
         Lower bound of the search interval.
-    rg : float
+    tr : float
         Upper bound of the search interval.
     tol : float
         Search tolerance.
@@ -98,22 +96,21 @@ def _root_find(t, f, lg, rg, tol):
         Root of `f(t)` between `lg` and `rg`.
     """
 
-    l, r = lg, rg
-    fl, fr = f(l), f(r)
+    l, r = tl, tr
+    fl = int(f(l))
 
     while abs(r - l) > tol:
 
         c = (l + r) / 2
-        fc = f(c)
+        fc = int(f(c))
 
-        if fl * fc <= 0:
+        if abs(fl - fc) == 1:
             r = c
-            fr = fc
-        elif fc * fr <= 0:
+        else:
             l = c
             fl = fc
 
-    return (l + r) / 2
+    return (l if fl == 1 else r)
 
 
 def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
@@ -140,7 +137,7 @@ def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     return ang
 
 
-def generate(satellite, location, enc, ang, lighting=0, sca=0, tol=1e-5):
+def generate(satellite, location, enc, ang, lighting=0, tol=1e-5):
     """Return windows for a given encounter.
 
     Parameters
@@ -158,8 +155,6 @@ def generate(satellite, location, enc, ang, lighting=0, sca=0, tol=1e-5):
 
         `-1` indicates nighttime encounters, `0` indicates anytime encounters,
         and `1` indicates daytime encounters.
-    sca : float, optional
-        Solar constraint angle in degrees.
     tol : float, optional
         Window start and end time tolerance in days.
 
@@ -184,21 +179,11 @@ def generate(satellite, location, enc, ang, lighting=0, sca=0, tol=1e-5):
     else:
         raise ValueError("Invalid encounter type.")
 
-    # Generate sun coordinates.
-    if (lighting != 0) or (sca > 0):
-        sun_coor = _sun_itrs(satellite._julian)
     if lighting != 0:
+        sun_coor = _sun_coor(satellite._julian)
         sun_alt, _ = sun_coor.horizontal(location, stroke=True)
         comp = "gt" if lighting == 1 else "le"
         raw_windows = raw_windows * _constraint_highlighter(sun_alt, comp, 0)
-    if sca > 0:
-        ground_GEO = np.array([[location.lat, location.lon, 0]])
-        gnd_itrs = satellite._geo_to_itrs(ground_GEO).reshape((3,))
-
-        sun_itrs = sun_coor.itrs(stroke=True)
-        sat_itrs = satellite.itrs(stroke=True)
-        dv3 = _get_ang(np.array(sun_itrs) - gnd_itrs, np.array(sat_itrs) - gnd_itrs)
-        raw_windows = raw_windows * _constraint_highlighter(dv3, "gt", sca)
 
     julian = satellite._julian
     ind = np.arange(0, julian.size, 1) * raw_windows(julian).astype(int)
@@ -215,12 +200,12 @@ def generate(satellite, location, enc, ang, lighting=0, sca=0, tol=1e-5):
     for i in ind:
 
         st1, st2 = julian[i[0] - 1], julian[i[0]]
-        start = _root_find(julian, raw_windows, st1, st2, tol)
+        start = _root_find(raw_windows, st1, st2, tol)
 
         et1, et2 = julian[i[-1]], julian[i[-1] + 1]
-        end = _root_find(julian, raw_windows, et1, et2, tol)
+        end = _root_find(raw_windows, et1, et2, tol)
 
-        window = Window(satellite, location, start, end, enc, ang, lighting, sca)
+        window = Window(satellite, location, start, end, enc, ang, lighting)
         windows._add_window(window)
 
     return windows
