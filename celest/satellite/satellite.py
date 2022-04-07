@@ -1,10 +1,8 @@
 
 
-from celest.core.interpolation import _interpolate
 from celest.satellite.coordinate import Coordinate
-from typing import Any, Literal, Tuple
+from typing import Literal, Tuple
 import pandas as pd
-import numpy as np
 import numpy.typing as npt
 
 
@@ -15,9 +13,9 @@ class Satellite(Coordinate):
 
     `julian + offset` is the Julian time in the J2000 epoch associated with
     input positions. If `frame=="geo"`, the `position` input can have 2
-    columns, (latitude, longitude) or three columns (lattitude, longitude,
+    columns (latitude, longitude) or three columns (latitude, longitude,
     altitude). If no geodetic altitude is provided, it is assumed zero. Other
-    frames require 3 columns.
+    frames require three columns.
 
     Parameters
     ----------
@@ -32,15 +30,13 @@ class Satellite(Coordinate):
     julian : array_like
         1-D array containing time data in Julian days.
 
-        If times are not in the J2000 epoch, a non-zero offset must be pased
+        If times are not in the J2000 epoch, a non-zero offset must be passed
         in to add to the julian times.
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default is zero.
 
     Methods
     -------
-    interpolate(windows, factor)
-        Interpolate satellite data for window times and positions.
     save_data(fname, delimiter, times, positions)
         Save satellite time and position data.
     """
@@ -54,71 +50,12 @@ class Satellite(Coordinate):
 
         return self._length
 
-    def interpolate(self, windows: Any, factor: int=5) -> None:
-        """Interpolate coordinate information around window times.
-
-        This method interpolates position and time data around input encounter
-        times to gain greater precision where needed.
-
-        Parameters
-        ----------
-        windows : WindowList
-            Windows defining interpolation regions.
-        factor : int, optional
-            The interpolation factor will increase the number of points in
-            window regions by the factor `factor`.
-
-        Notes
-        -----
-        Window defined interpolation is necessary for more precise coordinate
-        information around encounter regions as might be used for satellite
-        orientation calculations.
-
-        Examples
-        --------
-        If `IMG_windows` be a series of imaging encounters, we can interpolate
-        within such regions:
-
-        >>> satellite.interpolate(windows=IMG_windows, factor=5)
-        """
-
-        if not isinstance(factor, int):
-            raise ValueError("factor must be integer type.")
-
-        if factor <= 0:
-            raise ValueError("factor must be strictly positive.")
-
-        ind = np.zeros((0,), dtype=int)
-        time = self._julian
-        position = self.gcrs()
-
-        for window in windows:
-            start = window.start
-            end = window.end
-
-            temp_ind = np.where((start < time) & (time < end))[0]
-            ind = np.concatenate((ind, temp_ind))
-
-        ind = np.split(ind, np.where(np.diff(ind) > 1)[0])
-        ind = np.array(ind, dtype=object)
-
-        time_interp = _interpolate(time, factor, 2, ind)
-        position_interp = _interpolate(position, factor, 2, ind)
-
-        self._julian = time_interp
-        self._GCRS = position_interp
-        self._ITRS = None
-        self._GEO = None
-        self._length = time_interp.size
-
-    def save_data(self, fname: str, times: Tuple=("julian",), positions:
-                  Tuple=("gcrs",), fmt="%.18e", delimiter=" ", newline="\n",
-                  header="", footer="", comments="# ", encoding=None) -> None:
+    def save_data(self, times: Tuple=("julian",), positions: Tuple=("gcrs",),
+                  path: str=None, sep=",", float_format: str=None) -> None:
         """Save satellite data.
 
         Parameters
         ----------
-        fname : str
         times : Tuple, optional
             Tuple containing time representations to save.
 
@@ -127,25 +64,14 @@ class Satellite(Coordinate):
             Tuple containing position representations to save.
 
             Available positions include "gcrs", "itrs", and "geo".
-        fmt : str or sequence of strings, optional
-            A single format or sequence of formats, or a multiformat string
-            (in which case the delimiter is ignored).
-        delimiter : str, optional
-            String or character separating columns.
-        newline : str, optional
-            String or character separating lines.
-        header : str, optional
-            String to be written at the start of the file.
-        footer : str, optional
-            String to be written at the end of the file.
-        comments : str, optional
-            String to preappend to the header and footer to mark them as
-            comments.
-        encoding : {None, str}, optional
-            Encoding used to encode the output file.
-
-            Refer to NumPy's `savetxt` documentation for more information on
-            encoding options.
+        path : str, optional
+            String or path object to save data to. If not provided, data is
+            returned as a string.
+        sep : str, optional
+            String of length 1 representing the field delimiter for the
+            output file.
+        float_format : str, optional
+            Format string for floating point numbers.
 
         Examples
         --------
@@ -184,7 +110,7 @@ class Satellite(Coordinate):
             columns = position_information[1:]
 
             for i, column in enumerate(columns):
-                data[column] = position_data[:, i]
+                data[column] = position_data[i]
 
         df = pd.DataFrame(data)
-        df.to_csv(fname, sep=delimiter)
+        df.to_csv(path_or_buf=path, sep=sep, float_format=float_format)

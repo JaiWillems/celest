@@ -12,11 +12,7 @@ class TestWindow(TestCase):
     def setUp(self):
 
         location = GroundPosition(43.6532, 79.3832)
-        self.window = Window("", location, 21282.4, 21282.5, "image", 30, 1, 7)
-
-    def test_str(self):
-
-        print(self.window)
+        self.window = Window("", location, 21282.4, 21282.5, "image", 30, 1)
 
     def test_copy(self):
 
@@ -36,11 +32,11 @@ class TestWindows(TestCase):
         location = GroundPosition(43.6532, 79.3832)
         self.windows = Windows()
 
-        self.wind_one = Window("", location, 1319, 1319.2, "image", 30, 1, 0)
-        self.wind_two = Window("", location, 1322.3, 1322.31, "data link", 10, -1, 30)
-        self.wind_three = Window("", location, 1324, 1324.2, "image", 30, 1, 0)
-        self.wind_four = Window("", location, 1324.3, 1325.3, "image", 30, 1, 0)
-        self.wind_five = Window("", location, 1325, 1326.1, "image", 30, 1, 0)
+        self.wind_one = Window("", location, 1319, 1319.2, "image", 30, 1)
+        self.wind_two = Window("", location, 1322.3, 1322.31, "data link", 10, -1)
+        self.wind_three = Window("", location, 1324, 1324.2, "image", 30, 1)
+        self.wind_four = Window("", location, 1324.3, 1325.3, "image", 30, 1)
+        self.wind_five = Window("", location, 1325, 1326.1, "image", 30, 1)
 
         self.windows._add_window(self.wind_one)
         self.windows._add_window(self.wind_two)
