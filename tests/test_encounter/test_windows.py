@@ -1,16 +1,15 @@
 
 
 from celest.encounter.groundposition import GroundPosition
-from celest.encounter.windows import generate
-from celest.encounter._window_handling import Window, Windows
-from celest.encounter._window_utils import _window_encounter_ind
+from celest.encounter.windows import _get_ang, _sun_coor, generate
 from celest.satellite.satellite import Satellite
+from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest
 
 
-class TestEncounter(TestCase):
+class TestWindows(TestCase):
 
     def setUp(self):
 
@@ -18,98 +17,77 @@ class TestEncounter(TestCase):
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
         times, itrs = data[:, 0], data[:, 10:]
 
-        self.finch = Satellite(itrs, "itrs", times, 2430000)
+        self.sat = Satellite(itrs, "itrs", times, 2430000)
+
+    def test_sun_coor(self):
+
+        from astropy.coordinates import get_body, ITRS
+        from astropy import time, units
+
+        julData = np.array([2455368.75, 2456293.5416666665, 2459450.85])
+        astropy_time = time.Time(julData, format="jd")
+
+        sun_pos = get_body("sun", astropy_time)
+        sun_pos.representation_type = "cartesian"
+
+        itrsCoor = sun_pos.transform_to(ITRS(obstime=astropy_time))
+
+        x = itrsCoor.x.to(units.km).value
+        y = itrsCoor.y.to(units.km).value
+        z = itrsCoor.z.to(units.km).value
+
+        calc_x, calc_y, calc_z = _sun_coor(julData).itrs(stroke=False)
+        self.assertTrue(np.allclose(x, calc_x, rtol=0.05))
+        self.assertTrue(np.allclose(y, calc_y, rtol=0.05))
+        self.assertTrue(np.allclose(z, calc_z, rtol=0.05))
+
+    def test_get_ang(self):
+        """Test `Encounter._get_ang`."""
+
+        vec_one = np.array([[56, 92, 76], [9238, 8479, 9387], [2, 98, 23]])
+        vec_two = np.array([[36, 29, 38], [2703, 947, 8739], [9827, 921, 1]])
+        ang = [16.28, 37, 83.65]
+
+        calc_ang = _get_ang(vec_one, vec_two)
+
+        for i in range(calc_ang.size):
+            with self.subTest(i=i):
+                self.assertAlmostEqual(ang[i], calc_ang[i], delta=0.01)
 
     def test_windows(self):
 
-        location_1 = GroundPosition(43.6532, -79.3832)
-        location_2 = GroundPosition(52.1579, -106.6702)
+        location = GroundPosition(43.6532, -79.3832)
 
-        # Test case 1.
-        windows_1 = generate(self.finch, location_1, "image", 30, 0)
-        indices = _window_encounter_ind(self.finch, location_1, 30, 1, 0, 1)
-        indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
+        altitude = self.sat._altitude(location)
+        off_nadir = self.sat.off_nadir(location, stroke=True)
 
-        val_windows = Windows()
-        time = self.finch._julian
-        for reg in indices:
+        # Test the window generator for day imaging case.
 
-            start = time[reg[0]]
-            end = time[reg[-1]]
+        enc, ang, lighting, tol = "image", 30, 1, 1e-5
+        windows = generate(self.sat, location, enc, ang, lighting, tol)
 
-            window = Window(self.finch, location_1, start, end, "image", 30, 1, 0)
-            val_windows._add_window(window)
+        for window in windows:
+            start, end = window.start, window.end
+            window_times = np.linspace(start, end, 10)
 
-        self.assertEqual(len(val_windows), len(windows_1))
+            tha = Time(window_times).true_hour_angle(location.lon)
 
-        windows_val, windows_calc = val_windows.windows, windows_1.windows
-        for val, calc in zip(windows_val, windows_calc):
-            self.assertEqual(val.start, calc.start)
-            self.assertEqual(val.end, calc.end)
+            self.assertTrue(np.all(altitude(window_times) > 0))
+            self.assertTrue(np.all(off_nadir(window_times) < ang))
+            self.assertTrue(np.all((-90 < tha) & (tha < 90)))
 
-        # Test case 2.
-        windows_2 = generate(self.finch, location_1, "data_link", 10, 0)
-        indices = _window_encounter_ind(self.finch, location_1, 10, 0, 30, 0)
-        indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
+        # Test the window generator for all day data link case.
 
-        val_windows = Windows()
-        time = self.finch._julian
-        for reg in indices:
+        enc, ang, lighting, tol = "data_link", 10, 0, 1e-5
+        windows = generate(self.sat, location, enc, ang, lighting, tol)
 
-            start = time[reg[0]]
-            end = time[reg[-1]]
+        for window in windows:
+            start, end = window.start, window.end
+            window_times = np.linspace(start, end, 10)
 
-            window = Window(self.finch, location_1, start, end, "data_link", 10, 0, 30)
-            val_windows._add_window(window)
+            tha = Time(window_times).true_hour_angle(location.lon)
 
-        self.assertEqual(len(val_windows), len(windows_2))
-
-        windows_val, windows_calc = val_windows.windows, windows_2.windows
-        for val, calc in zip(windows_val, windows_calc):
-            self.assertEqual(val.start, calc.start)
-            self.assertEqual(val.end, calc.end)
-
-        windows_3 = generate(self.finch, location_2, "image", 30, 0)
-        indices = _window_encounter_ind(self.finch, location_2, 30, 1, 0, 1)
-        indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
-
-        val_windows = Windows()
-        time = self.finch._julian
-        for reg in indices:
-
-            start = time[reg[0]]
-            end = time[reg[-1]]
-
-            window = Window(self.finch, location_2, start, end, "image", 30, 1, 0)
-            val_windows._add_window(window)
-
-        self.assertEqual(len(val_windows), len(windows_3))
-
-        windows_val, windows_calc = val_windows.windows, windows_3.windows
-        for val, calc in zip(windows_val, windows_calc):
-            self.assertEqual(val.start, calc.start)
-            self.assertEqual(val.end, calc.end)
-
-        windows_4 = generate(self.finch, location_2, "data_link", 10)
-        indices = _window_encounter_ind(self.finch, location_2, 10, 0, 30, 0)
-        indices = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
-
-        val_windows = Windows()
-        time = self.finch._julian
-        for reg in indices:
-
-            start = time[reg[0]]
-            end = time[reg[-1]]
-
-            window = Window(self.finch, location_1, start, end, "data_link", 30, 1, 0)
-            val_windows._add_window(window)
-
-        self.assertEqual(len(val_windows), len(windows_4))
-
-        windows_val, windows_calc = val_windows.windows, windows_4.windows
-        for val, calc in zip(windows_val, windows_calc):
-            self.assertEqual(val.start, calc.start)
-            self.assertEqual(val.end, calc.end)
+            self.assertTrue(np.all(altitude(window_times) > 10))
 
 
 if __name__ == "__main__":
