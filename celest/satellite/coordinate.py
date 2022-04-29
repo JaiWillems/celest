@@ -44,25 +44,6 @@ class Coordinate(Time):
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default is zero.
 
-    Methods
-    -------
-    geo(iso=False, stroke=False)
-        Return geographical coordinates.
-    era(stroke=False)
-        Return Earth rotation angle in decimal degrees.
-    gcrs(stroke=False)
-        Return gcrs coordinates.
-    itrs(stroke=False)
-        Return itrs coordinates.
-    horizontal(location, stroke=False)
-        Return horizontal coordinates in decimal degrees.
-    off_nadir(location, stroke=False)
-        Return off-nadir angle in decimal degrees.
-    altitude(stroke=False)
-        Return the geodetic altitude in kilometers.
-    distance(location, stroke=False)
-        Return distance to the ground location.
-
     Examples
     --------
     Initialize `Coordinate` using gcrs positions:
@@ -78,9 +59,7 @@ class Coordinate(Time):
     >>> altitude, azimuth = c.horizontal(location=location)
     """
 
-    def __init__(self, position: npt.ArrayLike, frame:
-                 Literal["gcrs", "geo", "itrs"], julian: npt.ArrayLike,
-                 offset=0) -> None:
+    def __init__(self, position, frame, julian, offset=0) -> None:
 
         super().__init__(julian, offset)
 
@@ -115,8 +94,7 @@ class Coordinate(Time):
 
         return self._length
 
-    def _set_base_position(self, position: np.ndarray, frame:
-                           Literal["gcrs", "geo", "itrs"]) -> None:
+    def _set_base_position(self, position, frame) -> None:
         """Initialize base position.
 
         Parameters
@@ -156,7 +134,7 @@ class Coordinate(Time):
             x, y, z = [Stroke(self._julian, itrs[:, i], self._kind) for i in range(3)]
             self._ITRS = np.array([x, y, z])
 
-    def _geo_to_itrs(self, position: np.ndarray) -> np.ndarray:
+    def _geo_to_itrs(self, position) -> np.ndarray:
         """Geographical to itrs transformation.
 
         Parameters
@@ -206,7 +184,7 @@ class Coordinate(Time):
 
         return np.concatenate((x, y, z), axis=1)
 
-    def _itrs_to_geo(self, position: np.ndarray) -> np.ndarray:
+    def _itrs_to_geo(self, position) -> np.ndarray:
         """Itrs to geographical transformation.
 
         Parameters
@@ -232,7 +210,7 @@ class Coordinate(Time):
 
         return lat, lon
 
-    def geo(self, iso: bool=False, stroke=False) -> np.ndarray:
+    def geo(self, iso=False, stroke=False) -> np.ndarray:
         """Return geographical coordinates.
 
         The method can not return the data as both a stroke and iso
@@ -352,8 +330,7 @@ class Coordinate(Time):
         else:
             return ang
 
-    def _gcrs_and_itrs(self, position: np.ndarray, frame:
-                       Literal["itrs", "gcrs"]) -> np.ndarray:
+    def _gcrs_and_itrs(self, position, frame) -> np.ndarray:
         """Transform between gcrs and itrs coordinates.
 
         Parameters
@@ -502,7 +479,7 @@ class Coordinate(Time):
         else:
             return x(self._julian), y(self._julian), z(self._julian)
 
-    def _get_ang(self, u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    def _get_ang(self, u, v) -> np.ndarray:
         """Return the degree angle bewteen two vectors.
 
         Parameters
@@ -528,7 +505,7 @@ class Coordinate(Time):
 
         return ang
 
-    def _altitude(self, location: Any) -> Stroke:
+    def _altitude(self, location) -> Stroke:
         """Return the altitude angle of a satellite.
 
         Parameters
@@ -548,7 +525,7 @@ class Coordinate(Time):
 
         return 90 - self._get_ang(self._ITRS - gnd_itrs, gnd_itrs)
 
-    def _azimuth(self, location: Any) -> Stroke:
+    def _azimuth(self, location) -> Stroke:
         """Return the azimuth angle of the satellite.
 
         Parameters
@@ -583,7 +560,7 @@ class Coordinate(Time):
 
         return az
 
-    def horizontal(self, location: Any, stroke=False) -> Tuple:
+    def horizontal(self, location, stroke=False) -> Tuple:
         """Return horizontal coordinates in decimal degrees.
 
         The azimuth angle ranges from 0 to 360 degrees, measured clockwise
@@ -630,7 +607,7 @@ class Coordinate(Time):
         else:
             return alt(self._julian), az(self._julian)
 
-    def off_nadir(self, location: Any, stroke=False) -> np.ndarray:
+    def off_nadir(self, location, stroke=False) -> np.ndarray:
         """Return off-nadir angle in decimal degrees.
 
         The off-nadir angle is the angular distance of a ground location from
@@ -678,7 +655,7 @@ class Coordinate(Time):
         else:
             return ang(self._julian)
 
-    def _WGS84_radius(self, lattitude: np.ndarray) -> np.ndarray:
+    def _WGS84_radius(self, lattitude) -> np.ndarray:
         """Return Earth's geocentric radius using WGS84.
 
         Parameters
@@ -793,7 +770,7 @@ class Coordinate(Time):
         else:
             return h(self._julian)
 
-    def distance(self, location: Any, stroke=False) -> np.ndarray:
+    def distance(self, location, stroke=False) -> np.ndarray:
         """Return distance to the ground location.
 
         Parameters

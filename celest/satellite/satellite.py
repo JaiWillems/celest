@@ -34,15 +34,18 @@ class Satellite(Coordinate):
         in to add to the julian times.
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default is zero.
+    
+    Examples
+    --------
+    Initialize `Satellite` using gcrs positions:
 
-    Methods
-    -------
-    save_data(fname, delimiter, times, positions)
-        Save satellite time and position data.
+    >>> julian = [30462.50, 30462.50]
+    >>> position = [[-4681.50824149 -5030.09119386     0.        ]
+    ...             [-4714.35351825 -4978.74325953   454.41492765]]
+    >>> s = Satellite(position=position, frame="gcrs", julian=julian, offset=0)
     """
 
-    def __init__(self, position: npt.ArrayLike, frame: Literal["gcrs", "geo",
-                 "itrs"], julian: npt.ArrayLike, offset=0) -> None:
+    def __init__(self, position, frame, julian, offset=0) -> None:
 
         super().__init__(position, frame, julian, offset)
 
@@ -50,8 +53,8 @@ class Satellite(Coordinate):
 
         return self._length
 
-    def save_data(self, times: Tuple=("julian",), positions: Tuple=("gcrs",),
-                  path: str=None, sep=",", float_format: str=None) -> None:
+    def save_data(self, times=("julian",), positions=("gcrs",), path=None,
+                  sep=",", float_format=None) -> None:
         """Save satellite data.
 
         Parameters

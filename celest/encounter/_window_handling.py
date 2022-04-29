@@ -42,11 +42,6 @@ class Window:
         Encounter constraint angle in degrees.
     lighting : {-1, 0, 1}
         Lighting constraint for night only, all time, or day only encounters.
-
-    Methods
-    -------
-    copy()
-        Copy local window data to a new `Window` object.
     """
 
     def __init__(self, satellite: Any, location: Any, start: float, end: float,

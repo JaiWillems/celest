@@ -26,31 +26,6 @@ class Time:
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default to zero.
 
-    Methods
-    -------
-    true_solar_time(longitude)
-        Return true solar time in decimal hours.
-    mean_solar_time(longitude)
-        Return mean solar time in decimal hours.
-    true_hour_angle(longitude)
-        Return true hour angle in decimal hours.
-    mean_hour_angle(longitude)
-        Return mean hour angle in decimal hours.
-    ut1()
-        Return the universal time (same as GMT) in decimal hours.
-    julian()
-        Convenience method to return Julian times.
-    datetime()
-        Return `datetime.datetime` object array.
-    gmst()
-        Return Greenwich Mean Sidereal Time in decimal hours.
-    lmst(longitude)
-        Return Local Mean Sidereal Time in decimal hours.
-    gast()
-        Return Greenwich Apparent Sidereal Time in decimal hours.
-    last(longitude)
-        Return Local Apparent Sidereal Time in hours and degrees.
-
     Examples
     --------
     Construct a `Time` object using J2000 input times:
@@ -70,7 +45,7 @@ class Time:
     >>> last = t.last(longitude=145)
     """
 
-    def __init__(self, julian: npt.ArrayLike, offset: float=0) -> None:
+    def __init__(self, julian, offset=0) -> None:
 
         time = np.array(julian)
 
@@ -86,7 +61,7 @@ class Time:
 
         return self._length
 
-    def true_solar_time(self, longitude: npt.ArrayLike) -> np.ndarray:
+    def true_solar_time(self, longitude) -> np.ndarray:
         """Return true solar time in decimal hours.
 
         Parameters
@@ -142,7 +117,7 @@ class Time:
 
         return TST
 
-    def mean_solar_time(self, longitude: npt.ArrayLike) -> np.ndarray:
+    def mean_solar_time(self, longitude) -> np.ndarray:
         """Return mean solar time in decimal hours.
 
         Parameters
@@ -190,7 +165,7 @@ class Time:
 
         return MST
 
-    def true_hour_angle(self, longitude: npt.ArrayLike) -> np.ndarray:
+    def true_hour_angle(self, longitude) -> np.ndarray:
         """Return true hour angle in decimal hours.
 
         The true hour angle is the angle between the Sun's apparent position at
@@ -245,7 +220,7 @@ class Time:
 
         return HRA
 
-    def mean_hour_angle(self, longitude: npt.ArrayLike) -> np.ndarray:
+    def mean_hour_angle(self, longitude) -> np.ndarray:
         """Return mean hour angle in decimal hours.
 
         The mean hour angle is the angle between the Sun's mean position at
@@ -423,7 +398,7 @@ class Time:
 
         return gmst
 
-    def lmst(self, longitude: npt.ArrayLike) -> np.ndarray:
+    def lmst(self, longitude) -> np.ndarray:
         """Return Local Mean Sidereal Time in decimal hours.
 
         Parameters
@@ -504,7 +479,7 @@ class Time:
 
         return gast
 
-    def last(self, longitude: npt.ArrayLike) -> np.ndarray:
+    def last(self, longitude) -> np.ndarray:
         """Return Local Apparent Sidereal Time in hours and degrees.
 
         Parameters
