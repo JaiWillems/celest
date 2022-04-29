@@ -6,10 +6,9 @@ GroundPosition Class
 
 The :class:`GroundPosition` class is used to represent a ground location that
 can be passed into window generation functionality to produce viable
-ground-satellite encounter opportunities. Currently, the
-:class:`GroundPosition` class is fairly preliminary but will be expanded in the
-future to accommodate more specific and complicated ellipsoid models based on
-the input geographical coordinates.
+ground-satellite encounter opportunities. Currently, the :class:`GroundPosition`
+class is somewhat preliminary but will be expanded in the future to accommodate
+more complicated ellipsoid models based on the input geographical coordinates.
 
 .. autoclass:: celest.encounter.GroundPosition
    :members:
@@ -41,18 +40,18 @@ ways: indexing and iterating.
 
 To provide meaningful interactions with the window data, the :class:`Windows`
 is indexed by Julian start times in the J2000 epoch. Although, the start times
-are typically unknown to the user. As a result, a special indexing scheme was
-adopted by the class to provide data access that might be conveinient in
-contex. When indexing using an integer or float value, the window associated
-with the closest start time is returned. Similarily, when indexing with a tuple
-of values, the unique windows associated with the closest start time are
-returned. That is, when two indices are both closest to the start time of a
-window, the window is only returned once. If the index is a slice, all windows
-with start times falling within the slice (inclusive) are returned.
+are typically unknown to the user. As a result, a unique indexing scheme was
+adopted by the class to provide data access that might be convenient in
+context. The window associated with the closest start time is returned when
+indexing using an integer or float value. Similarly, when indexing with a tuple
+of values, the unique windows related to the closest start time are returned.
+When two indices are both closest to the start time of a window, the window is
+only returned once. All windows with start times falling within the slice
+(inclusive) are returned if the index is a slice.
 
-This indexing scheme allows for users to easily access the data in the
-:class:`Windows` class without having prior knowledge of start times. It also
-allows for the user to determine the encounter closest to a desired time for
+This indexing scheme allows users to easily access the data in the
+:class:`Windows` class without prior knowledge of start times. It also
+allows the user to determine the encounter closest to the desired time for
 scheduling purposes.
 
 Window data can also be accessed by iterating over the class.
