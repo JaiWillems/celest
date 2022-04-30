@@ -1,25 +1,47 @@
+"""Celest is a package for satellite mission planning.
+
+It provides:
+
+- Diverse arrangement of time and coordinate conversions,
+- Satellite orbital and attitude calculations, and
+- Satellite-to-ground encounter calculations.
+
+Refer to project links for documentation and source code urls.
+
+All Celest wheels distributed on PyPI are BSD licensed.
+"""
+DOCLINES = (__doc__ or '').split("\n")
+
+
 import setuptools
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+
+__version__ = "0.3.0"
+
 
 setuptools.setup(
     name="celest",
-    version="0.2.0",
-    author="Jai Willems",
+    version=__version__,
+    author="Jai Willems et al.",
     author_email="jai52h@hotmail.com",
     description="Satellite dynamics and mission planning library.",
-    long_description=long_description,
+    long_description="\n".join(DOCLINES),
     long_description_content_type="text/markdown",
     url="https://github.com/JaiWillems/Celest",
-    license="BSD-3-Clause",
+    download_url="https://pypi.org/project/celest/",
+    project_urls={
+        "Bug Tracker": "https://github.com/JaiWillems/celest/issues",
+        "Documentation": "https://celest.readthedocs.io/en/latest/",
+        "Source Code": "https://github.com/JaiWillems/celest"
+    },
+    license="BSD",
     packages=setuptools.find_packages(include=["celest", "celest.*"]),
     install_requires=[
         "jplephem",
         "julian",
         "numpy",
         "pandas",
-        "scipy"
+        "polare"
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

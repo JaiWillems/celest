@@ -1,4 +1,3 @@
-"""Testing module for the `Time` class."""
 
 
 from astropy import coordinates, time
@@ -12,9 +11,8 @@ import numpy as np
 class TestTime(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
-        self.julData = np.array([2455368.75, 2459450.85, 2456293.5416666665])
+        self.julData = [2455368.75, 2459450.85, 2456293.5416666665]
         self.astropy_time = time.Time(self.julData, format="jd")
 
     def test_true_solar_time(self):
@@ -30,11 +28,12 @@ class TestTime(TestCase):
         .. [1] NOAA US Department of Commerce. ESRL Global Monitoring
            Laboratory -Global Radiation and Aerosols. url:
            https://gml.noaa.gov/grad/solcalc/.
-        .. [2] Time Conventions. url:http://www.bom.gov.au/climate/data-services/solar/content/data-time.html.
+        .. [2] Time Conventions. url:
+           http://www.bom.gov.au/climate/data-services/solar/content/data-time.html.
         """
 
-        julian = np.array([2455368.75, 2459450.85, 2456293.5416666665])
-        lon = np.array([-105, -118.24, 147.46])
+        julian = [2455368.75, 2459450.85, 2456293.5416666665]
+        lon = [-105, -118.24, 147.46]
         tst = np.array([23.0715, 0.378059, 10.76556])
 
         calc_tst = Time(julian=julian).true_solar_time(longitude=lon)
@@ -52,11 +51,12 @@ class TestTime(TestCase):
 
         References
         ----------
-        .. [1] Time Conventions. url: http://www.bom.gov.au/climate/data-services/solar/content/data-time.html.
+        .. [1] Time Conventions. url:
+           http://www.bom.gov.au/climate/data-services/solar/content/data-time.html.
         """
 
-        julData = np.array([2456293.5416666665])
-        lon = np.array([147.46])
+        julData = 2456293.5416666665
+        lon = 147.46
         tst = np.array([10.83056])
 
         calc_tst = Time(julian=julData).mean_solar_time(longitude=lon)
@@ -79,15 +79,16 @@ class TestTime(TestCase):
            https://gml.noaa.gov/grad/solcalc/.
         """
 
-        julData = np.array([2455368.75, 2459450.85, 2456293.5416666665])
-        lon = np.array([-105, -118.24, 147.46])
+        julData = [2455368.75, 2459450.85, 2456293.5416666665]
+        lon = [-105, -118.24, 147.46]
         hour_angle = np.array([166.0734, 185.671, 341.53]) / 15 % 24
 
         calc_hour_angle = Time(julian=julData).true_hour_angle(longitude=lon)
 
         for i in range(calc_hour_angle.size):
             with self.subTest(i=i):
-                self.assertAlmostEqual(hour_angle[i], calc_hour_angle[i], delta=1.51)
+                self.assertAlmostEqual(hour_angle[i], calc_hour_angle[i],
+                                       delta=1.51)
 
     def test_mean_hour_angle(self):
         """Test `Time.true_hour_angle`.
@@ -98,15 +99,16 @@ class TestTime(TestCase):
         angle.
         """
 
-        julData = np.array([2456293.5416666665])
-        lon = np.array([147.46])
+        julData = 2456293.5416666665
+        lon = 147.46
         hour_angle = np.array([342.4584]) / 15 % 24
 
         calc_hour_angle = Time(julian=julData).mean_hour_angle(longitude=lon)
 
         for i in range(calc_hour_angle.size):
             with self.subTest(i=i):
-                self.assertAlmostEqual(hour_angle[i], calc_hour_angle[i], delta=0.01)
+                self.assertAlmostEqual(hour_angle[i], calc_hour_angle[i],
+                                       delta=0.01)
 
     def test_ut1(self):
         """Test `Time.UT1`.
@@ -149,7 +151,8 @@ class TestTime(TestCase):
                 self.assertEqual(calc_datetime[i].month, dt.month)
                 self.assertEqual(calc_datetime[i].day, dt.day)
                 self.assertEqual(calc_datetime[i].second, dt.second)
-                self.assertAlmostEqual(calc_datetime[i].microsecond, dt.microsecond, delta=1)
+                self.assertAlmostEqual(calc_datetime[i].microsecond,
+                                       dt.microsecond, delta=1)
 
     def test_gmst(self):
         """Test `Time.gmst`.

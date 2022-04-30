@@ -1,23 +1,20 @@
-"""Define various angle representations."""
 
 
-from celest.core.decorators import set_module
 import numpy as np
 
 
-@set_module('celest.satellite')
 def sexagesimal(angles: np.ndarray) -> np.ndarray:
     """Convert decimal angles into sexagesimal angles.
 
     Parameters
     ----------
     angles : np.ndarray
-        Array of shape (n,) containing angles in decimal degrees.
+        1-D array containing angles in decimal degrees.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n,) containing sexagesimal angles as strings.
+        1-D array containing sexagesimal angles as strings.
 
     Examples
     --------
@@ -30,14 +27,12 @@ def sexagesimal(angles: np.ndarray) -> np.ndarray:
               '+149°06′00.00″'])
     """
 
-    deg = u"\u00B0"
-    min = u"\u2032"
-    sec = u"\u2033"
+    deg, min, sec = u"\u00B0", u"\u2032", u"\u2033"
 
-    length = angles.shape[0]
-    out_arr = np.empty((length,), dtype="<U32")
+    n = angles.shape[0]
+    out_arr = np.empty((n,), dtype="<U32")
 
-    for i in range(length):
+    for i in range(n):
 
         ang = angles[i]
 
@@ -56,27 +51,20 @@ def sexagesimal(angles: np.ndarray) -> np.ndarray:
 
 
 def _ISO6709_representation(position: np.ndarray) -> np.ndarray:
-    """Format geographical data in an international standard.
-
-    This method formats the input geographical point location data in the
-    ISO6709 standard format.
+    """Format geographical data in the ISO6709 standard.
 
     Parameters
     ----------
     position : np.ndarray
-        Array of shape (n, 3) with columns of geodetic latitude,
-        terrestrial longitude, and geodetic altitude data.
+        2-D array containing columns of latitude, longitude, and altitude data.
 
     Returns
     -------
     np.ndarray
-        Array of shape (n,) containing position strings in accordance to
-        ISO6709 standard.
+        1-D array containing ISO6709 standardized position strings.
     """
 
-    deg = "\u00B0"
-    min = "\u2032"
-    sec = "\u2033"
+    deg, min, sec = "\u00B0", "\u2032", "\u2033"
 
     out_arr = np.empty((position.shape[0],), dtype="<U37")
 

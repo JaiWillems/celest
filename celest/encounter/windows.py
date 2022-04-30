@@ -1,126 +1,211 @@
-"""Generate window sets for specified encounters.
-
-This module contains functions to generate window sets for various satellite
-and ground-location encounters.
-"""
 
 
-from celest.core.decorators import set_module
-from celest.core.interpolation import _interpolate
 from celest.encounter._window_handling import Window, Windows
-from celest.encounter._window_utils import _window_encounter_ind
-from typing import Any, Literal
+from celest.satellite.coordinate import Coordinate
+from jplephem.spk import SPK
 import numpy as np
+import pkg_resources
 
 
-_image_encounter = {
-    "type": "I",
-    "angType": 1,  # Off-nadir angle.
-    "lighting": 1,
-    "sca": 0
-}
+def _constraint_highlighter(decision_var, constraint, ang):
+    """Return raw window highlighter.
+
+    This function applies the constraint between the decision variable and
+    constraint angle to generate a Stroke that is one where the constraint is
+    satisfied and zero elsewhere.
+
+    Parameters
+    ----------
+    decision_var : Stroke
+        Stroke object containing the decision variable.
+    constraint : {"gt", "ge", "lt", "le", "eq"}
+        Constraint type.
+
+        The constraint is applied with the decision variable on the left and
+        the constraint angle on the right. For example, `constraint="gt"`
+        implies `decision_var > ang`.
+    ang : float
+        Constraint angle in units equivalent to `decision_var`.
+
+    Returns
+    -------
+    Stroke
+        Stroke object containing the constraint highlighter.
+    """
+
+    if constraint == "gt":
+        return decision_var > ang
+    elif constraint == "ge":
+        return decision_var >= ang
+    elif constraint == "lt":
+        return decision_var < ang
+    elif constraint == "le":
+        return decision_var <= ang
+    elif constraint == "eq":
+        return decision_var == ang
+    else:
+        raise ValueError("Invalid constraint type.")
 
 
-_data_link_encounter = {
-    "type": "T",
-    "angType": 0,  # Altitude angle.
-    "lighting": 0,
-    "sca": 30
-}
+def _sun_coor(julian):
+    """Return the sun's coordinates.
+
+    Parameters
+    ----------
+    julian : np.ndarray
+        1-D array containing Julian times in the J2000 epoch.
+
+    Returns
+    -------
+    Coordinate
+        Coordinate object containing the sun's position.
+    """
+
+    ephem = pkg_resources.resource_filename(__name__, '../data/de421.bsp')
+    kernal = SPK.open(ephem)
+
+    ssb2sunb = kernal[0, 10].compute(julian)
+    ssb2eb = kernal[0, 3].compute(julian)
+    eb2e = kernal[3, 399].compute(julian)
+    e2sun = (ssb2sunb - ssb2eb - eb2e).T
+
+    SPK.close(kernal)
+
+    sun_coor = Coordinate(e2sun, "gcrs", julian)
+
+    return sun_coor
 
 
-@set_module('celest.encounter.windows')
-def generate(satellite: Any, location: Any, enc: Literal["image", "data link"],
-             ang: float, factor: int=5) -> Windows:
-    """Return encounter windows.
+def _root_find(f, tl, tr, tol):
+    """Return root of f(t) between lg and rg.
+
+    Parameters
+    ----------
+    f : Stroke
+        Stroke object representing the function to be evaluated.
+    tl : float
+        Lower bound of the search interval.
+    tr : float
+        Upper bound of the search interval.
+    tol : float
+        Search tolerance.
+
+    Returns
+    -------
+    float
+        Root of `f(t)` between `lg` and `rg`.
+    """
+
+    l, r = tl, tr
+    fl = int(f(l))
+
+    while abs(r - l) > tol:
+
+        c = (l + r) / 2
+        fc = int(f(c))
+
+        if abs(fl - fc) == 1:
+            r = c
+        else:
+            l = c
+            fl = fc
+
+    return (l if fl == 1 else r)
+
+
+def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Calculate degree angle bewteen two vectors.
+
+    Parameters
+    ----------
+    u, v : np.ndarray
+        2-D arrays containing row-vectors.
+
+    Returns
+    -------
+    np.ndarray
+        1-D array containing the degree angle between rows of `u` and `v`.
+    """
+
+    ua = None if u.ndim == 1 else 1
+    va = None if v.ndim == 1 else 1
+
+    n = np.sum(u * v, axis=(ua or va))
+    d = np.linalg.norm(u, axis=ua) * np.linalg.norm(v, axis=va)
+    ang = np.degrees(np.arccos(n / d))
+
+    return ang
+
+
+def generate(satellite, location, enc, ang, lighting=0, tol=1e-5):
+    """Return windows for a given encounter.
 
     Parameters
     ----------
     satellite : Satellite
-        Satellite taking part in ground interactions.
-    location : GroundPosition
-        Ground location of imaging site or ground station.
-    enc : {"image", "data link"}
-        Type of encounter as being an imaging or data link encounter.
+        Satellite object.
+    location : Location
+        Location of ground station.
+    enc : {"image", "data_link"}
+        Type of encounter.
     ang : float
-        Encounter contraint angle in degrees.
-    factor : int, optional
-        Data interpolation factor for more precise encounter information, by
-        default 5.
+        Constraint angle in degrees.
+    lighting : float, optional
+        Lighting condition specifier.
+
+        `-1` indicates nighttime encounters, `0` indicates anytime encounters,
+        and `1` indicates daytime encounters.
+    tol : float, optional
+        Window start and end time tolerance in days.
 
     Returns
     -------
     Windows
-        The encounter opportunities between the satellite and ground location
-        of the type specified.
-    
-    Notes
-    -----
-    Imaging encounters are use the off-nadir angle, measured in increasing
-    degrees from the satellite's nadir to the ground location. When the
-    off-nadir angle is used, the input `ang` provides a maximum constraint.
-    Data link encounters use the altitude angle, measured in increasing
-    degrees from the ground location's horizon to the satellite. When the
-    altitude angle is used, the input `ang` provides a minimum constraint.
-
-    Examples
-    --------
-    >>> toronto = GroundPosition(latitude=43.65, longitude=-79.38)
-    >>> toronto_dl = windows.generate(satellite, toronto, "data link", 30)
+        The satellite window details.
     """
+
+    # Determine windows based on the type of encounter.
+    if enc == "image":
+        dv = satellite._altitude(location)
+        raw_windows_1 = _constraint_highlighter(dv, "ge", 0)
+
+        dv = satellite.off_nadir(location, stroke=True)
+        raw_windows_2 = _constraint_highlighter(dv, "lt", ang)
+
+        raw_windows = raw_windows_1 * raw_windows_2
+    elif enc == "data_link":
+        dv = satellite._altitude(location)
+        raw_windows = _constraint_highlighter(dv, "gt", ang)
+    else:
+        raise ValueError("Invalid encounter type.")
+
+    if lighting != 0:
+        sun_coor = _sun_coor(satellite._julian)
+        sun_alt, _ = sun_coor.horizontal(location, stroke=True)
+        comp = "gt" if lighting == 1 else "le"
+        raw_windows = raw_windows * _constraint_highlighter(sun_alt, comp, 0)
+
+    julian = satellite._julian
+    ind = np.arange(0, julian.size, 1) * raw_windows(julian).astype(int)
+    ind = ind[ind != 0]
+    ind = np.split(ind, np.where(np.diff(ind) != 1)[0] + 1)
+    ind = np.array(ind, dtype=object)
 
     windows = Windows()
 
-    if enc == "image":
-        ang_type = _image_encounter["angType"]
-        lighting = _image_encounter["lighting"]
-        sca = _image_encounter["sca"]
-    else:
-        ang_type = _data_link_encounter["angType"]
-        lighting = _data_link_encounter["lighting"]
-        sca = _data_link_encounter["sca"]
+    # Populate Windows object.
+    if ind.size == 0:
+        return windows
 
-    if factor > 1:
+    for i in ind:
 
-        if ang_type:
-            off_nadir = satellite.position.off_nadir(location)
-            ind = np.where(off_nadir < ang)[0]
+        st1, st2 = julian[i[0] - 1], julian[i[0]]
+        start = _root_find(raw_windows, st1, st2, tol)
 
-        elif not ang_type:
-            alt, _ = satellite.position.horizontal(location)
-            ind = np.where(alt > ang)[0]
+        et1, et2 = julian[i[-1]], julian[i[-1] + 1]
+        end = _root_find(raw_windows, et1, et2, tol)
 
-        ind = np.split(ind, np.where(np.diff(ind) != 1)[0] + 1)
-        ind = np.array(ind, dtype=object)
+        window = Window(satellite, location, start, end, enc, ang, lighting)
+        windows._add_window(window)
 
-        julian_interp = _interpolate(satellite.time.julian(), factor, 2, ind)
-        eci_interp = _interpolate(satellite.position.gcrs(), factor, 2, ind)
-
-        satellite.position._GCRS = eci_interp
-        satellite.position._ITRS = None
-        satellite.position._GEO = None
-        satellite.position.length = eci_interp.shape[0]
-        satellite.position.time._julian = julian_interp
-        satellite.position.time._length = julian_interp.size
-        satellite.time = satellite.position.time
-
-    enc_ind = _window_encounter_ind(satellite, location, ang, ang_type, sca, lighting)
-
-    window_ind = np.split(enc_ind, np.where(np.diff(enc_ind) != 1)[0] + 1)
-    window_ind = np.array(window_ind, dtype=object)
-
-    times = satellite.time.julian()
-
-    if window_ind.size != 0:
-
-        n = len(window_ind)
-
-        for j in range(n):
-
-            start = times[window_ind[j][0]]
-            end = times[window_ind[j][-1]]
-            window = Window(satellite, location, start, end, enc, ang, lighting, sca)
-
-            windows._add_window(window)
-            
     return windows

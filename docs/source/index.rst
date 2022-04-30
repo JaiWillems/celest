@@ -6,25 +6,23 @@
 Celest Documentation
 ====================
 
-Celest is a satellite mission planning program designed for the University of
-Toronto Aerospace Team which is applying the program to a hyperspectral
-imaging CubeSat mission. The library aims to provide the necessary tools to
-plan satellite-ground interactions such as ground target tracking, and
-calculating imaging and ground transmission opportunities.
+Celest is a satellite mission planning software designed for the University of
+Toronto Aerospace Team, which is applying the program to a hyperspectral
+imaging CubeSat mission. The library aims to provide the necessary tools for
+celestial orbital conversions and satellite-to-ground interactions such as
+determining imaging/transmission opportunities.
 
-Being subjected to a design team workflow, Celest is consistently under
-development for improvements in efficiency, functionality, and fidelity. It is 
-then expected that the library will be updated regularly.
+Celest is currently in the development phase and is subject to significant
+changes. The program aims to incorporate a high-order adaptive orbit
+propagator and state-of-the-art scheduling algorithm for agile earth
+observation satellite (AEOS) imaging encounters.
 
 What can the program do?
 ------------------------
 
-The program only requires an input data set for a satellite that contains the
-positions in either a gcrs, itrs, or geographical frame and the
-assosciated Julian times. The program can then be used to calculate various
-position and time representations, satellite to ground encounters, and
-transformations necessary for ground location tracking.
-
+Currently, the program requires satellite position data in either the gcrs,
+itrs, or geographical frame and the corresponding times. Celest can then calculate different position representations, time representations, and ground
+encounter calculations.
 
 What can be expected of the project?
 ------------------------------------
