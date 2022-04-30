@@ -47,7 +47,7 @@ class Satellite(Coordinate):
 
         super().__init__(position, frame, julian, offset)
 
-    def __len__(self):
+    def __len__(self) -> int:
 
         return self._length
 

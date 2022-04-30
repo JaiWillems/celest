@@ -47,7 +47,7 @@ def _constraint_highlighter(decision_var, constraint, ang):
         raise ValueError("Invalid constraint type.")
 
 
-def _sun_coor(julian):
+def _sun_coor(julian) -> Coordinate:
     """Return the sun's coordinates.
 
     Parameters
@@ -76,7 +76,7 @@ def _sun_coor(julian):
     return sun_coor
 
 
-def _root_find(f, tl, tr, tol):
+def _root_find(f, tl, tr, tol) -> float:
     """Return root of f(t) between lg and rg.
 
     Parameters
@@ -113,7 +113,7 @@ def _root_find(f, tl, tr, tol):
     return (l if fl == 1 else r)
 
 
-def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
+def _get_ang(u, v) -> np.ndarray:
     """Calculate degree angle bewteen two vectors.
 
     Parameters
@@ -137,7 +137,7 @@ def _get_ang(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     return ang
 
 
-def generate(satellite, location, enc, ang, lighting=0, tol=1e-5):
+def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
     """Return windows for a given encounter.
 
     Parameters

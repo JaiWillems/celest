@@ -97,7 +97,7 @@ class Window:
         return return_window
 
 
-class Windows(object):
+class Windows:
     """Data structure to hold `Window` objects.
 
     This class is designed to hold encounter information and facilitate

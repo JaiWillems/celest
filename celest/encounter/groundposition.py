@@ -3,7 +3,7 @@
 import numpy as np
 
 
-class GroundPosition(object):
+class GroundPosition:
     """GroundPosition(latitude, longitude)
 
     Localize Earth surface location information.
