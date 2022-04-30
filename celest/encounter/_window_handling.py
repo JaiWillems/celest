@@ -44,9 +44,7 @@ class Window:
         Lighting constraint for night only, all time, or day only encounters.
     """
 
-    def __init__(self, satellite: Any, location: Any, start: float, end: float,
-                 enc: Literal["data link", "image"], ang: float, lighting:
-                 Literal[-1, 0, 1]) -> None:
+    def __init__(self, satellite, location, start, end, enc, ang, lighting) -> None:
 
         self.satellite = satellite
         self.coor = (location.lat, location.lon)
@@ -126,7 +124,7 @@ class Windows(object):
 
             return self.windows[index]
 
-    def __getitem__(self, key: float) -> Window:
+    def __getitem__(self, key) -> Window:
         """Return window closest to key time.
 
         This method allows for window indexing. If a scalar index is provided,
@@ -163,7 +161,7 @@ class Windows(object):
 
         return len(self.windows)
 
-    def _add_window(self, window: Window) -> None:
+    def _add_window(self, window) -> None:
         """Add new window to data base.
 
         Parameters
@@ -177,7 +175,7 @@ class Windows(object):
         """
 
         temp_series = pd.Series(window, index=[window.start])
-        self.windows = self.windows.append(temp_series)
+        self.windows = pd.concat([self.windows, temp_series])
         self.windows.sort_index(inplace=True)
 
     def stats(self) -> pd.DataFrame:
@@ -269,7 +267,7 @@ class Windows(object):
 
         return self.windows.to_numpy()
 
-    def save(self, fname: str, delimiter: Literal[",", "\\t"]) -> None:
+    def save(self, fname, delimiter) -> None:
         """Save encounter information.
 
         Parameters
