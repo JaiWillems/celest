@@ -5,7 +5,6 @@ from celest.satellite._astronomical_quantities import (
 )
 from datetime import datetime, timedelta
 import numpy as np
-import numpy.typing as npt
 
 
 class Time:

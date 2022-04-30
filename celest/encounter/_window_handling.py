@@ -1,7 +1,7 @@
 
 
 from celest.encounter.groundposition import GroundPosition
-from typing import Any, Literal
+from typing import Any
 import numpy as np
 import pandas as pd
 

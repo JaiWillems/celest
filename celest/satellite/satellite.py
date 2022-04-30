@@ -1,9 +1,7 @@
 
 
 from celest.satellite.coordinate import Coordinate
-from typing import Literal, Tuple
 import pandas as pd
-import numpy.typing as npt
 
 
 class Satellite(Coordinate):

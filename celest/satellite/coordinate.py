@@ -6,9 +6,8 @@ from celest.satellite.nutation_precession import (
 )
 from celest.satellite.time import Time
 from polare import Stroke
-from typing import Any, Literal, Tuple
+from typing import Tuple
 import numpy as np
-import numpy.typing as npt
 
 
 class Coordinate(Time):
