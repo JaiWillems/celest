@@ -41,8 +41,7 @@ setuptools.setup(
         "julian",
         "numpy",
         "pandas",
-        "polare",
-        "scipy"
+        "polare"
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
