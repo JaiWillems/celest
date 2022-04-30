@@ -55,7 +55,7 @@ class Coordinate(Time):
     Get horizontal coordinates for the ground location at (43.65, -79.38):
 
     >>> location = GroundPosition(latitude=43.65, longitude=-79.38)
-    >>> altitude, azimuth = c.horizontal(location=location)
+    >>> elevation, azimuth = c.horizontal(location=location)
     """
 
     def __init__(self, position, frame, julian, offset=0) -> None:
@@ -504,8 +504,8 @@ class Coordinate(Time):
 
         return ang
 
-    def _altitude(self, location) -> Stroke:
-        """Return the altitude angle of a satellite.
+    def _elevation(self, location) -> Stroke:
+        """Return the elevation angle of a satellite.
 
         Parameters
         ----------
@@ -515,7 +515,7 @@ class Coordinate(Time):
         Returns
         -------
         Stroke
-            Stroke containing the altitude of the satellite.
+            Stroke containing the elevation of the satellite.
         """
 
         # Get origin of horizontal system.
@@ -563,7 +563,7 @@ class Coordinate(Time):
         """Return horizontal coordinates in decimal degrees.
 
         The azimuth angle ranges from 0 to 360 degrees, measured clockwise
-        from North. The altitude angle ranges from 0 to 90 degrees measured
+        from North. The elevation angle ranges from 0 to 90 degrees measured
         above the local horizon.
 
         Parameters
@@ -577,7 +577,7 @@ class Coordinate(Time):
         Returns
         -------
         tuple
-            Tuple containing the altitude and azimuth angles.
+            Tuple containing the elevation and azimuth angles.
 
             The angles are stroke objects if `stroke=True`. Otherwise, 1-D
             arrays are returned.
@@ -597,8 +597,8 @@ class Coordinate(Time):
         if self._ITRS is None:
             self.itrs()
 
-        # Calculate the altitude and azimuth angles.
-        alt = self._altitude(location)
+        # Calculate the elevation and azimuth angles.
+        alt = self._elevation(location)
         az = self._azimuth(location)
 
         if stroke:

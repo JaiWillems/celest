@@ -147,7 +147,7 @@ The `ang` keyword defines the constraint angle that borders a
 viable/non-viable encounter region. The constraint angle type used for imaging
 encounters is the off-nadir angle measured in increasing degrees from the
 satellite's nadir to the ground location. Transmission encounters use the
-altitude angle of the satellite as measured in increasing degrees above the
+elevation angle of the satellite as measured in increasing degrees above the
 horizon (as seen from the ground location).
 
 The lighting conditions can also be set. For example, to image only in the

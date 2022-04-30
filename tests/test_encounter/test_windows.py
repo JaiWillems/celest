@@ -58,7 +58,7 @@ class TestWindows(TestCase):
 
         location = GroundPosition(43.6532, -79.3832)
 
-        altitude = self.sat._altitude(location)
+        elevation = self.sat._elevation(location)
         off_nadir = self.sat.off_nadir(location, stroke=True)
 
         # Test the window generator for day imaging case.
@@ -72,7 +72,7 @@ class TestWindows(TestCase):
 
             tha = Time(window_times).true_hour_angle(location.lon)
 
-            self.assertTrue(np.all(altitude(window_times) > 0))
+            self.assertTrue(np.all(elevation(window_times) > 0))
             self.assertTrue(np.all(off_nadir(window_times) < ang))
             self.assertTrue(np.all((-90 < tha) & (tha < 90)))
 
@@ -87,7 +87,7 @@ class TestWindows(TestCase):
 
             tha = Time(window_times).true_hour_angle(location.lon)
 
-            self.assertTrue(np.all(altitude(window_times) > 10))
+            self.assertTrue(np.all(elevation(window_times) > 10))
 
 
 if __name__ == "__main__":

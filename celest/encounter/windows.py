@@ -166,7 +166,7 @@ def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
 
     # Determine windows based on the type of encounter.
     if enc == "image":
-        dv = satellite._altitude(location)
+        dv = satellite._elevation(location)
         raw_windows_1 = _constraint_highlighter(dv, "ge", 0)
 
         dv = satellite.off_nadir(location, stroke=True)
@@ -174,7 +174,7 @@ def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
 
         raw_windows = raw_windows_1 * raw_windows_2
     elif enc == "data_link":
-        dv = satellite._altitude(location)
+        dv = satellite._elevation(location)
         raw_windows = _constraint_highlighter(dv, "gt", ang)
     else:
         raise ValueError("Invalid encounter type.")
