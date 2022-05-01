@@ -9,11 +9,10 @@ import unittest
 class TestGroundPosition(TestCase):
 
     def setUp(self):
-        """Test fixure for test method execution."""
 
-        self.name = "Toronto"
         self.lat = 43.6532
         self.lon = -79.3832
+        self.elev = 0.076
 
     def test_radius(self):
         """Test `GroundPosition._WGS84_radius`.
@@ -28,7 +27,7 @@ class TestGroundPosition(TestCase):
            https://planetcalc.com/7721/.
         """
 
-        ground_pos = GroundPosition(self.lat, self.lon)
+        ground_pos = GroundPosition(self.lat, self.lon, self.elev)
 
         a = 6378.1370
         b = 6356.7523142
@@ -36,7 +35,7 @@ class TestGroundPosition(TestCase):
         clat, slat = np.cos(lat), np.sin(lat)
         num = (a ** 2 * clat) ** 2 + (b ** 2 * slat) ** 2
         denom = (a * clat) ** 2 + (b * slat) ** 2
-        radius = np.sqrt(num / denom)
+        radius = np.sqrt(num / denom) + self.elev
 
         self.assertAlmostEqual(radius, ground_pos.radius, delta=0.001)
 

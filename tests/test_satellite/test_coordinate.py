@@ -242,8 +242,8 @@ class TestCoordinate(TestCase):
         from astropy import time
 
         # Set up observer location.
-        lat, lon = 52.1579, -106.6702
-        loc = EarthLocation.from_geodetic(lon*u.deg, lat*u.deg)
+        lat, lon, height = 52.1579, -106.6702, 0.482
+        loc = EarthLocation.from_geodetic(lon * u.deg, lat * u.deg, height * u.km)
 
         # Prepare time and position information.
         times = time.Time(self.times + self.offset, format="jd")
@@ -267,13 +267,13 @@ class TestCoordinate(TestCase):
 
         # Get Celest results.
         coor = Coordinate(itrsData, "itrs", self.times, self.offset)
-        groundPos = GroundPosition(lat, lon)
+        groundPos = GroundPosition(lat, lon, height)
         calc_alt, calc_az = coor.horizontal(groundPos)
 
         for i in range(calc_alt.size):
             with self.subTest(i=i):
-                self.assertAlmostEqual(alt[i], calc_alt[i], delta=0.25)
-                self.assertAlmostEqual(az[i], calc_az[i], delta=7.5)
+                self.assertAlmostEqual(alt[i], calc_alt[i], delta=0.22)
+                self.assertAlmostEqual(az[i], calc_az[i], delta=7.3)
 
     def test_off_nadir(self):
         """Test `Coordinate.off_nadir`.
@@ -290,15 +290,15 @@ class TestCoordinate(TestCase):
         off_nadir = np.array([66.88, 65.09, 63.90, 63.22, 62.46, 61.67, 58.42,
                               38.27, 23.73, 56.29])
 
-        location = GroundPosition(52.1579, -106.6702)
+        location = GroundPosition(52.1579, -106.6702, 0.482)
 
         julian = self.times[210:220]
         coor = Coordinate(self.ITRS[210:220], "itrs", julian, self.offset)
         calc_off_nadir = coor.off_nadir(location)
 
-        for i in range(10):
+        for i in range(len(off_nadir)):
             with self.subTest(i=i):
-                self.assertAlmostEqual(off_nadir[i], calc_off_nadir[i], delta=0.3)
+                self.assertAlmostEqual(off_nadir[i], calc_off_nadir[i], delta=0.25)
 
     def test_WGS84_radius(self):
         """Test `Coordinate._WGS84_radius`.
@@ -356,14 +356,14 @@ class TestCoordinate(TestCase):
         dist = [9070.49268746, 8776.7179543, 8330.99543153, 7851.70082642,
                 7359.09189844]
 
-        location = GroundPosition(52.1579, -106.6702)
+        location = GroundPosition(52.1579, -106.6702, 0.482)
 
         coor = Coordinate(position, "itrs", julian, self.offset)
         calc_dist = coor.distance(location)
 
         for i in range(5):
             with self.subTest(i=i):
-                self.assertAlmostEqual(calc_dist[i], dist[i], delta=0.1)
+                self.assertAlmostEqual(calc_dist[i], dist[i], delta=0.35)
 
 
 if __name__ == "__main__":
