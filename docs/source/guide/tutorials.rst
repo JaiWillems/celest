@@ -80,7 +80,7 @@ accessed through various methods. Some examples are shown below.
 .. code-block::
 
    from celest.encounter import GroundPosition
-   toronto = GroundPosition(latitude=43.6532, longitude=-79.3832)
+   toronto = GroundPosition(latitude=43.6532, longitude=-79.3832, height=0.076)
 
    # Get horizontal coordinates.
    alt, az = position.horizontal(location=toronto)
@@ -129,8 +129,8 @@ only one :class:`GroundPosition` object is required.
 .. code-block::
 
    # Define ground position.
-   toronto = GroundPosition(latitude=43.6532, longitude=-79.3832)
-   saskatoon = GroundPosition(latitude=52.1579, longitude=-106.6702)
+   toronto = GroundPosition(latitude=43.6532, longitude=-79.3832, height=0.076)
+   saskatoon = GroundPosition(latitude=52.1579, longitude=-106.6702, height=0.482)
 
 We are now ready to generate windows. The :py:func:`windows.generate` function
 takes a satellite and ground location as an input and will populate a

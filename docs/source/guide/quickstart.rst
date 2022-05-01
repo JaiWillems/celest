@@ -39,7 +39,7 @@ to determine encounter opportunities.
    satellite = Satellite(position=gcrs, frame='gcrs', time=julian, offset=0)
 
    # Define ground position.
-   toronto = GroundPosition(latitude=43.65, longitude=-79.38)
+   toronto = GroundPosition(latitude=43.65, longitude=-79.38, height=0.076)
 
    # Generate ground location windows.
    toronto_IMG_windows = windows.generate(satellite=satellite, location=toronto, enc="image", ang=30, lighting=1)
