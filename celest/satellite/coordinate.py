@@ -519,8 +519,8 @@ class Coordinate(Time):
         """
 
         # Get origin of horizontal system.
-        lat, lon, radius = location.lat, location.lon, location.radius
-        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]])).reshape((3,))
+        lat, lon, height = location.lat, location.lon, location.height
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
 
         return 90 - self._get_ang(self._ITRS - gnd_itrs, gnd_itrs)
 
@@ -539,8 +539,9 @@ class Coordinate(Time):
         """
 
         # Get origin of horizontal system.
-        lat, lon, radius = location.lat, location.lon, location.radius
-        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]])).reshape((3,))
+        lat, lon = location.lat, location.lon
+        radius, height = location.radius, location.height
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
 
         los = self._ITRS - gnd_itrs
 
@@ -645,8 +646,8 @@ class Coordinate(Time):
         if self._ITRS is None:
             self.itrs()
 
-        lat, lon = location.lat, location.lon
-        loc = self._geo_to_itrs(np.array([[lat, lon, 0]]))
+        lat, lon, height = location.lat, location.lon, location.height
+        loc = self._geo_to_itrs(np.array([[lat, lon, height]]))
         ang = self._get_ang((self._ITRS - loc).reshape((3,)), self._ITRS)
 
         if stroke:
@@ -803,8 +804,8 @@ class Coordinate(Time):
         if self._ITRS is None:
             self.itrs()
 
-        lat, lon = location.lat, location.lon
-        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, 0]]))
+        lat, lon, height = location.lat, location.lon, location.height
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]]))
         distance = np.linalg.norm(self._ITRS - gnd_itrs)
 
         if stroke:

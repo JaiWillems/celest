@@ -4,7 +4,7 @@ import numpy as np
 
 
 class GroundPosition:
-    """GroundPosition(latitude, longitude)
+    """GroundPosition(latitude, longitude, height=0)
 
     Localize Earth surface location information.
 
@@ -14,6 +14,9 @@ class GroundPosition:
         Lattitude of the location in decimal degrees.
     longitude : float
         Longitude of the location in decimal degrees.
+    height : float, optional
+        Height of the location above the standard ellipsoid in decimal
+        kilometers.
 
     Attributes
     ----------
@@ -23,11 +26,12 @@ class GroundPosition:
         Earth radius at (`latitude`, `longitude`).
     """
 
-    def __init__(self, latitude: float, longitude: float) -> None:
+    def __init__(self, latitude: float, longitude: float, height: float=0) -> None:
 
         self.lat = latitude
         self.lon = longitude
-        self.radius = self._radius(latitude)
+        self.height = height
+        self.radius = self._radius(latitude) + height
 
     def __str__(self) -> str:
 
