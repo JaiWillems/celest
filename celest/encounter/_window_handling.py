@@ -57,6 +57,70 @@ class VTW:
         return VTW(self.rise_time, self.set_time)
 
 
+class OW:
+    """OW(start, duration, location, quality, deadline)
+
+    Observation window.
+
+    The observation window describes a selected time window in which the
+    satellite-to-ground encounter is to be executed.
+
+    Parameters
+    ----------
+    start : float
+        Start time of the observing window in julian days.
+    duration : float
+        Duration of the observing window in seconds.
+    location : GroundPosition
+        Location of the satellite-ground encounter.
+    quality : float
+        Quality of the observing window.
+    deadline : float
+        Deadline of the observing window in julian days.
+
+    Attributes
+    ----------
+    start : float
+        Start time of the observing window in julian days.
+    duration : float
+        Duration of the observing window in seconds.
+    location : GroundPosition
+        Location of the satellite-ground encounter.
+    quality : float
+        Quality of the observing window.
+    deadline : float
+        Deadline of the observing window in julian days.
+    """
+
+    def __init__(self, start, duration, location, quality, deadline) -> None:
+
+        self.start = start
+        self.duration = duration
+        self.location = location
+        self.quality = quality
+        self.deadline = deadline
+    
+    def __str__(self) -> str:
+
+        return f"Location: {self.location.coor}, Start: {self.rise_time}, Duration:{self.set_time}s"
+
+    def copy(self) -> Any:
+        """Return `OW` copy.
+
+        Returns
+        -------
+        OW
+
+        Examples
+        --------
+        Let `OW_old` be a `OW` object.
+
+        >>> OW_new = OW_old.copy()
+        """
+
+        return OW(self.start, self.duration, self.location, self.quality, self.deadline)
+
+
 class Windows:
     """Data structure to hold `Window` objects.
 
