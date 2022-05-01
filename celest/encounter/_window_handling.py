@@ -1,100 +1,60 @@
 
 
-from celest.encounter.groundposition import GroundPosition
 from typing import Any
 import numpy as np
 import pandas as pd
 
 
-class Window:
-    """Window(satellite, location, start, end, enc, ang, lighting)
+class VTW:
+    """VTW(rise_time, set_time)
 
-    Encounter information.
+    Visible window time.
+
+    A visibile window time describes an event where the satellite is in line of
+    sight of the ground station within an elevation constraint.
 
     Parameters
     ----------
-    satellite : Satellite
-        Satellite for ground location encounter.
-    location : GroundPosition
-        Ground location for satellite encounter.
-    start, end: float
-        Window start and end times in J2000 Julian.
-    enc : {"data link", "image"}
-        Encounter type.
-    ang : float
-        Encounter constraint angle.
-    lighting : {-1, 0, 1}
-        Lighting constraint for night only, all time, or day only encounters.
+    rise_time : float
+        Rise time of the visible time window in julian days.
+    set_time : float
+        Set time of the visible time window in julian days.
 
     Attributes
     ----------
-    satellite : Satellite
-        Satellite for ground location encounter.
-    coor : tuple
-        Ground location (lat, lon) coordinates.
-    start, end : float
-        Window start and end times in J2000 Julian.
-    dt : float
-        Window duration in seconds.
-    type : {"data link", "image"}
-        Encounter type.
-    ang : float
-        Encounter constraint angle in degrees.
-    lighting : {-1, 0, 1}
-        Lighting constraint for night only, all time, or day only encounters.
+    rise_time : float
+        Rise time of the visible time window in julian days.
+    set_time : float
+        Set time of the visible time window in julian days.
+    duration : float
+        Duration of the visible time window in seconds.
     """
 
-    def __init__(self, satellite, location, start, end, enc, ang, lighting) -> None:
+    def __init__(self, rise_time, set_time) -> None:
 
-        self.satellite = satellite
-        self.coor = (location.lat, location.lon)
-
-        self.start = start
-        self.end = end
-        self.duration = 86400 * (end - start)
-
-        self.type = enc
-        self.ang = ang
-        self.lighting = lighting
+        self.rise_time = rise_time
+        self.set_time = set_time
+        self.duration = 86400 * (set_time - rise_time)
 
     def __str__(self) -> str:
 
-        str_1 = str(self.coor) + " "
-        str_2 = self.type + " "
-        str_3 = "ang:" + str(self.ang) + " "
-        str_4 = "lighting:" + str(self.lighting) + " "
-        str_5 = "start:" + str(self.start) + " "
-        str_6 = "end:" + str(self.end)
-
-        str_final = str_1 + str_2 + str_3 + str_4 + str_5 + str_6
-
-        return str_final
+        return f"Rise: {self.rise_time}, Set:{self.set_time}, Duration: {self.duration}s"
 
     def copy(self) -> Any:
-        """Return `Window` copy.
+        """Return `VTW` copy.
 
         Returns
         -------
-        Window
+        VTW
 
         Examples
         --------
-        Let `window_old` be a `Window` object.
+        Let `VTW_old` be a `VTW` object.
 
-        >>> window_new = window_old.copy()
+        >>> VTW_new = VTW_old.copy()
         """
 
-        sat = self.satellite
-        gnd = GroundPosition(self.coor[0], self.coor[1])
-        start = self.start
-        end = self.end
-        enc = self.type
-        ang = self.ang
-        lighting = self.lighting
-
-        return_window = Window(sat, gnd, start, end, enc, ang, lighting)
-
-        return return_window
+        return VTW(self.rise_time, self.set_time)
 
 
 class Windows:
