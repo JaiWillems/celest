@@ -20,7 +20,7 @@ class GroundPosition:
 
     Attributes
     ----------
-    lat, lon : float
+    latitude, longitude : float
         Latitude and longitude of the location in decimal degrees.
     radius : float
         Earth radius at (`latitude`, `longitude`).
@@ -28,14 +28,14 @@ class GroundPosition:
 
     def __init__(self, latitude: float, longitude: float, height: float=0) -> None:
 
-        self.lat = latitude
-        self.lon = longitude
+        self.latitude = latitude
+        self.longitude = longitude
         self.height = height
         self.radius = self._radius(latitude) + height
 
     def __str__(self) -> str:
 
-        return f"coor={(self.lat, self.lon)}, radius={round(self.radius, 5)}"
+        return f"coor={(self.latitude, self.longitude)}, radius={round(self.radius, 5)}"
 
     def _radius(self, latitude: float) -> float:
         """Calculate geocentric radius using WGS84.

@@ -404,8 +404,8 @@ class OWHandler(WindowHandler):
 
         for i, window in enumerate(np_data):
 
-            out_data[i + 1, 0] = window.location.lat
-            out_data[i + 1, 1] = window.location.lon
+            out_data[i + 1, 0] = window.location.latitude
+            out_data[i + 1, 1] = window.location.longitude
             out_data[i + 1, 2] = window.start_time
             out_data[i + 1, 3] = window.duration
             out_data[i + 1, 4] = window.quality

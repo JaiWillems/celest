@@ -519,7 +519,7 @@ class Coordinate(Time):
         """
 
         # Get origin of horizontal system.
-        lat, lon, height = location.lat, location.lon, location.height
+        lat, lon, height = location.latitude, location.longitude, location.height
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
 
         return 90 - self._get_ang(self._ITRS - gnd_itrs, gnd_itrs)
@@ -539,7 +539,7 @@ class Coordinate(Time):
         """
 
         # Get origin of horizontal system.
-        lat, lon = location.lat, location.lon
+        lat, lon = location.latitude, location.longitude
         radius, height = location.radius, location.height
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
 
@@ -646,7 +646,7 @@ class Coordinate(Time):
         if self._ITRS is None:
             self.itrs()
 
-        lat, lon, height = location.lat, location.lon, location.height
+        lat, lon, height = location.latitude, location.longitude, location.height
         loc = self._geo_to_itrs(np.array([[lat, lon, height]]))
         ang = self._get_ang((self._ITRS - loc).reshape((3,)), self._ITRS)
 
@@ -804,7 +804,7 @@ class Coordinate(Time):
         if self._ITRS is None:
             self.itrs()
 
-        lat, lon, height = location.lat, location.lon, location.height
+        lat, lon, height = location.latitude, location.longitude, location.height
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]]))
         distance = np.linalg.norm(self._ITRS - gnd_itrs)
 
