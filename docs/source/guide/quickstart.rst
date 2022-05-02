@@ -42,8 +42,8 @@ to determine encounter opportunities.
    toronto = GroundPosition(latitude=43.65, longitude=-79.38, height=0.076)
 
    # Generate ground location windows.
-   toronto_IMG_windows = windows.generate(satellite=satellite, location=toronto, enc="image", ang=30, lighting=1)
-   toronto_GL_windows = windows.generate(satellite=satellite, location=toronto, enc="data link", ang=10, lighting=0)
+   toronto_IMG_windows = windows.generate_vtw(satellite=satellite, location=toronto, vis_threshold=10, lighting=1)
+   toronto_GL_windows = windows.generate_vtw(satellite=satellite, location=toronto, vis_threshold=10, lighting=0)
 
    # Save satellite encounter windows.
    toronto_IMG_windows.save(fname="toronto_IMG_windows.csv", delimiter=",")
