@@ -1,7 +1,7 @@
 
 
 from celest.encounter.groundposition import GroundPosition
-from celest.encounter.windows import _get_ang, _sun_coor, generate
+from celest.encounter.windows import _get_ang, _sun_coor, generate_vtw
 from celest.satellite.satellite import Satellite
 from celest.satellite.time import Time
 from unittest import TestCase
@@ -17,7 +17,7 @@ class TestWindows(TestCase):
         data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
         times, itrs = data[:, 0], data[:, 10:]
 
-        self.sat = Satellite(itrs, "itrs", times, 2430000)
+        self.satellite = Satellite(itrs, "itrs", times, 2430000)
 
     def test_sun_coor(self):
 
@@ -57,37 +57,47 @@ class TestWindows(TestCase):
     def test_windows(self):
 
         location = GroundPosition(43.6532, -79.3832)
+        elevation = self.satellite._elevation(location)
 
-        elevation = self.sat._elevation(location)
-        off_nadir = self.sat.off_nadir(location, stroke=True)
+        sun_coor = _sun_coor(self.satellite._julian)
+        sun_alt, _ = sun_coor.horizontal(location, stroke=True)
 
-        # Test the window generator for day imaging case.
+        # Test the window generator for all day case.
 
-        enc, ang, lighting, tol = "image", 30, 1, 1e-5
-        windows = generate(self.sat, location, enc, ang, lighting, tol)
-
-        for window in windows:
-            start, end = window.start, window.end
-            window_times = np.linspace(start, end, 10)
-
-            tha = Time(window_times).true_hour_angle(location.lon)
-
-            self.assertTrue(np.all(elevation(window_times) > 0))
-            self.assertTrue(np.all(off_nadir(window_times) < ang))
-            self.assertTrue(np.all((-90 < tha) & (tha < 90)))
-
-        # Test the window generator for all day data link case.
-
-        enc, ang, lighting, tol = "data_link", 10, 0, 1e-5
-        windows = generate(self.sat, location, enc, ang, lighting, tol)
+        vis_threshold, lighting, tol = 10, 0, 1e-5
+        windows = generate_vtw(self.satellite, location, vis_threshold, lighting, tol)
 
         for window in windows:
-            start, end = window.start, window.end
-            window_times = np.linspace(start, end, 10)
+            rise_time, set_time = window.rise_time, window.set_time
+            window_times = np.linspace(rise_time, set_time, 10)
 
-            tha = Time(window_times).true_hour_angle(location.lon)
+            self.assertTrue(np.all(elevation(window_times) > vis_threshold))
+        
+        # Test the window generator for day only case.
 
-            self.assertTrue(np.all(elevation(window_times) > 10))
+        vis_threshold, lighting, tol = 10, 1, 1e-5
+        windows = generate_vtw(self.satellite, location, vis_threshold, lighting, tol)
+
+        for window in windows:
+            rise_time, set_time = window.rise_time, window.set_time
+            window_times = np.linspace(rise_time, set_time, 10)
+            sa = sun_alt(window_times)
+
+            self.assertTrue(np.all(elevation(window_times) > vis_threshold))
+            self.assertTrue(np.all((0 < sa)))
+        
+        # Test the window generator for night only case.
+
+        vis_threshold, lighting, tol = 10, -1, 1e-5
+        windows = generate_vtw(self.satellite, location, vis_threshold, lighting, tol)
+
+        for window in windows:
+            rise_time, set_time = window.rise_time, window.set_time
+            window_times = np.linspace(rise_time, set_time, 10)
+            sa = sun_alt(window_times)
+
+            self.assertTrue(np.all(elevation(window_times) > vis_threshold))
+            self.assertTrue(np.all((sa <= 0)))
 
 
 if __name__ == "__main__":
