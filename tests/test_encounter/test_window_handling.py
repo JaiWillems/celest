@@ -62,11 +62,11 @@ class TestWindowHandler(TestCase):
         self.W4 = VTW(1324.3, 1325.3)
         self.W5 = VTW(1325, 1326.1)
 
-        self.windows._add_window(self.W1)
-        self.windows._add_window(self.W2)
-        self.windows._add_window(self.W3)
-        self.windows._add_window(self.W4)
-        self.windows._add_window(self.W5)
+        self.windows._add_window_base(self.W1)
+        self.windows._add_window_base(self.W2)
+        self.windows._add_window_base(self.W3)
+        self.windows._add_window_base(self.W4)
+        self.windows._add_window_base(self.W5)
 
     def test_getitem(self):
 
@@ -143,7 +143,6 @@ class TestVTWHandler(TestCase):
     def test_stats(self):
 
         stats = self.windows.stats()
-        print(stats)
         self.assertIsNotNone(stats)
 
     def test_save(self):

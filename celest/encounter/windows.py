@@ -168,7 +168,7 @@ def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VT
 
     if vis_threshold < 0 or vis_threshold >= 90:
         raise ValueError("Visibility threshold should be in the range [0, 90).")
-    
+
     if lighting not in (-1, 0, 1):
         raise ValueError("Valid ighting conditions include -1, 0, and 1.")
 

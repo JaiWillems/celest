@@ -72,7 +72,7 @@ class TestWindows(TestCase):
             window_times = np.linspace(rise_time, set_time, 10)
 
             self.assertTrue(np.all(elevation(window_times) > vis_threshold))
-        
+
         # Test the window generator for day only case.
 
         vis_threshold, lighting, tol = 10, 1, 1e-5
@@ -85,7 +85,7 @@ class TestWindows(TestCase):
 
             self.assertTrue(np.all(elevation(window_times) > vis_threshold))
             self.assertTrue(np.all((0 < sa)))
-        
+
         # Test the window generator for night only case.
 
         vis_threshold, lighting, tol = 10, -1, 1e-5

@@ -187,7 +187,7 @@ class WindowHandler:
 
         return window.rise_time if isinstance(window, VTW) else window.start_time
 
-    def _add_window(self, window) -> None:
+    def _add_window_base(self, window) -> None:
         """Add new window to data base.
 
         Parameters
@@ -264,6 +264,19 @@ class VTWHandler(WindowHandler):
     def __init__(self) -> None:
 
         super().__init__()
+    
+    def _add_window(self, window) -> None:
+        """Add new window to data base.
+
+        Parameters
+        ----------
+        window : VTW
+        """
+
+        if isinstance(window, VTW):
+            self._add_window_base(window)
+        else:
+            raise TypeError("Expected VTW object.")
 
     def stats(self) -> pd.DataFrame:
         """Return visible time window statistics.
@@ -352,6 +365,19 @@ class OWHandler(WindowHandler):
     def __init__(self) -> None:
 
         super().__init__()
+    
+    def _add_window(self, window) -> None:
+        """Add new window to data base.
+
+        Parameters
+        ----------
+        window : OW
+        """
+
+        if isinstance(window, OW):
+            self._add_window_base(window)
+        else:
+            raise TypeError("Expected OW object.")
 
     def save(self, fname, delimiter) -> None:
         """Save observation window information.
