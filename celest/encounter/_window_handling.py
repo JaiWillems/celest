@@ -1,6 +1,6 @@
 
 
-from typing import Any
+from typing import Any, Literal
 import numpy as np
 import pandas as pd
 
@@ -58,7 +58,7 @@ class VTW:
 
 
 class OW:
-    """OW(start, duration, location, quality, deadline)
+    """OW(start_time, duration, location, quality, deadline)
 
     Observation window.
 
@@ -67,7 +67,7 @@ class OW:
 
     Parameters
     ----------
-    start : float
+    start_time : float
         Start time of the observing window in julian days.
     duration : float
         Duration of the observing window in seconds.
@@ -92,14 +92,14 @@ class OW:
         Deadline of the observing window in julian days.
     """
 
-    def __init__(self, start, duration, location, quality, deadline) -> None:
+    def __init__(self, start_time, duration, location, quality, deadline) -> None:
 
-        self.start = start
+        self.start_time = start_time
         self.duration = duration
         self.location = location
         self.quality = quality
         self.deadline = deadline
-    
+
     def __str__(self) -> str:
 
         return f"Location: {self.location.coor}, Start: {self.rise_time}, Duration:{self.set_time}s"
@@ -118,14 +118,13 @@ class OW:
         >>> OW_new = OW_old.copy()
         """
 
-        return OW(self.start, self.duration, self.location, self.quality, self.deadline)
+        return OW(self.start_time, self.duration, self.location, self.quality, self.deadline)
 
 
-class Windows:
-    """Data structure to hold `Window` objects.
+class WindowHandler:
+    """WindowHandler()
 
-    This class is designed to hold encounter information and facilitate
-    user-data interactions.
+    Data structure to hold `VTW` or `OW` objects.
     """
 
     def __init__(self) -> None:
@@ -148,14 +147,13 @@ class Windows:
 
             return self.windows[index]
 
-    def __getitem__(self, key) -> Window:
+    def __getitem__(self, key) -> Literal[VTW, OW]:
         """Return window closest to key time.
 
-        This method allows for window indexing. If a scalar index is provided,
-        the window with the closest start time will be returned. If the index
-        is a range, all windows that have start times within the range will be
-        returned. If the index is a tuple, then all the windows with start
-        times closes to each tuple entry will be returned.
+        For a scalar index, the window with the closest start time will be
+        returned. For a range index, all windows with start times within the
+        range will be returned. For a tuple index, all the windows with start
+        times closest to each tuple entry will be returned.
         """
 
         inds = self.windows.index.to_numpy()
@@ -185,88 +183,53 @@ class Windows:
 
         return len(self.windows)
 
+    def _window_start(self, window) -> float:
+
+        return window.rise_time if isinstance(window, VTW) else window.start_time
+
     def _add_window(self, window) -> None:
         """Add new window to data base.
 
         Parameters
         ----------
-        window : Window
-
-        Notes
-        -----
-        This method adds a new window to the data base by appending it to the
-        internal Pandas Series object indexed by the window's start time.
+        window : VTW or OW
         """
 
-        temp_series = pd.Series(window, index=[window.start])
+        temp_series = pd.Series(window, index=[self._window_start(window)])
         self.windows = pd.concat([self.windows, temp_series])
         self.windows.sort_index(inplace=True)
 
-    def stats(self) -> pd.DataFrame:
-        """Return enocunter statistics.
+    def get_window(self, julian) -> Literal[VTW, OW]:
+        """Return window closest to julian time.
 
-        This method returns statistics on the stored encounters. The statistics
-        include the 5th, 50th, and 95th percentile of encounter durations and
-        enocounter frequency.
+        Parameters
+        ----------
+        julian : float
+            Julian time in julian days.
 
-        Return
-        ------
-        DataFrame
-            Data base of encounter statistics.
-
-        Examples
-        --------
-        Assuming `toronto_img` is a `Windows` object returned from the windows
-        generation function.
-
-        >>> stats = toronto_img.stats()
-        >>> print(stats)
-                                       (45, -73), image
-        Q5 Duration (s)                      108.468446
-        Q50 Duration (s)                     167.687443
-        Q75 Duration (s)                     177.506299
-        Encounter Frequency (per day)          1.340795
+        Returns
+        -------
+        VTW or OW
         """
 
-        if len(self.windows) == 0:
-            return None
+        return self[julian]
 
-        enc_dict = {}
-        start_times = np.empty((0,))
-        end_times = np.empty((0,))
+    def get_windows_in_range(self, start, end) -> Literal[VTW, OW]:
+        """Return all windows with start times within the range.
 
-        for window in self.windows:
+        Parameters
+        ----------
+        start : float
+            Start time of the range in julian days.
+        end : float
+            End time of the range in julian days.
 
-            if (window.coor, window.type) not in enc_dict.keys():
-                enc_dict[window.coor, window.type] = np.array(
-                    [window.duration])
-            else:
-                arr = enc_dict[window.coor, window.type]
-                new_arr = np.append(arr, window.duration)
-                enc_dict[window.coor, window.type] = new_arr
+        Returns
+        -------
+        VTW or OW
+        """
 
-            start_times = np.append(start_times, window.start)
-            end_times = np.append(end_times, window.end)
-
-        out_data = {}
-        num_days = np.max(end_times) - np.min(start_times)
-
-        for key in enc_dict.keys():
-
-            dt_data = enc_dict[key]
-            enc_str = f"{key[0]}, {key[1]}"
-            qs = np.percentile(dt_data, [5, 50, 75])
-            freq = len(dt_data) / num_days
-
-            out_data[enc_str] = pd.Series([qs[0], qs[1], qs[2], freq])
-
-        df = pd.DataFrame.from_dict(out_data)
-        df.index = ["Q5 Duration (s)",
-                    "Q50 Duration (s)",
-                    "Q75 Duration (s)",
-                    "Encounter Frequency (per day)"]
-
-        return df
+        return self[start:end]
 
     def to_numpy(self) -> np.ndarray:
         """Return windows within a NumPy array.
@@ -291,13 +254,112 @@ class Windows:
 
         return self.windows.to_numpy()
 
+
+class VTWHandler(WindowHandler):
+    """VTWHandler()
+
+    Data structure to hold `VTW` objects.
+    """
+
+    def __init__(self) -> None:
+
+        super().__init__()
+
+    def stats(self) -> pd.DataFrame:
+        """Return visible time window statistics.
+
+        This method returns statistics on the visible time windows, including
+        the 5th, 50th, and 95th percentile of encounter durations and
+        enocounter frequency.
+
+        Return
+        ------
+        DataFrame
+            Data base of encounter statistics.
+
+        Examples
+        --------
+        Assuming `toronto_img` is a `VTWHandler` object returned from the
+        windows generation function.
+
+        >>> stats = toronto_img.stats()
+        >>> print(stats)
+                                              Statistic
+        Minimum Duration (s)                        0.0
+        Q5 Duration (s)                      108.468446
+        Q50 Duration (s)                     167.687443
+        Q75 Duration (s)                     177.506299
+        Maximum Duration (s)                      524.0
+        Encounter Frequency (per day)          1.340795
+        """
+
+        if len(self.windows) == 0:
+            return None
+
+        duration = []
+        rise_times = []
+        set_times = []
+
+        for window in self.windows:
+            duration.append(window.duration)
+            rise_times.append(window.rise_time)
+            set_times.append(window.set_time)
+
+        data = {}
+        data['Min Duration (s)'] = np.min(duration)
+        data['Q5 Duration (s)'] = np.percentile(duration, 5)
+        data['Q50 Duration (s)'] = np.percentile(duration, 50)
+        data['Q95 Duration (s)'] = np.percentile(duration, 95)
+        data['Max Duration (s)'] = np.max(duration)
+        data['Encounter Frequency (per day)'] = len(self) / (np.max(set_times) - np.min(rise_times))
+
+        df = pd.DataFrame(pd.Series(data), columns=["Statistic"])
+
+        return df
+
     def save(self, fname, delimiter) -> None:
-        """Save encounter information.
+        """Save visible time window information.
 
         Parameters
         ----------
         fname : str
-            File name to save encounter information to.
+            File name to save encounter information under.
+        delimiter : {",", "\\t"}
+            String or character separating columns.
+        """
+
+        np_data = self.to_numpy()
+
+        out_data = np.empty(shape=(np_data.shape[0] + 1, 3), dtype="<U25")
+        out_data[0, :] = ["Rise Time (JD2000)", "Set Time (JD2000)", "Duration (s)"]
+
+        for i, window in enumerate(np_data):
+
+            out_data[i + 1, 0] = window.rise_time
+            out_data[i + 1, 1] = window.set_time
+            out_data[i + 1, 2] = window.duration
+
+        np.savetxt(fname, out_data, delimiter=delimiter,
+                   fmt="%s,%s,%s")
+
+
+class OWHandler(WindowHandler):
+    """OWHandler()
+
+    Data structure to hold `OW` objects.
+    """
+
+    def __init__(self) -> None:
+
+        super().__init__()
+
+    def save(self, fname, delimiter) -> None:
+        """Save observation window information.
+
+        Parameters
+        ----------
+        fname : str
+            File name to save encounter information under.
         delimiter : {",", "\\t"}
             String or character separating columns.
         """
@@ -306,22 +368,22 @@ class Windows:
 
         out_data = np.empty(shape=(np_data.shape[0] + 1, 6), dtype="<U25")
         out_data[0, :] = [
-            "latitude (deg)",
-            "longitude (deg)",
-            "start (jul)",
-            "end (jul)",
-            "duration (sec)",
-            "type"
+            "Latitude (deg)",
+            "Longitude (deg)",
+            "Start Time (JD2000)",
+            "Duration (s)",
+            "Quality (1-10)",
+            "Deadline (JD2000)"
         ]
 
         for i, window in enumerate(np_data):
 
-            out_data[i + 1, 0] = window.coor[0]
-            out_data[i + 1, 1] = window.coor[1]
-            out_data[i + 1, 2] = window.start
-            out_data[i + 1, 3] = window.end
-            out_data[i + 1, 4] = window.duration
-            out_data[i + 1, 5] = window.type
+            out_data[i + 1, 0] = window.location.lat
+            out_data[i + 1, 1] = window.location.lon
+            out_data[i + 1, 2] = window.start_time
+            out_data[i + 1, 3] = window.duration
+            out_data[i + 1, 4] = window.quality
+            out_data[i + 1, 5] = window.deadline
 
         np.savetxt(fname, out_data, delimiter=delimiter,
                    fmt="%s,%s,%s,%s,%s,%s")
