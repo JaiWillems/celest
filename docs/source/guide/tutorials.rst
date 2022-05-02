@@ -132,32 +132,22 @@ only one :class:`GroundPosition` object is required.
    toronto = GroundPosition(latitude=43.6532, longitude=-79.3832, height=0.076)
    saskatoon = GroundPosition(latitude=52.1579, longitude=-106.6702, height=0.482)
 
-We are now ready to generate windows. The :py:func:`windows.generate` function
+We are now ready to generate windows. The :py:func:`windows.generate_vtw` function
 takes a satellite and ground location as an input and will populate a
-:class:`Windows` object with visible window times for the encounter
-defined by the `enc` and `ang` keywords.
+:class:`VTWHandling` object with visible time windows defined by the
+`vis_threshold` and `lighting` keywords.
 
-There are two encounter types that Celest currently supports: (1) imaging
-encounters where the satellite is in view of the ground location, and (2) data
-transmission encounters where the ground location is in view of the satellite.
-The `enc` keyword specifies the type of encounter as either and imaging
-(`enc="image"`) or data transmission (`enc="data link"`) type.
 
-The `ang` keyword defines the constraint angle that borders a
-viable/non-viable encounter region. The constraint angle type used for imaging
-encounters is the off-nadir angle measured in increasing degrees from the
-satellite's nadir to the ground location. Transmission encounters use the
-elevation angle of the satellite as measured in increasing degrees above the
-horizon (as seen from the ground location).
-
-The lighting conditions can also be set. For example, to image only in the
-daylight, we can set `lighting=1`.
+The `vis_threshold` keyword defines the minimum satellite elevation angle as
+seen from the ground location that will allow for satellite-ground
+interactions. The `lighting` keyword allows us to specify the lighting
+conditions of the visible time windows.
 
 .. code-block::
 
    # Generate ground location windows.
-   toronto_IMG_windows = windows.generate(satellite=satellite, location=toronto, enc="image", ang=30, lighting=1)
-   toronto_GL_windows = windows.generate(satellite=satellite, location=toronto, enc="data link", ang=10, lighting=0)
+   toronto_IMG_windows = windows.generate_vtw(satellite=satellite, location=toronto, vis_threshold=10, lighting=1)
+   toronto_GL_windows = windows.generate_vtw(satellite=satellite, location=toronto, vis_threshold=10, lighting=0)
 
    # Save satellite encounter windows.
    toronto_IMG_windows.save(fname="toronto_IMG_windows.csv", delimiter=",")
