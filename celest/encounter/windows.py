@@ -1,6 +1,6 @@
 
 
-from celest.encounter._window_handling import Window, Windows
+from celest.encounter._window_handling import VTW, VTWHandler
 from celest.satellite.coordinate import Coordinate
 from jplephem.spk import SPK
 import numpy as np
@@ -137,8 +137,12 @@ def _get_ang(u, v) -> np.ndarray:
     return ang
 
 
-def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
-    """Return windows for a given encounter.
+def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VTWHandler:
+    """Return visible window times for a satellite-ground combination.
+
+    This function generates the visible window times where the satellite has
+    an elevation angle greater than `vis_threshold` and where lighting
+    conditions are met.
 
     Parameters
     ----------
@@ -146,10 +150,8 @@ def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
         Satellite object.
     location : Location
         Location of ground station.
-    enc : {"image", "data_link"}
-        Type of encounter.
-    ang : float
-        Constraint angle in degrees.
+    vis_threshold : float
+        Visibility threshold in degrees.
     lighting : float, optional
         Lighting condition specifier.
 
@@ -160,24 +162,18 @@ def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
 
     Returns
     -------
-    Windows
-        The satellite window details.
+    VTWHandler
+        The visible time windows.
     """
 
-    # Determine windows based on the type of encounter.
-    if enc == "image":
-        dv = satellite._elevation(location)
-        raw_windows_1 = _constraint_highlighter(dv, "ge", 0)
+    if vis_threshold < 0 or vis_threshold >= 90:
+        raise ValueError("Visibility threshold should be in the range [0, 90).")
+    
+    if lighting not in (-1, 0, 1):
+        raise ValueError("Valid ighting conditions include -1, 0, and 1.")
 
-        dv = satellite.off_nadir(location, stroke=True)
-        raw_windows_2 = _constraint_highlighter(dv, "lt", ang)
-
-        raw_windows = raw_windows_1 * raw_windows_2
-    elif enc == "data_link":
-        dv = satellite._elevation(location)
-        raw_windows = _constraint_highlighter(dv, "gt", ang)
-    else:
-        raise ValueError("Invalid encounter type.")
+    dv = satellite._elevation(location)
+    raw_windows = _constraint_highlighter(dv, "ge", vis_threshold)
 
     if lighting != 0:
         sun_coor = _sun_coor(satellite._julian)
@@ -191,7 +187,7 @@ def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
     ind = np.split(ind, np.where(np.diff(ind) != 1)[0] + 1)
     ind = np.array(ind, dtype=object)
 
-    windows = Windows()
+    windows = VTWHandler()
 
     # Populate Windows object.
     if ind.size == 0:
@@ -199,13 +195,13 @@ def generate(satellite, location, enc, ang, lighting=0, tol=1e-5) -> Windows:
 
     for i in ind:
 
-        st1, st2 = julian[i[0] - 1], julian[i[0]]
-        start = _root_find(raw_windows, st1, st2, tol)
+        rt1, rt2 = julian[i[0] - 1], julian[i[0]]
+        rise_time = _root_find(raw_windows, rt1, rt2, tol)
 
-        et1, et2 = julian[i[-1]], julian[i[-1] + 1]
-        end = _root_find(raw_windows, et1, et2, tol)
+        st1, st2 = julian[i[-1]], julian[i[-1] + 1]
+        set_time = _root_find(raw_windows, st1, st2, tol)
 
-        window = Window(satellite, location, start, end, enc, ang, lighting)
+        window = VTW(rise_time, set_time)
         windows._add_window(window)
 
     return windows
