@@ -26,7 +26,7 @@ class ALNS:
     def __init__(self, x_init: Any) -> None:
 
         self.x_init = x_init
-    
+
     def add_cost_func(self, c: function) -> None:
         """Add cost function to minimize.
 
@@ -38,7 +38,7 @@ class ALNS:
         """
 
         self.c = c
-    
+
     def add_destroy_funcs(self, funcs: List[function]) -> None:
         """Add destroy functions to the ALNS instance.
 
@@ -50,7 +50,7 @@ class ALNS:
         """
 
         self.destroy_funcs = funcs
-    
+
     def add_repair_funcs(self, funcs: List[function]) -> None:
         """Add repair functions to the ALNS instance.
 
@@ -62,7 +62,7 @@ class ALNS:
         """
 
         self.repair_funcs = funcs
-    
+
     def _get_probabilities(self, weights: list) -> list:
         """Get probabilities from weights.
 
@@ -79,9 +79,9 @@ class ALNS:
 
         s = sum(weights)
         p = [w / s for w in weights]
-        
+
         return p
-    
+
     def _get_destroy_index(self) -> int:
         """Return index of the destroy function to be used.
 
@@ -124,8 +124,7 @@ class ALNS:
         """
 
         return self.destroy_funcs[i]
-    
-    
+
     def _get_repair_func(self, i) -> function:
         """Return repair function at index i.
 
@@ -140,7 +139,7 @@ class ALNS:
         """
 
         return self.repair_funcs[i]
-    
+
     def _update_destroy_weights(self, l: float, score: int, i: int) -> None:
         """Update the destroy weights.
 
@@ -158,7 +157,7 @@ class ALNS:
         """
 
         self.destroy_weights[i] = l * self.destroy_weights[i] + (1 - l) * score
-    
+
     def _update_repair_weights(self, l: float, score: int, i: int) -> None:
         """Update the repair weights.
 
@@ -176,7 +175,7 @@ class ALNS:
         """
 
         self.repair_weights[i] = l * self.repair_weights[i] + (1 - l) * score
-    
+
     def _accept(self, xt: Any, x: Any, T: float) -> bool:
         """Accpetance criterion.
 
@@ -190,7 +189,7 @@ class ALNS:
             Current solution.
         T : float
             Temperature.
-        
+
         Returns
         -------
         bool
@@ -202,7 +201,7 @@ class ALNS:
         else:
             p = math.exp(-(self.c(xt) - self.c(x)) / T)
             return random.choices([False, True], [1 - p, p])[0]
-    
+
     def solve(self, max_iter: int, T0: float, a: float, l: float) -> Any:
         """Determine the optimal solution.
 
@@ -216,7 +215,7 @@ class ALNS:
             Temperature update factor.
         l : float
             Decay parameter within the range [0, 1].
-        
+
         Returns
         -------
         Any
@@ -241,14 +240,14 @@ class ALNS:
             if self._accept(xt, x, t):
                 x = xt
                 score = _BETTER_SCORE if self.c(xt) > self.c(x) else _ACCEPT_SCORE
-            
+
             if self.c(xt) < self.c(xb):
                 xb = xt
                 score = _BEST_SCORE
-            
+
             self._update_destroy_weights(l, score, i)
             self._update_repair_weights(l, score, j)
 
             t = a * t
-        
+
         return xb
