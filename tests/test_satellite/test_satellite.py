@@ -27,12 +27,12 @@ class TestSatellite(TestCase):
         self.gcrs_x, self.gcrs_y, self.gcrs_z = self.finch.gcrs()
         self.itrs_x, self.itrs_y, self.itrs_z = self.finch.itrs()
 
-    def test_save_data(self):
-        """Test `Satellite.save_data`."""
+    def test_save(self):
+        """Test `Satellite.save`."""
 
         times = ("julian", "ut1", "gmst", "gast")
         positions = ("geo", "gcrs", "itrs")
-        self.finch.save_data(times, positions, path="test_data.csv", sep=",")
+        self.finch.save(times, positions, path="test_data.csv", sep=",")
 
         data = np.loadtxt("test_data.csv", delimiter=",", skiprows=1)
         load_julian = data[:, 1]

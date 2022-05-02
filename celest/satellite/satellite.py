@@ -51,8 +51,8 @@ class Satellite(Coordinate):
 
         return self._length
 
-    def save_data(self, times=("julian",), positions=("gcrs",), path=None,
-                  sep=",", float_format=None) -> None:
+    def save(self, times=("julian",), positions=("gcrs",), path=None,
+             sep=",", float_format=None) -> None:
         """Save satellite data.
 
         Parameters
@@ -77,7 +77,7 @@ class Satellite(Coordinate):
         Examples
         --------
         >>> positions = ["gcrs", "itrs"]
-        >>> finch.save_data(fname="data.csv", positions=positions, delimiter=",")
+        >>> finch.save(fname="data.csv", positions=positions, delimiter=",")
         """
 
         key_mapping = {
