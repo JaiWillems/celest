@@ -44,8 +44,8 @@ class TestOW(TestCase):
 
         self.assertTrue(self.window.start_time == wind_copy.start_time)
         self.assertTrue(self.window.duration == wind_copy.duration)
-        self.assertTrue(self.window.location.lat == wind_copy.location.lat)
-        self.assertTrue(self.window.location.lon == wind_copy.location.lon)
+        self.assertTrue(self.window.location.latitude == wind_copy.location.latitude)
+        self.assertTrue(self.window.location.longitude == wind_copy.location.longitude)
         self.assertTrue(self.window.quality == wind_copy.quality)
         self.assertTrue(self.window.deadline == wind_copy.deadline)
 
@@ -188,8 +188,8 @@ class TestOWHandler(TestCase):
         data = np.loadtxt('test_ow.csv', delimiter=',', skiprows=1)
         for i, window in enumerate(self.windows):
 
-            self.assertEqual(window.location.lat, data[i, 0])
-            self.assertEqual(window.location.lon, data[i, 1])
+            self.assertEqual(window.location.latitude, data[i, 0])
+            self.assertEqual(window.location.longitude, data[i, 1])
             self.assertEqual(window.start_time, data[i, 2])
             self.assertEqual(window.duration, data[i, 3])
             self.assertEqual(window.quality, data[i, 4])
