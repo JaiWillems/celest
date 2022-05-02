@@ -1,9 +1,8 @@
 
 
 from celest.encounter.groundposition import GroundPosition
-from celest.encounter.windows import _get_ang, _sun_coor, generate_vtw
+from celest.encounter.windows import _sun_coor, generate_vtw
 from celest.satellite.satellite import Satellite
-from celest.satellite.time import Time
 from unittest import TestCase
 import numpy as np
 import unittest
@@ -40,19 +39,6 @@ class TestWindows(TestCase):
         self.assertTrue(np.allclose(x, calc_x, rtol=0.05))
         self.assertTrue(np.allclose(y, calc_y, rtol=0.05))
         self.assertTrue(np.allclose(z, calc_z, rtol=0.05))
-
-    def test_get_ang(self):
-        """Test `Encounter._get_ang`."""
-
-        vec_one = np.array([[56, 92, 76], [9238, 8479, 9387], [2, 98, 23]])
-        vec_two = np.array([[36, 29, 38], [2703, 947, 8739], [9827, 921, 1]])
-        ang = [16.28, 37, 83.65]
-
-        calc_ang = _get_ang(vec_one, vec_two)
-
-        for i in range(calc_ang.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(ang[i], calc_ang[i], delta=0.01)
 
     def test_windows(self):
 

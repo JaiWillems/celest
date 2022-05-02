@@ -113,30 +113,6 @@ def _root_find(f, tl, tr, tol) -> float:
     return (l if fl == 1 else r)
 
 
-def _get_ang(u, v) -> np.ndarray:
-    """Calculate degree angle bewteen two vectors.
-
-    Parameters
-    ----------
-    u, v : np.ndarray
-        2-D arrays containing row-vectors.
-
-    Returns
-    -------
-    np.ndarray
-        1-D array containing the degree angle between rows of `u` and `v`.
-    """
-
-    ua = None if u.ndim == 1 else 1
-    va = None if v.ndim == 1 else 1
-
-    n = np.sum(u * v, axis=(ua or va))
-    d = np.linalg.norm(u, axis=ua) * np.linalg.norm(v, axis=va)
-    ang = np.degrees(np.arccos(n / d))
-
-    return ang
-
-
 def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VTWHandler:
     """Return visible window times for a satellite-ground combination.
 
