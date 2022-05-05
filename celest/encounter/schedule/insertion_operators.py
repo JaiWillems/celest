@@ -66,7 +66,21 @@ def minimum_opportunity_insertion(request_list, q):
     return request_list
 
 
-def minimum_conflict_insertion(request_list, q):
+def minimum_conflict_insertion(request_list, q) -> list:
+    """Insert q requests with the minimum conflict degree.
+
+    Parameters
+    ----------
+    request_list : list
+        List of requests.
+    q : int
+        The number of requests to insert.
+
+    Returns
+    -------
+    list
+        List of requests with items inserted.
+    """
 
     for i, request in enumerate(request_list):
 
