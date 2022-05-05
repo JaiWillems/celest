@@ -1,6 +1,6 @@
 
 
-from typing import Any, List
+from typing import Any, List, Callable
 import math
 import random
 
@@ -27,7 +27,7 @@ class ALNS:
 
         self.x_init = x_init
 
-    def add_cost_func(self, c: function) -> None:
+    def add_cost_func(self, c: Callable) -> None:
         """Add cost function to minimize.
 
         Parameters
@@ -39,7 +39,7 @@ class ALNS:
 
         self.c = c
 
-    def add_destroy_funcs(self, funcs: List[function]) -> None:
+    def add_destroy_funcs(self, funcs: List[Callable]) -> None:
         """Add destroy functions to the ALNS instance.
 
         Parameters
@@ -51,7 +51,7 @@ class ALNS:
 
         self.destroy_funcs = funcs
 
-    def add_repair_funcs(self, funcs: List[function]) -> None:
+    def add_repair_funcs(self, funcs: List[Callable]) -> None:
         """Add repair functions to the ALNS instance.
 
         Parameters
@@ -110,7 +110,7 @@ class ALNS:
 
         return i
 
-    def _get_destroy_func(self, i) -> function:
+    def _get_destroy_func(self, i) -> Callable:
         """Return destroy function at index i.
 
         Parameters
@@ -125,7 +125,7 @@ class ALNS:
 
         return self.destroy_funcs[i]
 
-    def _get_repair_func(self, i) -> function:
+    def _get_repair_func(self, i) -> Callable:
         """Return repair function at index i.
 
         Parameters
@@ -202,17 +202,17 @@ class ALNS:
             p = math.exp(-(self.c(xt) - self.c(x)) / T)
             return random.choices([False, True], [1 - p, p])[0]
 
-    def solve(self, max_iter: int, T0: float, a: float, l: float) -> Any:
+    def solve(self, max_iter: int, t0: float, p: float, l: float) -> Any:
         """Determine the optimal solution.
 
         Parameters
         ----------
         max_iter : int
             Maximum number of iterations.
-        T0 : float
+        t0 : float
             Initial temperature.
-        a : float
-            Temperature update factor.
+        p : float
+            Annealing coefficient.
         l : float
             Decay parameter within the range [0, 1].
 
@@ -224,7 +224,7 @@ class ALNS:
 
         x = self.x_init
         xb = self.x_init
-        t = T0
+        t = t0
         self.destroy_weights = [1] * len(self.destroy_funcs)
         self.repair_weights = [1] * len(self.repair_funcs)
 
@@ -248,6 +248,6 @@ class ALNS:
             self._update_destroy_weights(l, score, i)
             self._update_repair_weights(l, score, j)
 
-            t = a * t
+            t = p * t
 
         return xb
