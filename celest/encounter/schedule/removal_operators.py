@@ -20,7 +20,7 @@ def random_removal(request_list, q) -> list:
         The request list with items removed.
     """
 
-    while q >= 0:
+    while q > 0:
 
         i = random.randint(0, len(request_list) - 1)
 
@@ -55,7 +55,7 @@ def priority_removal(request_list, q) -> list:
     request_list = sorted(request_list, key=lambda x: x.priority, reverse=True)
 
     i = 0
-    while (q >= 0) and (i < len(request_list)):
+    while (q > 0) and (i < len(request_list)):
 
         if request_list[i].is_scheduled:
 
@@ -90,7 +90,7 @@ def opportunity_removal(request_list, q) -> list:
     request_list = sorted(request_list, key=lambda x: len(x.vtws), reverse=True)
 
     i = 0
-    while (q >= 0) and (i < len(request_list)):
+    while (q > 0) and (i < len(request_list)):
 
         if request_list[i].is_scheduled:
 

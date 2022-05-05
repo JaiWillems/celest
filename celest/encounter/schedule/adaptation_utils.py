@@ -140,7 +140,7 @@ def _insert_window(request_list, i) -> bool:
             continue
 
         request.is_scheduled = True
-        request.schedule_idx = j
+        request.scheduled_idx = j
         request.scheduled_start = start
         request.scheduled_duration = duration
 

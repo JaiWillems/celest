@@ -74,7 +74,7 @@ def minimum_conflict_insertion(request_list, q):
             min_vtw, j = _min_conflict_degree(request_list, i)
 
             start = _get_OW_start(min_vtw, request.look_ang)
-            duration = request.look_ang
+            duration = request.duration
 
             if start + duration / 86400 > min_vtw.set_time:
                 continue
@@ -84,7 +84,7 @@ def minimum_conflict_insertion(request_list, q):
                 continue
 
             request.is_scheduled = True
-            request.schedule_idx = j
+            request.scheduled_idx = j
             request.scheduled_start = start
             request.scheduled_duration = duration
 
@@ -92,6 +92,8 @@ def minimum_conflict_insertion(request_list, q):
 
         if q == 0:
             break
+    
+    return request_list
 
 
 _INSERTION_FUNCTIONS = [
