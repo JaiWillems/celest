@@ -251,8 +251,8 @@ def _conflict_degree(request_list, vtw) -> float:
     return cd
 
 
-def _min_conflict_degree(request_list, i) -> Tuple:
-    """Return the vtw in the ith request with a minimum conflict degree.
+def _min_conflict_degree(request_list, i) -> list:
+    """Return the vtw conflict degrees for the ith request.
 
     Parameters
     ----------
@@ -263,22 +263,20 @@ def _min_conflict_degree(request_list, i) -> Tuple:
 
     Returns
     -------
-    VTW
-        Visible time window for the ith request with a minimum conflict degree.
-    int
-        Index of the visible time window in the ith request's `vtws` attribute.
+    list
+        List containing a tuple for each visible time window which holds the
+        conflict degree and the index for the requests `vtws` attribute.
+
+        The list is ordered in increasing order of conflict degree.
     """
 
-    min_cd = None
-    min_vtw = None
-    idx = None
+    cd_arr = []
 
     for j, vtw in enumerate(request_list[i].vtws):
+
         cd = _conflict_degree(request_list, vtw)
+        cd_arr.append((cd, j))
 
-        if min_cd is None:
-            min_cd, min_vtw, idx = cd, vtw, j
-        elif cd < min_cd:
-            min_cd, min_vtw, idx = cd, vtw, j
+    cd_arr = sorted(cd_arr, key=lambda x: x[0])
 
-    return min_vtw, idx
+    return cd_arr

@@ -85,24 +85,30 @@ def minimum_conflict_insertion(request_list, q) -> list:
     for i, request in enumerate(request_list):
 
         if not request.is_scheduled:
-            min_vtw, j = _min_conflict_degree(request_list, i)
+            cd_info = _min_conflict_degree(request_list, i)
 
-            start = _get_OW_start(min_vtw, request.look_ang)
-            duration = request.duration
+            for _, j in cd_info:
 
-            if start + duration / 86400 > min_vtw.set_time:
-                continue
-            if start + duration / 86400 > request.deadline:
-                continue
-            if _insert_conflict(request_list, start, duration):
-                continue
+                vtw = request.vtws[j]
 
-            request.is_scheduled = True
-            request.scheduled_idx = j
-            request.scheduled_start = start
-            request.scheduled_duration = duration
+                start = _get_OW_start(vtw, request.look_ang)
+                duration = request.duration
 
-            q -= 1
+                if start + duration / 86400 > vtw.set_time:
+                    continue
+                if start + duration / 86400 > request.deadline:
+                    continue
+                if _insert_conflict(request_list, start, duration):
+                    continue
+
+                request.is_scheduled = True
+                request.scheduled_idx = j
+                request.scheduled_start = start
+                request.scheduled_duration = duration
+
+                q -= 1
+
+                break
 
         if q == 0:
             break
