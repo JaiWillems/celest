@@ -1,6 +1,7 @@
 
 
 from typing import Any, List, Callable
+import copy
 import math
 import random
 
@@ -235,8 +236,8 @@ class ALNS:
             Optimal solution.
         """
 
-        x = self.x_init
-        xb = self.x_init
+        x = copy.deepcopy(self.x_init)
+        xb = copy.deepcopy(self.x_init)
         t = t0
         self.destroy_weights = [1] * len(self.destroy_funcs)
         self.repair_weights = [1] * len(self.repair_funcs)
@@ -249,16 +250,16 @@ class ALNS:
             i = self._get_destroy_index()
             j = self._get_repair_index()
 
-            xt = self._get_repair_func(j)(self._get_destroy_func(i)(x, Q), Q)
+            xt = self._get_repair_func(j)(self._get_destroy_func(i)(copy.deepcopy(x), Q), Q)
 
             score = _REJECT_SCORE
 
             if self._accept(xt, x, t):
-                x = xt
+                x = copy.deepcopy(xt)
                 score = _BETTER_SCORE if self.c(xt) > self.c(x) else _ACCEPT_SCORE
 
             if self.c(xt) < self.c(xb):
-                xb = xt
+                xb = copy.deepcopy(xt)
                 score = _BEST_SCORE
 
             if self.is_complete(xb):
