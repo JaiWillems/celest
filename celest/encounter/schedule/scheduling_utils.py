@@ -48,7 +48,29 @@ def _initial_solution(request_list):
     return request_list
 
 
-def cost(request_list) -> float:
+def _is_complete(request_list) -> bool:
+    """Check if the schedule is complete.
+
+    Parameters
+    ----------
+    request_list : list
+        List of requests.
+
+    Returns
+    -------
+    bool
+        True if the schedule is complete, False otherwise.
+    """
+
+    for request in request_list:
+
+        if not request.is_scheduled:
+            return False
+
+    return True
+
+
+def _cost(request_list) -> float:
     """Evaluate the cost of the schedule.
 
     Parameters
@@ -63,6 +85,7 @@ def cost(request_list) -> float:
     """
 
     cost = 0
+
     for request in request_list:
         cost -= request.priority * request.is_scheduled
 
