@@ -10,6 +10,8 @@ _BETTER_SCORE = 2
 _ACCEPT_SCORE = 1
 _REJECT_SCORE = 0
 
+Q = 1
+
 
 class ALNS:
     """ALNS(x_init)
@@ -201,6 +203,17 @@ class ALNS:
         else:
             p = math.exp(-(self.c(xt) - self.c(x)) / T)
             return random.choices([False, True], [1 - p, p])[0]
+    
+    def add_is_complete_func(self, func) -> None:
+        """Function to check if the solution is complete.
+
+        Parameters
+        ----------
+        func : Callable
+            Function that takes a solution and returns a boolean.
+        """
+
+        self.is_complete = func
 
     def solve(self, max_iter: int, t0: float, p: float, l: float) -> Any:
         """Determine the optimal solution.
@@ -228,12 +241,15 @@ class ALNS:
         self.destroy_weights = [1] * len(self.destroy_funcs)
         self.repair_weights = [1] * len(self.repair_funcs)
 
+        if self.is_complete(xb):
+            return xb
+
         for _ in range(max_iter):
 
             i = self._get_destroy_index()
             j = self._get_repair_index()
 
-            xt = self._get_repair_func(j)(self._get_destroy_func(i)(x))
+            xt = self._get_repair_func(j)(self._get_destroy_func(i)(x, Q), Q)
 
             score = _REJECT_SCORE
 
@@ -244,6 +260,9 @@ class ALNS:
             if self.c(xt) < self.c(xb):
                 xb = xt
                 score = _BEST_SCORE
+
+            if self.is_complete(xb):
+                return xb
 
             self._update_destroy_weights(l, score, i)
             self._update_repair_weights(l, score, j)
