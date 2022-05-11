@@ -2,38 +2,42 @@
 
 from celest.satellite._angle_representations import _ISO6709_representation
 from celest.satellite.nutation_precession import (
-    bias_matrix, precession_matrix, nutation_matrix
+    bias_matrix,
+    precession_matrix,
+    nutation_matrix
 )
 from celest.satellite.time import Time
 from polare import Stroke
-from typing import Tuple
+from typing import Tuple, Union
 import numpy as np
 
 
 class Coordinate(Time):
-    """Coordinate(position, frame, julian, offset=0)
+    """Coordinate(position, velocity, frame, julian, offset=0)
 
     Satellite coordinate transformations.
 
-    The input position and time can be converted into different coordinate
-    representations useful for satellite applications. Here, `julian + offset`
-    is the Julian time in J2000 epoch and is used in various transformations.
+    The input position, velocity, and time can be converted into different
+    reference frames useful for satellite applications. Here, `julian + offset`
+    is the Julian time in J2000 epoch.
 
-    If `frame=="geo"`, the `position` input can have two columns, (latitude,
-    longitude) or three columns (latitude, longitude, altitude). If no
-    geodetic altitude is provided, it is assumed to be zero. Other frames
-    require three columns.
+    The `position` and `velocity` inputs require three columns corresponding to
+    the x, y, z cartesian coordinates.
 
     Parameters
     ----------
     position : array_like
-        2-D array containing position coordinates. Axis 0 is the time series
-        axis.
+        2-D array containing position coordinates in km. Axis 0 is the time
+        series axis.
 
         Supported coordinate frames include the Geocentric Celestial Reference
-        System (gcrs), International Terrestrial Reference System (itrs), and
-        geographical (geo) system.
-    frame : {"gcrs", "geo", "itrs"}
+        System (gcrs) and International Terrestrial Reference System (itrs).
+    velocity : array_like
+        2-D array containing velocity coordinates in m/s. Axis 0 is the time
+        series axis.
+
+        See `position` input for supported coordinate frames.
+    frame : {"gcrs", "itrs"}
         Frame specifier for the input position.
     julian : array_like
         1-D array containing time data in Julian days.
@@ -45,56 +49,83 @@ class Coordinate(Time):
 
     Examples
     --------
-    Initialize `Coordinate` using gcrs positions:
+    Initialize `Coordinate` using gcrs data:
 
-    >>> julian = [30462.50, 30462.50]
-    >>> position = [[-4681.50824149 -5030.09119386     0.        ]
-    ...             [-4714.35351825 -4978.74325953   454.41492765]]
-    >>> c = Coordinate(position=position, frame="gcrs", julian=julian, offset=0)
+    >>> julian = [30462.50000, 30462.50069]
+    >>> position = [[-4681.50824, -5030.09119, 000.00000]
+    ...             [-4714.35352, -4978.74326, 454.41493]]
+    >>> velocity = [[-0.72067, 0.67072, 7.57919]
+    ...             [-0.37378, 1.04024, 7.56237]]
+    >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+    ...                julian=julian, offset=2430000)
 
     Get horizontal coordinates for the ground location at (43.65, -79.38):
 
-    >>> location = GroundPosition(latitude=43.65, longitude=-79.38)
+    >>> location = GroundPosition(latitude=43.65, longitude=-79.38, height=0.076)
     >>> elevation, azimuth = c.horizontal(location=location)
     """
 
-    def __init__(self, position, frame, julian, offset=0) -> None:
+    def __init__(self, position, velocity, frame, julian, offset=0) -> None:
 
         super().__init__(julian, offset)
 
-        time, position = np.array(julian), np.array(position)
+        position = np.array(position)
+        velocity = np.array(velocity)
+        time = np.array(julian)
 
-        if frame not in ["gcrs", "geo", "itrs"]:
+        if frame not in ["gcrs", "itrs"]:
             raise ValueError(f"{frame} is not a valid frame.")
 
         if position.ndim != 2:
             raise ValueError("position input must be 2-D.")
 
+        if velocity.ndim != 2:
+            raise ValueError("velocity input must be 2-D.")
+
         if time.ndim != 1:
             raise ValueError("time input must be 1-D.")
 
         if position.shape[0] != time.size:
-            raise ValueError(f"position and time data lengths are mismatched: "
-                             f"lengths are {position.shape[0]} and {len(time)}")
+            raise ValueError(f"position and time data lengths are mismatched:"
+                             f" lengths are {len(position)} and {len(time)}")
+
+        if velocity.shape[0] != time.size:
+            raise ValueError(f"velocity and time data lengths are mismatched:"
+                             f" lengths are {len(velocity)} and {len(time)}")
 
         kind_dict = {1: "zero", 2: "linear", 3: "quadratic"}
-        if position.shape[0] > 3:
-            self._kind = "cubic"
-        else:
-            self._kind = kind_dict[position.shape[0]]
+        self._kind = "cubic" if len(position) > 3 else kind_dict[len(position)]
 
         self._GCRS = None
         self._ITRS = None
         self._length = None
 
-        self._set_base_position(position, frame)
+        self._set_base_data(position, velocity, frame)
 
     def __len__(self) -> int:
 
         return self._length
 
-    def _set_base_position(self, position, frame) -> None:
-        """Initialize base position.
+    def _stroke_init(self, data) -> Stroke:
+        """Initialize data Stroke.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            1-D array containing data.
+
+        Returns
+        -------
+        Stroke
+        """
+
+        return Stroke(self._julian, data, self._kind)
+
+    def _set_base_data(self, position, velocity, frame) -> None:
+        """Initialize base data.
+
+        The `position` and `velocity` inputs require three columns
+        corresponding to the x, y, z cartesian coordinates.
 
         Parameters
         ----------
@@ -102,36 +133,28 @@ class Coordinate(Time):
             2-D array containing position coordinates.
 
             Supported coordinate frames include the Geocentric Celestial
-            Reference System (gcrs), International Terrestrial Reference
-            System (itrs), and geographical (geo) system.
-        frame : {"gcrs", "geo", "itrs"}
-            Frame specifier for the input position.
+            Reference System (gcrs) and International Terrestrial Reference
+            System (itrs).
+        velocity : array_like
+            2-D array containing velocity coordinates.
 
-        Notes
-        -----
-        GCRS and ITRS positions shall have 3 columns representing XYZ
-        cartesian points. GEO positions can have either 2 or 3 columns where
-        the first two represent geodetic latitude and terrestrial longitude;
-        the last column represent geodetic altitude and is assumed zero if not
-        passed in.
+            See `position` input for supported coordinate frames.
+        frame : {"gcrs", "itrs"}
+            Frame specifier for the input position.
         """
 
-        self._length = position.shape[0]
-
-        if position.shape[1] == 2:
-            height = np.zeros((self._length, 1))
-            position = np.concatenate((position, height), axis=1)
+        self._length = len(position)
 
         if frame == "gcrs":
-            x, y, z = [Stroke(self._julian, position[:, i], self._kind) for i in range(3)]
-            self._GCRS = np.array([x, y, z])
+            x, y, z = [self._stroke_init(position[:, i]) for i in range(3)]
+            vx, vy, vz = [self._stroke_init(velocity[:, i]) for i in range(3)]
+            self._GCRS = np.array([x, y, z, vx, vy, vz])
         elif frame == "itrs":
-            x, y, z = [Stroke(self._julian, position[:, i], self._kind) for i in range(3)]
-            self._ITRS = np.array([x, y, z])
+            x, y, z = [self._stroke_init(position[:, i]) for i in range(3)]
+            vx, vy, vz = [self._stroke_init(velocity[:, i]) for i in range(3)]
+            self._ITRS = np.array([x, y, z, vx, vy, vz])
         else:
-            itrs = self._geo_to_itrs(position)
-            x, y, z = [Stroke(self._julian, itrs[:, i], self._kind) for i in range(3)]
-            self._ITRS = np.array([x, y, z])
+            raise ValueError(f"{frame} is not a valid frame.")
 
     def _geo_to_itrs(self, position) -> np.ndarray:
         """Geographical to itrs transformation.
@@ -209,12 +232,12 @@ class Coordinate(Time):
 
         return lat, lon
 
-    def geo(self, iso=False, stroke=False) -> np.ndarray:
+    def geo(self, iso=False, stroke=False) -> Union[Tuple, np.ndarray]:
         """Return geographical coordinates.
 
-        The method can not return the data as both a stroke and iso
-        formatted strings. If both `iso=True` and `stroke=True`, the method
-        will return a tuple of stroke objects.
+        The method cannot return data as both a stroke and iso
+        formatted strings. If both `iso=True` and `stroke=True`, the Stroke
+        return will take precedence.
 
         Parameters
         ----------
@@ -226,9 +249,9 @@ class Coordinate(Time):
 
         Returns
         -------
-        tuple
+        Union[Tuple, np.ndarray]
             Tuple of latitude, longitude, and altitude given in decimal
-            degrees.
+            degrees and km.
 
             If `iso=True`, the output is a 1-D array containing formatted
             strings.
@@ -242,30 +265,45 @@ class Coordinate(Time):
 
         Examples
         --------
-        Initialize object and get geographical data:
+        Initialize `Coordinate` using gcrs data:
 
-        >>> julian=[2454545]
-        >>> position = [[6343.82, -2640.87, -11.26]]
-        >>> c = Coordinate(position=position, frame="itrs", julian=julian)
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Get geographical data:
+
         >>> c.geo()
-        np.array([[-9.38870528e-02, -2.26014826e+01, 5.04126976e+02]])
+        (array([-0.09540, 3.69543]),
+         array([-22.60391, -23.35431]),
+         array([493.42306, 493.59707]))
 
         Return formatted output strings by setting `iso=True`:
 
         >>> c.geo(iso=True)
-        np.array(['00°05′37.99″S 22°36′05.34″W 504.12697'])
+        array(['00°05′37.86″S 22°36′05.44″W 493.42km'
+               '03°42′10.85″N 23°21′06.73″W 493.60km'])
         """
 
         if self._ITRS is None:
-            x, y, z = self._GCRS
-            x, y, z = [i(self._julian).reshape((-1, 1)) for i in [x, y, z]]
-            gcrs = np.concatenate((x, y, z), axis=1)
+            x, y, z, vx, vy, vz = self._GCRS
 
-            itrs = self._gcrs_and_itrs(gcrs, "gcrs")
-            x, y, z = [Stroke(self._julian, itrs[:, i], self._kind) for i in range(3)]
-            self._ITRS = np.array([x, y, z])
+            gcrs_pos = np.array([i(self._julian) for i in [x, y, z]]).T
+            gcrs_vel = np.array([i(self._julian) for i in [vx, vy, vz]]).T
 
-        lat, lon = self._itrs_to_geo(self._ITRS)
+            itrs_pos = self._gcrs_and_itrs(gcrs_pos, "gcrs")
+            x, y, z = [self._stroke_init(itrs_pos[:, i]) for i in range(3)]
+
+            itrs_vel = self._gcrs_and_itrs(gcrs_vel, "gcrs")
+            vx, vy, vz = [self._stroke_init(itrs_vel[:, i]) for i in range(3)]
+
+            self._ITRS = np.array([x, y, z, vx, vy, vz])
+
+        lat, lon = self._itrs_to_geo(self._ITRS[:3])
         alt = self.altitude(stroke=True)
 
         if stroke:
@@ -278,7 +316,7 @@ class Coordinate(Time):
         else:
             return lat, lon, alt
 
-    def era(self, stroke=False) -> np.ndarray:
+    def era(self, stroke=False) -> Union[np.ndarray, Stroke]:
         """Return Earth rotation angle in decimal degrees.
 
         Parameters
@@ -312,11 +350,20 @@ class Coordinate(Time):
 
         Examples
         --------
-        >>> julian = [2454545]
-        >>> position = [[6343.82, -2640.87, -11.26]]
-        >>> c = Coordinate(position=position, type="itrs", julian=julian)
+        Initialize `Coordinate` using gcrs data:
+
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Get era data:
+
         >>> c.era()
-        np.array([6.2360075])
+        array([249.65772, 249.90840])
         """
 
         # Multiply time elapsed since J2000 by Earth rotation rate and add
@@ -324,17 +371,14 @@ class Coordinate(Time):
         dJulian = self._julian - 2451545
         ang = (360.9856123035484 * dJulian + 280.46) % 360
 
-        if stroke:
-            return Stroke(self._julian, ang, self._kind)
-        else:
-            return ang
+        return Stroke(self._julian, ang, self._kind) if stroke else ang
 
-    def _gcrs_and_itrs(self, position, frame) -> np.ndarray:
+    def _gcrs_and_itrs(self, data, frame) -> np.ndarray:
         """Transform between gcrs and itrs coordinates.
 
         Parameters
         ----------
-        position : np.ndarray
+        data : np.ndarray
             2-D array containing x, y, z cartesian coordinates.
         frame : {"itrs", "gcrs"}
             Input data frame.
@@ -348,10 +392,10 @@ class Coordinate(Time):
         -----
         The conversion between the gcrs and itrs frames accounts for Earth
         rotation, precession, and nutation. Polar motion effects are ignored
-        due to their poor predictive nature.
+        due to their poor predictability.
         """
 
-        pos_data = np.copy(position)
+        pos_data = np.copy(data)
 
         # Get dependencies.
         era = self.era()
@@ -388,7 +432,7 @@ class Coordinate(Time):
 
         return pos_data
 
-    def gcrs(self, stroke=False) -> np.ndarray:
+    def gcrs(self, stroke=False) -> Tuple:
         """Return gcrs coordinates.
 
         Parameters
@@ -399,8 +443,9 @@ class Coordinate(Time):
 
         Returns
         -------
-        tuple
-            Tuple containing x, y, z cartesian coordinates in the gcrs frame.
+        Tuple
+            Tuple containing x, y, z cartesian positions and velocities in the
+            gcrs frame.
 
             The coordinates are stroke objects if `stroke=True`. Otherwise,
             1-D arrays are returned.
@@ -412,26 +457,45 @@ class Coordinate(Time):
 
         Examples
         --------
-        Calculate gcrs coordinates from itrs coordinates:
+        Initialize `Coordinate` using itrs data:
 
-        >>> juluian = [2454545]
-        >>> position = [[6343.82, -2640.87, -11.26]]
-        >>> c = Coordinate(position=position, type="itrs", julian=julian)
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[6343.70553, -2641.13728, -11.44111]
+        ...             [6295.54131, -2718.36512, 442.89640]]
+        >>> velocity = [[-0.37176, -0.92574, 7.57747]
+        ...             [-0.84200, -0.72521, 7.56150]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Get era data:
+
         >>> c.gcrs()
-        np.array([[6212.21719598, -2937.10811161, -11.26]])
+        (array([-4681.50824, -4714.35352]),
+         array([-5030.09119, -4978.74326]),
+         array([0, 454.41493]),
+         array([-0.72067, -0.37378]))
+         array([0.67072, 1.04024]),
+         array([7.57919, 7.56237]))
         """
 
         if self._GCRS is None:
-            itrs = np.array([self._ITRS[i](self._julian) for i in range(3)]).T
-            gcrs = self._gcrs_and_itrs(itrs, "itrs")
-            x, y, z = [Stroke(self._julian, gcrs[:, i], self._kind) for i in range(3)]
-            self._GCRS = np.array([x, y, z])
+            x, y, z, vx, vy, vz = self._ITRS
 
-        x, y, z = self._GCRS[0], self._GCRS[1], self._GCRS[2]
+            itrs_pos = np.array([i(self._julian) for i in [x, y, z]]).T
+            itrs_vel = np.array([i(self._julian) for i in [vx, vy, vz]]).T
+
+            gcrs_pos = self._gcrs_and_itrs(itrs_pos, "itrs")
+            x, y, z = [self._stroke_init(gcrs_pos[:, i]) for i in range(3)]
+
+            gcrs_vel = self._gcrs_and_itrs(itrs_vel, "itrs")
+            vx, vy, vz = [self._stroke_init(gcrs_vel[:, i]) for i in range(3)]
+
+            self._GCRS = np.array([x, y, z, vx, vy, vz])
+
         if stroke:
-            return x, y, z
+            return (i for i in self._GCRS)
         else:
-            return x(self._julian), y(self._julian), z(self._julian)
+            return (i(self._julian) for i in self._GCRS)
 
     def itrs(self, stroke=False) -> np.ndarray:
         """Return itrs coordinates.
@@ -445,7 +509,8 @@ class Coordinate(Time):
         Returns
         -------
         tuple
-            Tuple containing x, y, z cartesian data in the itrs frame.
+            Tuple containing x, y, z cartesian positions and velocities in the
+            itrs frame.
 
             The coordinates are stroke objects if `stroke=True`. Otherwise,
             1-D arrays are returned.
@@ -457,26 +522,45 @@ class Coordinate(Time):
 
         Examples
         --------
-        Calculate itrs coordinates from gcrs coordinates:
+        Initialize `Coordinate` using gcrs data:
 
-        >>> julian = [2454545]
-        >>> position = [[6343.82, -2640.87, -11.26]]
-        >>> c = Coordinate(position=position, type="gcrs", julian=julian)
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Get itrs data:
+
         >>> c.itrs()
-        np.array([[6461.30569276, -2338.75507354, -11.26]])
+        (array([[6343.70553, 6295.54131]),
+         array([-2641.13728, -2718.36512]),
+         array([-11.44111, 442.89640]),
+         array([-0.37176, -0.84200]),
+         array([-0.92574, -0.72521]),
+         array([7.57747, 7.56150]))
         """
 
         if self._ITRS is None:
-            gcrs = np.array([self._GCRS[i](self._julian) for i in range(3)]).T
-            itrs = self._gcrs_and_itrs(gcrs, "gcrs")
-            x, y, z = [Stroke(self._julian, itrs[:, i], self._kind) for i in range(3)]
-            self._ITRS = np.array([x, y, z])
+            x, y, z, vx, vy, vz = self._GCRS
 
-        x, y, z = self._ITRS[0], self._ITRS[1], self._ITRS[2]
+            gcrs_pos = np.array([i(self._julian) for i in [x, y, z]]).T
+            gcrs_vel = np.array([i(self._julian) for i in [vx, vy, vz]]).T
+
+            itrs_pos = self._gcrs_and_itrs(gcrs_pos, "gcrs")
+            x, y, z = [self._stroke_init(itrs_pos[:, i]) for i in range(3)]
+
+            itrs_vel = self._gcrs_and_itrs(gcrs_vel, "gcrs")
+            vx, vy, vz = [self._stroke_init(itrs_vel[:, i]) for i in range(3)]
+
+            self._ITRS = np.array([x, y, z, vx, vy, vz])
+
         if stroke:
-            return x, y, z
+            return (i for i in self._ITRS)
         else:
-            return x(self._julian), y(self._julian), z(self._julian)
+            return (i(self._julian) for i in self._ITRS)
 
     def _get_ang(self, u, v) -> np.ndarray:
         """Return the degree angle bewteen two vectors.
@@ -522,7 +606,7 @@ class Coordinate(Time):
         lat, lon, height = location.latitude, location.longitude, location.height
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
 
-        return 90 - self._get_ang(self._ITRS - gnd_itrs, gnd_itrs)
+        return 90 - self._get_ang(self._ITRS[:3] - gnd_itrs, gnd_itrs)
 
     def _azimuth(self, location) -> Stroke:
         """Return the azimuth angle of the satellite.
@@ -543,7 +627,7 @@ class Coordinate(Time):
         radius, height = location.radius, location.height
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
 
-        los = self._ITRS - gnd_itrs
+        los = self._ITRS[:3] - gnd_itrs
 
         # Find Earth tangent passing through horizontal origin and z-axis.
         st = [0, 0, radius / np.sin(np.radians(lat))] - gnd_itrs
@@ -585,14 +669,23 @@ class Coordinate(Time):
 
         Examples
         --------
-        Calculate the horizontal coordinates at (52.1579, -106.6702):
+        Initialize `Coordinate` using gcrs data:
 
-        >>> julian=[2454545]
-        >>> position = [[6343.82, -2640.87, -11.26]]
-        >>> location = GroundPosition(52.1579, -106.6702)
-        >>> c = Coordinate(position=position, frame="ecef", julian=julian)
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Calculate the horizontal coordinates at (52.16, -106.67):
+
+        >>> location = GroundPosition(latitude=52.16, longitude=-106.67,
+        ...                           height=0.482)
         >>> c.horizontal(location=location)
-        (array([-40.8786098]), array([94.73615482]))
+        (array([-40.88076, -39.01006]),
+         array([94.73900, 92.99101]))
         """
 
         if self._ITRS is None:
@@ -607,7 +700,7 @@ class Coordinate(Time):
         else:
             return alt(self._julian), az(self._julian)
 
-    def off_nadir(self, location, stroke=False) -> np.ndarray:
+    def off_nadir(self, location, stroke=False) -> Union[Stroke, np.ndarray]:
         """Return off-nadir angle in decimal degrees.
 
         The off-nadir angle is the angular distance of a ground location from
@@ -631,16 +724,22 @@ class Coordinate(Time):
 
         Examples
         --------
-        Calculate the off-nadir angle for the location (52.1579, -106.6702):
+        Initialize `Coordinate` using gcrs data:
 
-        >>> toronto = GroundPosition(52.1579, -106.6702)
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
 
-        >>> julian = [30462.70517808 30462.70583972]
-        >>> position = [[-1148.75741119 -5527.65458256  3930.33125383]
-        ...             [-1186.47076862 -5258.03277545  4276.52904538]]
-        >>> c = Coordinate(position=position, frame="itrs", julian=julian, offset=2430000)
-        >>> c.off_nadir(location=toronto)
-        array([67.08711357 65.27748945])
+        Calculate the off-nadir data at (52.16, -106.67):
+
+        >>> location = GroundPosition(latitude=52.16, longitude=-106.67,
+        ...                           height=0.482)
+        >>> c.off_nadir(location=location)
+        array([67.10070, 65.29457])
         """
 
         if self._ITRS is None:
@@ -648,12 +747,9 @@ class Coordinate(Time):
 
         lat, lon, height = location.latitude, location.longitude, location.height
         loc = self._geo_to_itrs(np.array([[lat, lon, height]]))
-        ang = self._get_ang((self._ITRS - loc).reshape((3,)), self._ITRS)
+        ang = self._get_ang((self._ITRS[:3] - loc).reshape((3,)), self._ITRS[:3])
 
-        if stroke:
-            return ang
-        else:
-            return ang(self._julian)
+        return ang if stroke else ang(self._julian)
 
     def _WGS84_radius(self, lattitude) -> np.ndarray:
         """Return Earth's geocentric radius using WGS84.
@@ -694,7 +790,7 @@ class Coordinate(Time):
 
         return radius
 
-    def altitude(self, stroke=False) -> np.ndarray:
+    def altitude(self, stroke=False) -> Union[Stroke, np.ndarray]:
         """Return the geodetic altitude in kilometers.
 
         This method uses the WGS84 reference ellipsoid to calculate the
@@ -727,11 +823,20 @@ class Coordinate(Time):
 
         Examples
         --------
-        >>> julian=[2454545]
-        >>> position = [[6343.82, -2640.87, -11.26]]
-        >>> c = Coordinate(position=position, type="itrs", julian=julian)
+        Initialize `Coordinate` using gcrs data:
+
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Calculate altitude data:
+
         >>> c.altitude()
-        np.array([504.1269764])
+        array([493.42306, 493.59714])
         """
 
         if self._ITRS is None:
@@ -742,7 +847,7 @@ class Coordinate(Time):
 
         tol = 10e-10
 
-        x, y, z = self._ITRS
+        x, y, z = self._ITRS[:3]
 
         e = np.sqrt(1 - b ** 2 / a ** 2)
         p = np.sqrt(x ** 2 + y ** 2)
@@ -770,7 +875,7 @@ class Coordinate(Time):
         else:
             return h(self._julian)
 
-    def distance(self, location, stroke=False) -> np.ndarray:
+    def distance(self, location, stroke=False) -> Union[Stroke, np.ndarray]:
         """Return distance to the ground location.
 
         Parameters
@@ -790,15 +895,22 @@ class Coordinate(Time):
 
         Examples
         --------
-        Calculate the satellite distances from position (52.1579, -106.6702):
+        Initialize `Coordinate` using gcrs data:
 
-        >>> times = [30462.5, 30462.50069444]
-        >>> position = [[6343.81620221, -2640.87223125, -11.25541802],
-        ...             [6295.64583763, -2718.09271472, 443.08232543]]
-        >>> location = GroundPosition(52.1579, -106.6702)
-        >>> c = Coordinate(position=position, frame="itrs", julian=julian, offset=2430000)
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Calculate the satellite distances from position (52.16, -106.67):
+
+        >>> location = GroundPosition(latitude=52.16, longitude=-106.67,
+        ...                           height=0.482)
         >>> c.distance(location=location)
-        np.array([9070.49268746, 8776.7179543])
+        array([9070.80824, 8777.02141])
         """
 
         if self._ITRS is None:
@@ -806,9 +918,6 @@ class Coordinate(Time):
 
         lat, lon, height = location.latitude, location.longitude, location.height
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]]))
-        distance = np.linalg.norm(self._ITRS - gnd_itrs)
+        distance = np.linalg.norm(self._ITRS[:3] - gnd_itrs)
 
-        if stroke:
-            return distance
-        else:
-            return distance(self._julian)
+        return distance if stroke else distance(self._julian)
