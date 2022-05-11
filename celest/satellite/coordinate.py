@@ -559,8 +559,65 @@ class Coordinate(Time):
             vx, vy, vz = [self._stroke_init(itrs_vel[:, i]) for i in range(3)]
 
             self._ITRS = np.array([x, y, z, vx, vy, vz])
-        
+
         x, y, z, vx, vy, vz = self._ITRS
+
+        if stroke:
+            return x, y, z, vx, vy, vz
+        else:
+            return x(self._julian), y(self._julian), z(self._julian), \
+                   vx(self._julian), vy(self._julian), vz(self._julian)
+
+    def lvlh(self, stroke=False) -> Tuple:
+        """Return the LVLH (Hill frame) coordinates.
+
+        The local-vertical local-horizontal frame (also known as the Hill
+        frame) is a body frame where the z-axis is algigned with the negative
+        of the geocentric position vector, the y-axis is aligned with the
+        negative orbit normal, and the x-axis completes the right handed triad.
+
+        Parameters
+        ----------
+        stroke : bool, optional
+            Formats output as a tuple of stroke objects if true. Otherwise,
+            the output is a tuple of 1-D arrays.
+
+        Returns
+        -------
+        Tuple
+            Tuple containing x, y, z cartesian positions and velocities in the
+            VLVH frame.
+
+            The coordinates are stroke objects if `stroke=True`. Otherwise,
+            1-D arrays are returned.
+        """
+
+        if self._GCRS is None:
+            self.gcrs()
+
+        gcrs_x, gcrs_y, gcrs_z, gcrs_vx, gcrs_vy, gcrs_vz = self._GCRS
+        r = np.array([gcrs_x, gcrs_y, gcrs_z])
+        v = np.array([gcrs_vx, gcrs_vy, gcrs_vz])
+
+        norm_r = np.linalg.norm(r)
+        r_cross_v = np.cross(r, v)
+        norm_r_cross_v = np.linalg.norm(r_cross_v)
+
+        lvlh_z = - np.array([gcrs_x / norm_r,
+                             gcrs_y / norm_r,
+                             gcrs_z / norm_r])
+        lvlh_y = - np.array([r_cross_v[0] / norm_r_cross_v,
+                             r_cross_v[1] / norm_r_cross_v,
+                             r_cross_v[2] / norm_r_cross_v])
+        lvlh_x = np.cross(lvlh_y, lvlh_z)
+
+        Aoi = np.array([lvlh_x, lvlh_y, lvlh_z])
+
+        lvlh_r = np.dot(Aoi, r)
+        lvlh_v = np.dot(Aoi, v)
+
+        x, y, z = lvlh_r
+        vx, vy, vz = lvlh_v
 
         if stroke:
             return x, y, z, vx, vy, vz
