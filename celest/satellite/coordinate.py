@@ -492,10 +492,13 @@ class Coordinate(Time):
 
             self._GCRS = np.array([x, y, z, vx, vy, vz])
 
+        x, y, z, vx, vy, vz = self._GCRS
+
         if stroke:
-            return (i for i in self._GCRS)
+            return x, y, z, vx, vy, vz
         else:
-            return (i(self._julian) for i in self._GCRS)
+            return x(self._julian), y(self._julian), z(self._julian), \
+                   vx(self._julian), vy(self._julian), vz(self._julian)
 
     def itrs(self, stroke=False) -> np.ndarray:
         """Return itrs coordinates.
@@ -556,11 +559,14 @@ class Coordinate(Time):
             vx, vy, vz = [self._stroke_init(itrs_vel[:, i]) for i in range(3)]
 
             self._ITRS = np.array([x, y, z, vx, vy, vz])
+        
+        x, y, z, vx, vy, vz = self._ITRS
 
         if stroke:
-            return (i for i in self._ITRS)
+            return x, y, z, vx, vy, vz
         else:
-            return (i(self._julian) for i in self._ITRS)
+            return x(self._julian), y(self._julian), z(self._julian), \
+                   vx(self._julian), vy(self._julian), vz(self._julian)
 
     def _get_ang(self, u, v) -> np.ndarray:
         """Return the degree angle bewteen two vectors.
