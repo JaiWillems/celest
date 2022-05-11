@@ -10,25 +10,30 @@ class TestSatellite(TestCase):
 
     def setUp(self):
 
-        fname = "tests/test_data/coordinate_validation_set.txt"
-        data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
+        fname = "tests/test_data/coordinate_validation_long.txt"
+        cols = (0, 11, 12, 13, 14, 15, 16)
+        skiprows = 1
+        max_rows = 5000
+        data = np.loadtxt(fname=fname, usecols=cols, skiprows=skiprows,
+                          max_rows=max_rows)
 
         self.times = data[:, 0]
-        self.ITRS = data[:, 10:]
+        self.GCRS = data[:, 1:4]
+        self.GCRS_vel = data[:, 4:7]
 
         self.offset = 2430000
-        self.finch = Satellite(self.ITRS, "itrs", self.times, self.offset)
+        self.finch = Satellite(self.GCRS, self.GCRS_vel, "gcrs", self.times,
+                               self.offset)
 
         self.julian = self.finch.julian()
         self.ut1 = self.finch.ut1()
         self.gmst = self.finch.gmst()
         self.gast = self.finch.gast()
-        self.lat, self.lon, self.alt = self.finch.geo()
-        self.gcrs_x, self.gcrs_y, self.gcrs_z = self.finch.gcrs()
-        self.itrs_x, self.itrs_y, self.itrs_z = self.finch.itrs()
+        self.geo = self.finch.geo()
+        self.gcrs = self.finch.gcrs()
+        self.itrs = self.finch.itrs()
 
     def test_save(self):
-        """Test `Satellite.save`."""
 
         times = ("julian", "ut1", "gmst", "gast")
         positions = ("geo", "gcrs", "itrs")
@@ -42,22 +47,28 @@ class TestSatellite(TestCase):
         load_lat = data[:, 5]
         load_lon = data[:, 6]
         load_alt = data[:, 7]
-        load_gcrs = data[:, 8:11]
-        load_itrs = data[:, 11:]
+        load_gcrs = data[:, 8:14]
+        load_itrs = data[:, 14:20]
 
         self.assertTrue(np.array_equal(load_julian, self.julian))
         self.assertTrue(np.array_equal(load_ut1, self.ut1))
         self.assertTrue(np.array_equal(load_gmst, self.gmst))
         self.assertTrue(np.array_equal(load_gast, self.gast))
-        self.assertTrue(np.array_equal(load_lat, self.lat))
-        self.assertTrue(np.array_equal(load_lon, self.lon))
-        self.assertTrue(np.array_equal(load_alt, self.alt))
-        self.assertTrue(np.array_equal(load_gcrs[:, 0], self.gcrs_x))
-        self.assertTrue(np.array_equal(load_gcrs[:, 1], self.gcrs_y))
-        self.assertTrue(np.array_equal(load_gcrs[:, 2], self.gcrs_z))
-        self.assertTrue(np.array_equal(load_itrs[:, 0], self.itrs_x))
-        self.assertTrue(np.array_equal(load_itrs[:, 1], self.itrs_y))
-        self.assertTrue(np.array_equal(load_itrs[:, 2], self.itrs_z))
+        self.assertTrue(np.array_equal(load_lat, self.geo[0]))
+        self.assertTrue(np.array_equal(load_lon, self.geo[1]))
+        self.assertTrue(np.array_equal(load_alt, self.geo[2]))
+        self.assertTrue(np.array_equal(load_gcrs[:, 0], self.gcrs[0]))
+        self.assertTrue(np.array_equal(load_gcrs[:, 1], self.gcrs[1]))
+        self.assertTrue(np.array_equal(load_gcrs[:, 2], self.gcrs[2]))
+        self.assertTrue(np.array_equal(load_gcrs[:, 3], self.gcrs[3]))
+        self.assertTrue(np.array_equal(load_gcrs[:, 4], self.gcrs[4]))
+        self.assertTrue(np.array_equal(load_gcrs[:, 5], self.gcrs[5]))
+        self.assertTrue(np.array_equal(load_itrs[:, 0], self.itrs[0]))
+        self.assertTrue(np.array_equal(load_itrs[:, 1], self.itrs[1]))
+        self.assertTrue(np.array_equal(load_itrs[:, 2], self.itrs[2]))
+        self.assertTrue(np.array_equal(load_itrs[:, 3], self.itrs[3]))
+        self.assertTrue(np.array_equal(load_itrs[:, 4], self.itrs[4]))
+        self.assertTrue(np.array_equal(load_itrs[:, 5], self.itrs[5]))
 
         import os
         os.remove("test_data.csv")
