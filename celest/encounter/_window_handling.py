@@ -1,12 +1,13 @@
 
 
 from typing import Any, Literal
+import copy
 import numpy as np
 import pandas as pd
 
 
 class VTW:
-    """VTW(rise_time, set_time)
+    """VTW(rise_time, set_time, roll=None, pitch=None, yaw=None)
 
     Visible window time.
 
@@ -19,6 +20,12 @@ class VTW:
         Rise time of the visible time window in julian days.
     set_time : float
         Set time of the visible time window in julian days.
+    roll : Stroke, optional
+        Roll angle of the satellite in radians.
+    pitch : Stroke, optional
+        Pitch angle of the satellite in radians.
+    yaw : Stroke, optional
+        Yaw angle of the satellite in radians.
 
     Attributes
     ----------
@@ -28,13 +35,22 @@ class VTW:
         Set time of the visible time window in julian days.
     duration : float
         Duration of the visible time window in seconds.
+    roll : Stroke
+        Roll angle of the satellite in radians.
+    pitch : Stroke
+        Pitch angle of the satellite in radians.
+    yaw : Stroke
+        Yaw angle of the satellite in radians.
     """
 
-    def __init__(self, rise_time, set_time) -> None:
+    def __init__(self, rise_time, set_time, roll=None, pitch=None, yaw=None) -> None:
 
         self.rise_time = rise_time
         self.set_time = set_time
         self.duration = 86400 * (set_time - rise_time)
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
 
     def __str__(self) -> str:
 
@@ -54,11 +70,11 @@ class VTW:
         >>> VTW_new = VTW_old.copy()
         """
 
-        return VTW(self.rise_time, self.set_time)
+        return copy.deepcopy(self)
 
 
 class OW:
-    """OW(start_time, duration, location, quality, deadline)
+    """OW(start_time, duration, location, quality, deadline, roll, pitch, yaw)
 
     Observation window.
 
@@ -77,6 +93,12 @@ class OW:
         Quality of the observing window.
     deadline : float
         Deadline of the observing window in julian days.
+    roll : float
+        Roll angle of the satellite-ground encounter.
+    pitch : float
+        Pitch angle of the satellite-ground encounter.
+    yaw : float
+        Yaw angle of the satellite-ground encounter.
 
     Attributes
     ----------
@@ -90,19 +112,28 @@ class OW:
         Quality of the observing window.
     deadline : float
         Deadline of the observing window in julian days.
+    roll : float
+        Roll angle of the satellite-ground encounter.
+    pitch : float
+        Pitch angle of the satellite-ground encounter.
+    yaw : float
+        Yaw angle of the satellite-ground encounter.
     """
 
-    def __init__(self, start_time, duration, location, quality, deadline) -> None:
+    def __init__(self, start_time, duration, location, quality, deadline, roll, pitch, yaw) -> None:
 
         self.start_time = start_time
         self.duration = duration
         self.location = location
         self.quality = quality
         self.deadline = deadline
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
 
     def __str__(self) -> str:
 
-        return f"Location: {self.location.coor}, Start: {self.rise_time}, Duration:{self.set_time}s"
+        return f"Location: {(self.location.latitude, self.location.longitude)}, Start: {self.start_time}, Duration:{self.duration}s"
 
     def copy(self) -> Any:
         """Return `OW` copy.
@@ -118,7 +149,7 @@ class OW:
         >>> OW_new = OW_old.copy()
         """
 
-        return OW(self.start_time, self.duration, self.location, self.quality, self.deadline)
+        return copy.deepcopy(self)
 
 
 class WindowHandler:
