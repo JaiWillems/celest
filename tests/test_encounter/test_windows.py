@@ -12,11 +12,19 @@ class TestWindows(TestCase):
 
     def setUp(self):
 
-        fname = "tests/test_data/coordinate_validation_set.txt"
-        data = np.loadtxt(fname=fname, delimiter="\t", skiprows=1)
-        times, itrs = data[:, 0], data[:, 10:]
+        fname = "tests/test_data/coordinate_validation_long.txt"
+        cols = (0, 11, 12, 13, 14, 15, 16)
+        skiprows = 1
+        max_rows = 5000
+        data = np.loadtxt(fname=fname, usecols=cols, skiprows=skiprows,
+                          max_rows=max_rows)
 
-        self.satellite = Satellite(itrs, "itrs", times, 2430000)
+        times = data[:, 0]
+        GCRS = data[:, 1:4]
+        GCRS_vel = data[:, 4:7]
+
+        offset = 2430000
+        self.satellite = Satellite(GCRS, GCRS_vel, "gcrs", times, offset)
 
     def test_sun_coor(self):
 
@@ -35,7 +43,7 @@ class TestWindows(TestCase):
         y = itrsCoor.y.to(units.km).value
         z = itrsCoor.z.to(units.km).value
 
-        calc_x, calc_y, calc_z = _sun_coor(julData).itrs(stroke=False)
+        calc_x, calc_y, calc_z, _, _, _ = _sun_coor(julData).itrs(stroke=False)
         self.assertTrue(np.allclose(x, calc_x, rtol=0.05))
         self.assertTrue(np.allclose(y, calc_y, rtol=0.05))
         self.assertTrue(np.allclose(z, calc_z, rtol=0.05))
@@ -43,7 +51,7 @@ class TestWindows(TestCase):
     def test_windows(self):
 
         location = GroundPosition(43.6532, -79.3832)
-        elevation = self.satellite._elevation(location)
+        elevation, _ = self.satellite.horizontal(location, stroke=True)
 
         sun_coor = _sun_coor(self.satellite._julian)
         sun_alt, _ = sun_coor.horizontal(location, stroke=True)
