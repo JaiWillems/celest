@@ -1,5 +1,6 @@
 
 
+from celest.encounter.groundposition import GroundPosition
 from celest.satellite.satellite import Satellite
 from unittest import TestCase
 import numpy as np
@@ -22,22 +23,31 @@ class TestSatellite(TestCase):
         self.GCRS_vel = data[:, 4:7]
 
         self.offset = 2430000
-        self.finch = Satellite(self.GCRS, self.GCRS_vel, "gcrs", self.times,
-                               self.offset)
+        self.satellite = Satellite(self.GCRS, self.GCRS_vel, "gcrs",
+                                   self.times, self.offset)
 
-        self.julian = self.finch.julian()
-        self.ut1 = self.finch.ut1()
-        self.gmst = self.finch.gmst()
-        self.gast = self.finch.gast()
-        self.geo = self.finch.geo()
-        self.gcrs = self.finch.gcrs()
-        self.itrs = self.finch.itrs()
+        self.julian = self.satellite.julian()
+        self.ut1 = self.satellite.ut1()
+        self.gmst = self.satellite.gmst()
+        self.gast = self.satellite.gast()
+        self.geo = self.satellite.geo()
+        self.gcrs = self.satellite.gcrs()
+        self.itrs = self.satellite.itrs()
+    
+    def test_attitude(self):
+
+        location = GroundPosition(52.1579, -106.6702, 0.482)
+        roll, pitch, yaw = self.satellite.attitude(location)
+
+        self.assertIsNotNone(roll)
+        self.assertIsNotNone(pitch)
+        self.assertIsNotNone(yaw)
 
     def test_save(self):
 
         times = ("julian", "ut1", "gmst", "gast")
         positions = ("geo", "gcrs", "itrs")
-        self.finch.save(times, positions, path="test_data.csv", sep=",")
+        self.satellite.save(times, positions, path="test_data.csv", sep=",")
 
         data = np.loadtxt("test_data.csv", delimiter=",", skiprows=1)
         load_julian = data[:, 1]
