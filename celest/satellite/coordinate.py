@@ -590,6 +590,39 @@ class Coordinate(Time):
 
             The coordinates are stroke objects if `stroke=True`. Otherwise,
             1-D arrays are returned.
+        
+        Notes
+        -----
+        The LVLH frame definition was taken from NASA's technical memorandum
+        on coordinate frames for the space shuttle program. [NASA1974]_
+
+        References
+        ----------
+        .. [NASA1974] Coordinate Systems for the Space Shuttle Program, Lyndon
+           B. Johnson Space Center, Houston, Texas 77058, Oct 1974, no. NASA
+           TM X-58153.
+        
+        Examples
+        --------
+        Initialize `Coordinate` using gcrs data:
+
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> c = Coordinate(position=position, velocity=velocity, frame="gcrs",
+        ...                julian=julian, offset=2430000)
+
+        Get lvlh data:
+
+        >>> c.lvlh()
+        (array([0, -1.13687e-13]),
+         array([-4.54747e-13, 1.06581e-13]),
+         array([-6871.56000, -6871.64511]),
+         array([7.64286, 7.64272]),
+         array([-2.22045e-16, -1.11022e-16]),
+         array([5.55112e-17, -2.83622e-03]))
         """
 
         if self._GCRS is None:
