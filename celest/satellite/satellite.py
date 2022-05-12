@@ -74,6 +74,35 @@ class Satellite(Coordinate):
         -------
         Tuple
             Tuple containing roll, pitch, and yaw angles in decimal degrees.
+
+        Notes
+        -----
+        The methods used were taken from [adcs1]_.
+
+        References
+        ----------
+        .. [adcs1] G. H. J. van Vuuren, “The design and simulation analysis of
+           an attitude determination and control system for a small earth
+           observation satellite,” Master of Engineering, Stellenbosch
+           University, Stellenbosch, South Africa, Mar 2015.
+
+        Examples
+        --------
+        Initialize `Satellite` using gcrs data:
+
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> s = Satellite(position=position, velocity=velocity, frame="gcrs",
+        ...               julian=julian, offset=2430000)
+
+        Get attitude data:
+
+        >>> location = GroundPosition(latitude=43.65, longitude=-79.38,
+        ...                           height=0.076)
+        >>> roll, pitch, yaw = s.attitude(location)
         """
 
         x, y, z, _, _, _ = self.lvlh()
