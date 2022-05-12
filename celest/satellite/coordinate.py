@@ -568,6 +568,56 @@ class Coordinate(Time):
             return x(self._julian), y(self._julian), z(self._julian), \
                    vx(self._julian), vy(self._julian), vz(self._julian)
 
+    def _gcrs_to_lvlh_matrix(self, stroke=False) -> np.ndarray:
+        """Return the gcrs to lvlh rotation matrix.
+
+        Parameters
+        ----------
+        stroke : bool, optional
+            Formats output as a 2-D array of Stroke objects if true.
+            Otherwise, the output is a 3-D array.
+
+        Returns
+        -------
+        np.ndarray
+            2-D rotation matrix containing Stroke objects if `stroke=True`.
+            Otherwise, 3-D rotation matrix.
+        """
+
+        gcrs_x, gcrs_y, gcrs_z, gcrs_vx, gcrs_vy, gcrs_vz = self._GCRS
+        r = np.array([gcrs_x, gcrs_y, gcrs_z])
+        v = np.array([gcrs_vx, gcrs_vy, gcrs_vz])
+
+        norm_r = np.linalg.norm(r)
+        r_cross_v = np.cross(r, v)
+        norm_r_cross_v = np.linalg.norm(r_cross_v)
+
+        lvlh_z = - np.array([gcrs_x / norm_r,
+                             gcrs_y / norm_r,
+                             gcrs_z / norm_r])
+        lvlh_y = - np.array([r_cross_v[0] / norm_r_cross_v,
+                             r_cross_v[1] / norm_r_cross_v,
+                             r_cross_v[2] / norm_r_cross_v])
+        lvlh_x = np.cross(lvlh_y, lvlh_z)
+
+        Aoi = np.array([lvlh_x, lvlh_y, lvlh_z])
+
+        if stroke:
+            return Aoi
+        else:
+            a11 = Aoi[0, 0](self._julian)
+            a12 = Aoi[0, 1](self._julian)
+            a13 = Aoi[0, 2](self._julian)
+            a21 = Aoi[1, 0](self._julian)
+            a22 = Aoi[1, 1](self._julian)
+            a23 = Aoi[1, 2](self._julian)
+            a31 = Aoi[2, 0](self._julian)
+            a32 = Aoi[2, 1](self._julian)
+            a33 = Aoi[2, 2](self._julian)
+            return np.array([[a11, a12, a13],
+                             [a21, a22, a23],
+                             [a31, a32, a33]])
+
     def lvlh(self, stroke=False) -> Tuple:
         """Return the LVLH (Hill frame) coordinates.
 
@@ -590,7 +640,7 @@ class Coordinate(Time):
 
             The coordinates are stroke objects if `stroke=True`. Otherwise,
             1-D arrays are returned.
-        
+
         Notes
         -----
         The LVLH frame definition was taken from NASA's technical memorandum
@@ -601,7 +651,7 @@ class Coordinate(Time):
         .. [NASA1974] Coordinate Systems for the Space Shuttle Program, Lyndon
            B. Johnson Space Center, Houston, Texas 77058, Oct 1974, no. NASA
            TM X-58153.
-        
+
         Examples
         --------
         Initialize `Coordinate` using gcrs data:
@@ -632,19 +682,7 @@ class Coordinate(Time):
         r = np.array([gcrs_x, gcrs_y, gcrs_z])
         v = np.array([gcrs_vx, gcrs_vy, gcrs_vz])
 
-        norm_r = np.linalg.norm(r)
-        r_cross_v = np.cross(r, v)
-        norm_r_cross_v = np.linalg.norm(r_cross_v)
-
-        lvlh_z = - np.array([gcrs_x / norm_r,
-                             gcrs_y / norm_r,
-                             gcrs_z / norm_r])
-        lvlh_y = - np.array([r_cross_v[0] / norm_r_cross_v,
-                             r_cross_v[1] / norm_r_cross_v,
-                             r_cross_v[2] / norm_r_cross_v])
-        lvlh_x = np.cross(lvlh_y, lvlh_z)
-
-        Aoi = np.array([lvlh_x, lvlh_y, lvlh_z])
+        Aoi = self._gcrs_to_lvlh_matrix(stroke=True)
 
         lvlh_r = np.dot(Aoi, r)
         lvlh_v = np.dot(Aoi, v)
@@ -698,6 +736,9 @@ class Coordinate(Time):
             Stroke containing the elevation of the satellite.
         """
 
+        if self._ITRS is None:
+            self.itrs()
+
         # Get origin of horizontal system.
         lat, lon, height = location.latitude, location.longitude, location.height
         gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
@@ -717,6 +758,9 @@ class Coordinate(Time):
         Stroke
             Stroke containing the azimuth of the satellite.
         """
+
+        if self._ITRS is None:
+            self.itrs()
 
         # Get origin of horizontal system.
         lat, lon = location.latitude, location.longitude
@@ -783,9 +827,6 @@ class Coordinate(Time):
         (array([-40.88076, -39.01006]),
          array([94.73900, 92.99101]))
         """
-
-        if self._ITRS is None:
-            self.itrs()
 
         # Calculate the elevation and azimuth angles.
         alt = self._elevation(location)
