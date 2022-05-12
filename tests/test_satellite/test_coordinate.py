@@ -189,6 +189,12 @@ class TestCoordinate(TestCase):
                                        delta=0.35)
                 self.assertAlmostEqual(calc_itrs_z[i], self.ITRS[i, 2],
                                        delta=0.35)
+    
+    def test_lvlh(self):
+
+        lvlh_data = self.coor_gcrs.lvlh()
+        self.assertIsNotNone(lvlh_data)
+        
 
     def test_get_ang(self):
 
