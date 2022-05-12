@@ -1,6 +1,8 @@
 
 
 from celest.satellite.coordinate import Coordinate
+from typing import Tuple
+import numpy as np
 import pandas as pd
 
 
@@ -53,6 +55,61 @@ class Satellite(Coordinate):
     def __len__(self) -> int:
 
         return self._length
+
+    def attitude(self, location, stroke=False) -> Tuple:
+        """Return satellite roll, pitch, and yaw angles in decimal degrees.
+
+        This method returns the attitude angles required to align the
+        satellite's nadir with a ground location for ground imaging.
+
+        Parameters
+        ----------
+        location : GroundPosition
+            Location for satellite attitude pointing.
+        stroke : bool, optional
+            Formats output as a tuple of stroke objects if true. Otherwise,
+            the output is a tuple of 1-D arrays.
+
+        Returns
+        -------
+        Tuple
+            Tuple containing roll, pitch, and yaw angles in decimal degrees.
+        """
+
+        x, y, z, _, _, _ = self.lvlh()
+        x, y, z = [i.reshape((-1, 1)) for i in (x, y, z)]
+        sat_pos = np.concatenate((x, y, z), axis=1)
+
+        lat, lon, height = location.latitude, location.longitude, location.height
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]]))
+        gnd_gcrs = self._gcrs_and_itrs(np.repeat(gnd_itrs, self._length, axis=0), "itrs")
+
+        Aoi = self._gcrs_to_lvlh_matrix()
+        gnd_lvlh = np.einsum('jki, ik -> ij', Aoi, gnd_gcrs)
+
+        s_norm = np.linalg.norm(sat_pos, axis=1)
+        s = - sat_pos / s_norm[:, None]
+
+        g_norm = np.linalg.norm(gnd_lvlh - sat_pos, axis=1)
+        g = (gnd_lvlh - sat_pos) / g_norm[:, None]
+
+        v, c = np.cross(s, g, axis=1), np.sum(s * g, axis=1)
+
+        a32 = v[:, 0] + v[:, 1] * v[:, 2] / (1 + c)
+        a31 = - v[:, 1] + v[:, 0] * v[:, 2] / (1 + c)
+        a33 = 1 - (v[:, 0] ** 2 + v[:, 1] ** 2) / (1 + c)
+        a12 = - v[:, 2] + v[:, 0] * v[:, 1] / (1 + c)
+        a22 = 1 - (v[:, 0] ** 2 + v[:, 2] ** 2) / (1 + c)
+
+        roll = - np.degrees(np.arcsin(a32))
+        pitch = np.degrees(np.arctan2(a31, a33))
+        yaw = np.degrees(np.arctan2(a12, a22))
+
+        if not stroke:
+            return roll, pitch, yaw
+        else:
+            roll, pitch, yaw = [self._stroke_init(i) for i in (roll, pitch, yaw)]
+            return roll, pitch, yaw
 
     def save(self, times=("julian",), positions=("gcrs",), path=None,
              sep=",", float_format=None) -> None:
