@@ -166,6 +166,7 @@ def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VT
     ind = np.array(ind, dtype=object)
 
     windows = VTWHandler()
+    roll, pitch, yaw = satellite.attitude(location, stroke=True)
 
     # Populate Windows object.
     if ind.size == 0:
@@ -179,7 +180,7 @@ def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VT
         st1, st2 = julian[i[-1]], julian[i[-1] + 1]
         set_time = _root_find(raw_windows, st1, st2, tol)
 
-        window = VTW(rise_time, set_time)
+        window = VTW(rise_time, set_time, roll, pitch, yaw)
         windows._add_window(window)
 
     return windows
