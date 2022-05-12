@@ -64,14 +64,16 @@ def _sun_coor(julian) -> Coordinate:
     ephem = pkg_resources.resource_filename(__name__, '../data/de421.bsp')
     kernal = SPK.open(ephem)
 
-    ssb2sunb = kernal[0, 10].compute(julian)
-    ssb2eb = kernal[0, 3].compute(julian)
-    eb2e = kernal[3, 399].compute(julian)
-    e2sun = (ssb2sunb - ssb2eb - eb2e).T
+    ssb2sunb_pos, ssb2sunb_vel = kernal[0, 10].compute_and_differentiate(julian)
+    ssb2eb_pos, ssb2eb_vel = kernal[0, 3].compute_and_differentiate(julian)
+    eb2e_pos, eb2e_vel = kernal[3, 399].compute_and_differentiate(julian)
+
+    e2sun_pos = (ssb2sunb_pos - ssb2eb_pos - eb2e_pos).T
+    e2sun_vel = (ssb2sunb_vel - ssb2eb_vel - eb2e_vel).T
 
     SPK.close(kernal)
 
-    sun_coor = Coordinate(e2sun, "gcrs", julian)
+    sun_coor = Coordinate(e2sun_pos, e2sun_vel, "gcrs", julian)
 
     return sun_coor
 
@@ -164,6 +166,7 @@ def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VT
     ind = np.array(ind, dtype=object)
 
     windows = VTWHandler()
+    roll, pitch, yaw = satellite.attitude(location, stroke=True)
 
     # Populate Windows object.
     if ind.size == 0:
@@ -177,7 +180,7 @@ def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VT
         st1, st2 = julian[i[-1]], julian[i[-1] + 1]
         set_time = _root_find(raw_windows, st1, st2, tol)
 
-        window = VTW(rise_time, set_time)
+        window = VTW(rise_time, set_time, roll, pitch, yaw)
         windows._add_window(window)
 
     return windows

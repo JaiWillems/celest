@@ -1,19 +1,18 @@
 
 
 from celest.satellite.coordinate import Coordinate
+from typing import Tuple
+import numpy as np
 import pandas as pd
 
 
 class Satellite(Coordinate):
-    """Satellite(position, frame, julian, offset=0)
+    """Satellite(position, velocity, frame, julian, offset=0)
 
     Satellite abstraction for satellite-ground encounters.
 
     `julian + offset` is the Julian time in the J2000 epoch associated with
-    input positions. If `frame=="geo"`, the `position` input can have 2
-    columns (latitude, longitude) or three columns (latitude, longitude,
-    altitude). If no geodetic altitude is provided, it is assumed zero. Other
-    frames require three columns.
+    input positions.
 
     Parameters
     ----------
@@ -21,8 +20,11 @@ class Satellite(Coordinate):
         2-D array containing position coordinates.
 
         Supported coordinate frames include the Geocentric Celestial Reference
-        System (gcrs), International Terrestrial Reference System (itrs), and
-        geographical (geo) system.
+        System (gcrs) and International Terrestrial Reference System (itrs).
+    velocity : array_like
+        2-D array containing velocity coordinates.
+
+        Refer to the `position` parameter for supported coordinate frames.
     frame : {"gcrs", "geo", "itrs"}
         Frame specifier for the input position.
     julian : array_like
@@ -32,28 +34,115 @@ class Satellite(Coordinate):
         in to add to the julian times.
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default is zero.
-    
+
     Examples
     --------
-    Initialize `Satellite` using gcrs positions:
+    Initialize `Satellite` using gcrs data:
 
-    >>> julian = [30462.50, 30462.50]
-    >>> position = [[-4681.50824149 -5030.09119386     0.        ]
-    ...             [-4714.35351825 -4978.74325953   454.41492765]]
-    >>> s = Satellite(position=position, frame="gcrs", julian=julian, offset=0)
+    >>> julian = [30462.50000, 30462.50069]
+    >>> position = [[-4681.50824, -5030.09119, 000.00000]
+    ...             [-4714.35352, -4978.74326, 454.41493]]
+    >>> velocity = [[-0.72067, 0.67072, 7.57919]
+    ...             [-0.37378, 1.04024, 7.56237]]
+    >>> s = Satellite(position=position, velocity=velocity, frame="gcrs",
+    ...               julian=julian, offset=2430000)
     """
 
-    def __init__(self, position, frame, julian, offset=0) -> None:
+    def __init__(self, position, velocity, frame, julian, offset=0) -> None:
 
-        super().__init__(position, frame, julian, offset)
+        super().__init__(position, velocity, frame, julian, offset)
 
     def __len__(self) -> int:
 
         return self._length
 
+    def attitude(self, location, stroke=False) -> Tuple:
+        """Return satellite roll, pitch, and yaw angles in decimal degrees.
+
+        This method returns the attitude angles required to align the
+        satellite's nadir with a ground location for ground imaging.
+
+        Parameters
+        ----------
+        location : GroundPosition
+            Location for satellite attitude pointing.
+        stroke : bool, optional
+            Formats output as a tuple of stroke objects if true. Otherwise,
+            the output is a tuple of 1-D arrays.
+
+        Returns
+        -------
+        Tuple
+            Tuple containing roll, pitch, and yaw angles in decimal degrees.
+
+        Notes
+        -----
+        The methods used were taken from [adcs1]_.
+
+        References
+        ----------
+        .. [adcs1] G. H. J. van Vuuren, “The design and simulation analysis of
+           an attitude determination and control system for a small earth
+           observation satellite,” Master of Engineering, Stellenbosch
+           University, Stellenbosch, South Africa, Mar 2015.
+
+        Examples
+        --------
+        Initialize `Satellite` using gcrs data:
+
+        >>> julian = [30462.50000, 30462.50069]
+        >>> position = [[-4681.50824, -5030.09119, 000.00000]
+        ...             [-4714.35352, -4978.74326, 454.41493]]
+        >>> velocity = [[-0.72067, 0.67072, 7.57919]
+        ...             [-0.37378, 1.04024, 7.56237]]
+        >>> s = Satellite(position=position, velocity=velocity, frame="gcrs",
+        ...               julian=julian, offset=2430000)
+
+        Get attitude data:
+
+        >>> location = GroundPosition(latitude=43.65, longitude=-79.38,
+        ...                           height=0.076)
+        >>> roll, pitch, yaw = s.attitude(location)
+        """
+
+        x, y, z, _, _, _ = self.lvlh()
+        x, y, z = [i.reshape((-1, 1)) for i in (x, y, z)]
+        sat_pos = np.concatenate((x, y, z), axis=1)
+
+        lat, lon, height = location.latitude, location.longitude, location.height
+        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]]))
+        gnd_gcrs = self._gcrs_and_itrs(np.repeat(gnd_itrs, self._length, axis=0), "itrs")
+
+        Aoi = self._gcrs_to_lvlh_matrix()
+        gnd_lvlh = np.einsum('jki, ik -> ij', Aoi, gnd_gcrs)
+
+        s_norm = np.linalg.norm(sat_pos, axis=1)
+        s = - sat_pos / s_norm[:, None]
+
+        g_norm = np.linalg.norm(gnd_lvlh - sat_pos, axis=1)
+        g = (gnd_lvlh - sat_pos) / g_norm[:, None]
+
+        v, c = np.cross(s, g, axis=1), np.sum(s * g, axis=1)
+
+        a32 = v[:, 0] + v[:, 1] * v[:, 2] / (1 + c)
+        a31 = - v[:, 1] + v[:, 0] * v[:, 2] / (1 + c)
+        a33 = 1 - (v[:, 0] ** 2 + v[:, 1] ** 2) / (1 + c)
+        a12 = - v[:, 2] + v[:, 0] * v[:, 1] / (1 + c)
+        a22 = 1 - (v[:, 0] ** 2 + v[:, 2] ** 2) / (1 + c)
+
+        roll = - np.degrees(np.arcsin(a32))
+        pitch = np.degrees(np.arctan2(a31, a33))
+        yaw = np.degrees(np.arctan2(a12, a22))
+
+        if not stroke:
+            return roll, pitch, yaw
+        else:
+            roll, pitch, yaw = [self._stroke_init(i) for i in (roll, pitch, yaw)]
+            return roll, pitch, yaw
+
     def save(self, times=("julian",), positions=("gcrs",), path=None,
              sep=",", float_format=None) -> None:
-        """Save satellite data.
+        """Export satellite data.
 
         Parameters
         ----------
@@ -85,10 +174,20 @@ class Satellite(Coordinate):
             "ut1": (self.ut1, "UT1.hr"),
             "gmst": (self.gmst, "GMST.hr"),
             "gast": (self.gast, "GAST.hr"),
-            "itrs": (self.itrs, "ITRS.x.km", "ITRS.y.km", "ITRS.z.km"),
-            "gcrs": (self.gcrs, "GCRS.x.km", "GCRS.y.km", "GCRS.z.km"),
+            "itrs": (self.itrs, "ITRS.x.km", "ITRS.y.km", "ITRS.z.km",
+                     "ITRS.vx.m/s", "ITRS.vy.m/s", "ITRS.vz.m/s"),
+            "gcrs": (self.gcrs, "GCRS.x.km", "GCRS.y.km", "GCRS.z.km",
+                     "GCRS.vx.m/s", "GCRS.vy.m/s", "GCRS.vz.m/s"),
             "geo": (self.geo, "GEO.lat.deg", "GEO.lon.deg", "GEO.height.km")
         }
+
+        for time in times:
+            if time not in key_mapping:
+                raise ValueError(f"{time} is not a valid time representation.")
+
+        for position in positions:
+            if position not in key_mapping:
+                raise ValueError(f"{position} is not a valid position representation.")
 
         data = {}
 
