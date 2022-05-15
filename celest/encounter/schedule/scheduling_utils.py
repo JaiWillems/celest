@@ -29,6 +29,12 @@ def _initial_solution(request_list):
             start = _get_OW_start(vtw, request.look_ang)
             duration = request.duration
 
+            if start is None:
+                continue
+
+            if start < vtw.rise_time:
+                continue
+
             if start + duration / 86400 > vtw.set_time:
                 continue
 
