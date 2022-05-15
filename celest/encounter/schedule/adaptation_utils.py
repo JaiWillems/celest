@@ -1,8 +1,5 @@
 
 
-from typing import Tuple
-
-
 def _look_ang_time(pitch_stroke, look_ang, rise_time, set_time, tol=1e-5) -> float:
     """Return the time where the look angle is acheived.
 
@@ -171,7 +168,7 @@ def _overlap(vtw1, vtw2) -> bool:
         return True
 
 
-def _over(request_list, curr_vtw):
+def _over(request_list, curr_vtw) -> list:
     """Determine the set of overlapping visible time windows.
 
     Parameters
