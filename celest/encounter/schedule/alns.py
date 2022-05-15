@@ -6,12 +6,11 @@ import math
 import random
 
 
-_BEST_SCORE = 30
-_BETTER_SCORE = 20
-_ACCEPT_SCORE = 10
-_REJECT_SCORE = 1
-
-Q = 2
+_BEST_SCORE = 3
+_BETTER_SCORE = 2
+_ACCEPT_SCORE = 1
+_REJECT_SCORE = 0
+_SUM_SCORE = _BEST_SCORE + _BETTER_SCORE + _ACCEPT_SCORE + _REJECT_SCORE
 
 
 class ALNS:
@@ -170,7 +169,7 @@ class ALNS:
             Destroy function index.
         """
 
-        self.destroy_weights[i] = l * self.destroy_weights[i] + (1 - l) * score
+        self.destroy_weights[i] = (1 - l) * self.destroy_weights[i] + l * score / _SUM_SCORE
 
     def _update_repair_weights(self, l: float, score: int, i: int) -> None:
         """Update the repair weights.
@@ -188,7 +187,7 @@ class ALNS:
             Repair function index.
         """
 
-        self.repair_weights[i] = l * self.repair_weights[i] + (1 - l) * score
+        self.repair_weights[i] = (1 - l) * self.repair_weights[i] + l * score / _SUM_SCORE
 
     def _accept(self, xt: Any, x: Any, T: float) -> bool:
         """Accpetance criterion.
@@ -212,13 +211,13 @@ class ALNS:
 
         cx, cxt = self.c(x), self.c(xt)
 
-        if cxt > cx:
+        if cxt < cx:
             return True
         else:
             p = math.exp(100 * (cxt - cx) / (T * cx))
             return random.choices([False, True], [1 - p, p])[0]
 
-    def solve(self, max_iter: int, p: float, l: float) -> Any:
+    def solve(self, max_iter: int, p: float, l: float, nr: int, na: int) -> Any:
         """Determine the optimal solution.
 
         Parameters
@@ -229,6 +228,10 @@ class ALNS:
             Annealing coefficient.
         l : float
             Decay parameter within the range [0, 1].
+        nr : int
+            Number of items to remove on each iteration.
+        na : int
+            Number of items to add on each iteration.
 
         Returns
         -------
@@ -238,7 +241,8 @@ class ALNS:
 
         x = copy.deepcopy(self.x_init)
         xb = copy.deepcopy(self.x_init)
-        t = -0.05 * self.c(x) / math.log(0.5)
+        t = 0.05 * self.c(x) / math.log(0.5)
+
         self.destroy_weights = [1] * len(self.destroy_funcs)
         self.repair_weights = [1] * len(self.repair_funcs)
 
@@ -250,7 +254,7 @@ class ALNS:
             i = self._get_destroy_index()
             j = self._get_repair_index()
 
-            xt = self._get_repair_func(j)(self._get_destroy_func(i)(copy.deepcopy(x), Q), Q)
+            xt = self._get_repair_func(j)(self._get_destroy_func(i)(copy.deepcopy(x), nr), na)
             score = _REJECT_SCORE
 
             if self._accept(xt, x, t):
