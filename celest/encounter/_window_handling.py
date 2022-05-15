@@ -56,25 +56,9 @@ class VTW:
 
         return f"Rise: {self.rise_time}, Set:{self.set_time}, Duration: {self.duration}s"
 
-    def copy(self) -> Any:
-        """Return `VTW` copy.
-
-        Returns
-        -------
-        VTW
-
-        Examples
-        --------
-        Let `VTW_old` be a `VTW` object.
-
-        >>> VTW_new = VTW_old.copy()
-        """
-
-        return copy.deepcopy(self)
-
 
 class OW:
-    """OW(start_time, duration, location, quality, deadline, roll, pitch, yaw)
+    """OW(start_time, duration, location, deadline, roll, pitch, yaw)
 
     Observation window.
 
@@ -89,8 +73,6 @@ class OW:
         Duration of the observing window in seconds.
     location : GroundPosition
         Location of the satellite-ground encounter.
-    quality : float
-        Quality of the observing window.
     deadline : float
         Deadline of the observing window in julian days.
     roll : float
@@ -108,8 +90,6 @@ class OW:
         Duration of the observing window in seconds.
     location : GroundPosition
         Location of the satellite-ground encounter.
-    quality : float
-        Quality of the observing window.
     deadline : float
         Deadline of the observing window in julian days.
     roll : float
@@ -120,12 +100,11 @@ class OW:
         Yaw angle of the satellite-ground encounter.
     """
 
-    def __init__(self, start_time, duration, location, quality, deadline, roll, pitch, yaw) -> None:
+    def __init__(self, start_time, duration, location, deadline, roll, pitch, yaw) -> None:
 
         self.start_time = start_time
         self.duration = duration
         self.location = location
-        self.quality = quality
         self.deadline = deadline
         self.roll = roll
         self.pitch = pitch
@@ -134,22 +113,6 @@ class OW:
     def __str__(self) -> str:
 
         return f"Location: {(self.location.latitude, self.location.longitude)}, Start: {self.start_time}, Duration:{self.duration}s"
-
-    def copy(self) -> Any:
-        """Return `OW` copy.
-
-        Returns
-        -------
-        OW
-
-        Examples
-        --------
-        Let `OW_old` be a `OW` object.
-
-        >>> OW_new = OW_old.copy()
-        """
-
-        return copy.deepcopy(self)
 
 
 class WindowHandler:
