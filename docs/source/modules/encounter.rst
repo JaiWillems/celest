@@ -28,19 +28,21 @@ greater than the visibility threshold.
 Window Handling
 ---------------
 
-The :class:`VTWHandling` class is the data structure returned from the
+The :class:`VTWHandler` class is the data structure returned from the
 :py:func:`windows.generate_vtw` function which holds all visible time windows
-as :class:`VTW` objects and provides an interface to access the data. The
-following details these two classes.
+as :class:`VTW` objects and provides an interface to access the data.
+Similarly, the :class:`OWHandler` class is the data structure returned from
+the scheduling workflow which hols all observation windows as :class:`OW`
+objects. The following detail these various classes.
 
-VTWHandling
-~~~~~~~~~~~
+VTWHandler
+~~~~~~~~~~
 
-The window data held within the :class:`VTWHandling` class can be interfaced in
+The window data held within the :class:`VTWHandler` class can be interfaced in
 three ways: indexing, using access methods, and iterating.
 
 To provide meaningful interactions with the window data, the
-:class:`VTWHandling` is indexed by Julian start times in the J2000 epoch.
+:class:`VTWHandler` is indexed by Julian start times in the J2000 epoch.
 Although, the start times are typically unknown to the user. As a result, a
 unique indexing scheme was adopted by the class to provide data access that
 might be convenient in context. The window associated with the closest start
@@ -51,7 +53,7 @@ a window, the window is only returned once. All windows with start times
 falling within the slice (inclusive) are returned if the index is a slice.
 
 This indexing scheme allows users to easily access the data in the
-:class:`VTWHandling` class without prior knowledge of start times. It also
+:class:`VTWHandler` class without prior knowledge of start times. It also
 allows the user to determine the encounter closest to the desired time for
 scheduling purposes.
 
@@ -98,7 +100,7 @@ Examples of object interactions are seen in the following example.
       end = window_object.start
    
 
-.. autoclass:: celest.encounter._window_handling.VTWHandling
+.. autoclass:: celest.encounter._window_handling.VTWHandler
    :members:
    :show-inheritance:
    :noindex:
@@ -111,6 +113,31 @@ regarding a specific encounter opportunity. The important information is held
 in a series of attributes.
 
 .. autoclass:: celest.encounter._window_handling.VTW
+   :members:
+   :show-inheritance:
+   :noindex:
+
+OWHandler
+~~~~~~~~~
+
+The :class:`OWHandler` is retuned from the :class:`Schedule` when the
+:py:func:`generate` method is called. It holds the :class:`OW` objects which
+represent the scheduled requests. The :class:`OWHandler` class can be
+interfaced in a similar way to the :class:`VTWHandler` class.
+
+.. autoclass:: celest.encounter._window_handling.OWHandler
+   :members:
+   :show-inheritance:
+   :noindex:
+
+OW
+~~
+
+The :class:`OW` class is the data structure that holds all the information
+regarding a scheduled request. The important information is held
+in a series of attributes.
+
+.. autoclass:: celest.encounter._window_handling.OW
    :members:
    :show-inheritance:
    :noindex:
