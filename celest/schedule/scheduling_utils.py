@@ -1,6 +1,6 @@
 
 
-from celest.encounter.schedule.adaptation_utils import (
+from celest.schedule.adaptation_utils import (
     _get_OW_start,
     _insert_conflict
 )

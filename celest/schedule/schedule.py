@@ -1,9 +1,9 @@
 
 
-from celest.encounter.schedule.alns import ALNS
-from celest.encounter.schedule.insertion_operators import _INSERTION_FUNCTIONS
-from celest.encounter.schedule.removal_operators import _REMOVAL_FUNCTIONS
-from celest.encounter.schedule.scheduling_utils import (
+from celest.schedule.alns import ALNS
+from celest.schedule.insertion_operators import _INSERTION_FUNCTIONS
+from celest.schedule.removal_operators import _REMOVAL_FUNCTIONS
+from celest.schedule.scheduling_utils import (
     _initial_solution,
     _is_complete,
     _cost

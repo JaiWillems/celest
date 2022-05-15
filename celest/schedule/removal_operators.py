@@ -1,6 +1,6 @@
 
 
-from celest.encounter.schedule.adaptation_utils import _conflict_degree
+from celest.schedule.adaptation_utils import _conflict_degree
 import random
 
 
