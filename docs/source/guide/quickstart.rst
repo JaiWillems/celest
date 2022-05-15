@@ -27,9 +27,10 @@ to determine encounter opportunities.
 
 .. code-block::
 
-   import numpy as np
    from celest.satellite import Time, Coordinate, Satellite
+   from celest.schedule import Schedule
    from celest.encounter import GroundPosition, windows
+   import numpy as np
 
    # Load the data.
    julian = np.loadtxt('julian.txt')
@@ -48,3 +49,26 @@ to determine encounter opportunities.
    # Save satellite encounter windows.
    toronto_IMG_windows.save(fname="toronto_IMG_windows.csv", delimiter=",")
    toronto_DL_windows.save(fname="toronto_DL_windows.csv", delimiter=",")
+
+We can also directly schedule a series of imaging requests.
+
+.. code-block::
+
+   # Start by defining ground locations.
+   toronto = GroundPosition(latitude=43.65, longitude=-79.38, height=0.076)
+   north_bay = GroundPosition(latitude=46.31, longitude=-79.46, height=0.193)
+   sudbury = GroundPosition(latitude=46.49, longitude=-80.99, height=0.348)
+   mississauga = GroundPosition(latitude=43.59, longitude=-79.64, height=0.156)
+
+   # Initialize the scheduling object.
+   schedule = Schedule(satellite=satellite, vis_threshold=10)
+
+   # Add imaging requests we want to schedule.
+   schedule.add_request(location=toronto, deadline=2460467, duration=30, priority=1, look_ang=None)
+   schedule.add_request(location=north_bay, deadline=2460467, duration=30, priority=1, look_ang=None)
+   schedule.add_request(location=sudbury, deadline=2460467, duration=30, priority=4, look_ang=None)
+   schedule.add_request(location=mississauga, deadline=2460467, duration=30, priority=5, look_ang=None)
+
+   # Determine a feasible schedule.
+   schedule_out = schedule.generate(max_iter=100, annealing_coeff=0.8, react_factor=0.5)
+   schedule_out.save(fname="ontario_imaging_schedule.csv", delimiter=",")
