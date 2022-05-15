@@ -64,7 +64,7 @@ class ALNS:
         """
 
         self.repair_funcs = funcs
-    
+
     def add_is_complete_func(self, func) -> None:
         """Function to check if the solution is complete.
 
@@ -254,7 +254,8 @@ class ALNS:
             i = self._get_destroy_index()
             j = self._get_repair_index()
 
-            xt = self._get_repair_func(j)(self._get_destroy_func(i)(copy.deepcopy(x), nr), na)
+            xt = self._get_destroy_func(i)(copy.deepcopy(x), nr)
+            xt = self._get_repair_func(j)(xt, na)
             score = _REJECT_SCORE
 
             if self._accept(xt, x, t):

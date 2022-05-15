@@ -112,7 +112,7 @@ def minimum_conflict_insertion(request_list, q) -> list:
 
         if q == 0:
             break
-    
+
     return request_list
 
 

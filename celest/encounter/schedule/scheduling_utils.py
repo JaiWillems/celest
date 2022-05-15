@@ -31,16 +31,12 @@ def _initial_solution(request_list):
 
             if start is None:
                 continue
-
             if start < vtw.rise_time:
                 continue
-
             if start + duration / 86400 > vtw.set_time:
                 continue
-
             if start + duration / 86400 > request_list[i].deadline:
                 continue
-
             if _insert_conflict(request_list, start, duration):
                 continue
 

@@ -127,7 +127,8 @@ def conflict_removal(request_list, q) -> list:
 
         if request.is_scheduled:
 
-            cd = _conflict_degree(request_list, request.vtws[request.scheduled_idx])
+            idx = request.scheduled_idx
+            cd = _conflict_degree(request_list, request.vtws[idx])
             cd_arr.append((i, cd))
 
     for i, _ in sorted(cd_arr, key=lambda x: x[1], reverse=True):
