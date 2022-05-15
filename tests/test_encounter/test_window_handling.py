@@ -15,7 +15,7 @@ class TestVTW(TestCase):
         rise_time = 21282.4
         set_time = 21282.5
 
-        self.window = VTW(rise_time, set_time)
+        self.window = VTW(rise_time, set_time, None, None, None)
 
     def test_copy(self):
 
@@ -36,7 +36,7 @@ class TestOW(TestCase):
         quality = 9
         deadline = 21284.3
 
-        self.window = OW(start_time, duration, location, quality, deadline)
+        self.window = OW(start_time, duration, location, quality, deadline, None, None, None)
 
     def test_copy(self):
 
@@ -56,11 +56,11 @@ class TestWindowHandler(TestCase):
 
         self.windows = WindowHandler()
 
-        self.W1 = VTW(1319, 1319.2)
-        self.W2 = VTW(1322.3, 1322.31)
-        self.W3 = VTW(1324, 1324.2)
-        self.W4 = VTW(1324.3, 1325.3)
-        self.W5 = VTW(1325, 1326.1)
+        self.W1 = VTW(1319, 1319.2, None, None, None)
+        self.W2 = VTW(1322.3, 1322.31, None, None, None)
+        self.W3 = VTW(1324, 1324.2, None, None, None)
+        self.W4 = VTW(1324.3, 1325.3, None, None, None)
+        self.W5 = VTW(1325, 1326.1, None, None, None)
 
         self.windows._add_window_base(self.W1)
         self.windows._add_window_base(self.W2)
@@ -128,11 +128,11 @@ class TestVTWHandler(TestCase):
 
         self.windows = VTWHandler()
 
-        self.W1 = VTW(1319, 1319.2)
-        self.W2 = VTW(1322.3, 1322.31)
-        self.W3 = VTW(1324, 1324.2)
-        self.W4 = VTW(1324.3, 1325.3)
-        self.W5 = VTW(1325, 1326.1)
+        self.W1 = VTW(1319, 1319.2, None, None, None)
+        self.W2 = VTW(1322.3, 1322.31, None, None, None)
+        self.W3 = VTW(1324, 1324.2, None, None, None)
+        self.W4 = VTW(1324.3, 1325.3, None, None, None)
+        self.W5 = VTW(1325, 1326.1, None, None, None)
 
         self.windows._add_window(self.W1)
         self.windows._add_window(self.W2)
@@ -168,11 +168,11 @@ class TestOWHandler(TestCase):
 
         location = GroundPosition(43.6532, 79.3832, 0.076)
 
-        self.W1 = OW(1319, 30, location, 8, 1319.2)
-        self.W2 = OW(1322.3, 20, location, 9, 1322.31)
-        self.W3 = OW(1324, 32, location, 4, 1324.2)
-        self.W4 = OW(1324.3, 28, location, 7, 1325.3)
-        self.W5 = OW(1325, 10, location, 10, 1326.1)
+        self.W1 = OW(1319, 30, location, 8, 1319.2, None, None, None)
+        self.W2 = OW(1322.3, 20, location, 9, 1322.31, None, None, None)
+        self.W3 = OW(1324, 32, location, 4, 1324.2, None, None, None)
+        self.W4 = OW(1324.3, 28, location, 7, 1325.3, None, None, None)
+        self.W5 = OW(1325, 10, location, 10, 1326.1, None, None, None)
 
         self.windows._add_window(self.W1)
         self.windows._add_window(self.W2)

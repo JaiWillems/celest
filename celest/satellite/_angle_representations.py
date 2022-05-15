@@ -50,13 +50,18 @@ def sexagesimal(angles: np.ndarray) -> np.ndarray:
     return out_arr
 
 
-def _ISO6709_representation(position: np.ndarray) -> np.ndarray:
+def _ISO6709_representation(latitude: np.ndarray, longitude: np.ndarray,
+                            altitude: np.ndarray) -> np.ndarray:
     """Format geographical data in the ISO6709 standard.
 
     Parameters
     ----------
-    position : np.ndarray
-        2-D array containing columns of latitude, longitude, and altitude data.
+    latitude : np.ndarray
+        1-D array containing latitude angles in decimal degrees.
+    longitude : np.ndarray
+        1-D array containing longitude angles in decimal degrees.
+    altitude : np.ndarray
+        1-D array containing altitude angles in km.
 
     Returns
     -------
@@ -65,12 +70,13 @@ def _ISO6709_representation(position: np.ndarray) -> np.ndarray:
     """
 
     deg, min, sec = "\u00B0", "\u2032", "\u2033"
+    n = len(latitude)
 
-    out_arr = np.empty((position.shape[0],), dtype="<U37")
+    out_arr = np.empty((n,), dtype="<U37")
 
-    for i in range(position.shape[0]):
+    for i in range(n):
 
-        lat, lon, h = position[i, 0], position[i, 1], position[i, 2]
+        lat, lon, alt = latitude[i], longitude[i], altitude[i]
 
         # Format latitude string.
         degree = int(abs(lat))
@@ -97,8 +103,8 @@ def _ISO6709_representation(position: np.ndarray) -> np.ndarray:
         lon_str = f"{degree}{deg}{minute}{min}{second}{sec}{direction} "
 
         # Format height string.
-        h = "%.2f" % h
-        h_str = f"{h}km"
+        alt = "%.2f" % alt
+        h_str = f"{alt}km"
 
         out_arr[i] = lat_str + lon_str + h_str
 
