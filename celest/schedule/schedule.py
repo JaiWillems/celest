@@ -82,7 +82,7 @@ class Schedule(ALNS):
     satellite : Satellite
         The satellite participating in the encounter.
     vis_threshold : float
-        The elevation angle required by the satellite to be visible ot a ground
+        The elevation angle required by the satellite to be visible to a ground
         target.
     """
 

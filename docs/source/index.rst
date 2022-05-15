@@ -6,23 +6,18 @@
 Celest Documentation
 ====================
 
-Celest is a satellite mission planning software designed for the University of
-Toronto Aerospace Team, which is applying the program to a hyperspectral
-imaging CubeSat mission. The library aims to provide the necessary tools for
+Celest is a satellite mission planning software designed for remote sensing
+CubeSat mission proifles. The library aims to provide the necessary tools for
 celestial orbital conversions and satellite-to-ground interactions such as
-determining imaging/transmission opportunities.
-
-Celest is currently in the development phase and is subject to significant
-changes. The program aims to incorporate a high-order adaptive orbit
-propagator and state-of-the-art scheduling algorithm for agile earth
-observation satellite (AEOS) imaging encounters.
+determining and scheduling imaging/transmission opportunities.
 
 What can the program do?
 ------------------------
 
-Currently, the program requires satellite position data in either the gcrs,
-itrs, or geographical frame and the corresponding times. Celest can then calculate different position representations, time representations, and ground
-encounter calculations.
+Currently, the program requires satellite position and velocity data in either
+the gcrs or itrs frames and the corresponding times. Celest can then calculate
+different position representations, time representations, and can determine and
+schedule satellite-to-ground encounters.
 
 What can be expected of the project?
 ------------------------------------
@@ -31,9 +26,6 @@ In future releases, a high order c-implemented orbit propagator will be
 incorporated into the library to allow for a complete mission planning workflow
 from inputting orbital parameters to calculating satellite-to-ground encounter
 opportunities.
-
-We also intend to incorporate a window scheduling system that will be used to
-develop an optimal satellite itinerary for satellite mission planning.
 
 Other features that are being considered include a terminal interface, higher
 fidelity conversion calculations, window/data visuals, data loaders, and more
@@ -53,3 +45,4 @@ robust ground tracking by incorporating forward motion compensation.
 
    modules/satellite
    modules/encounter
+   modules/schedule
