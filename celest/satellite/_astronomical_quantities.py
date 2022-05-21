@@ -1,5 +1,6 @@
 
 
+from statistics import mean
 from typing import Tuple
 import numpy as np
 
@@ -55,16 +56,46 @@ def nutation_angles(julian: np.ndarray) -> Tuple:
     >>> D, M, N, F, O = nutation_angles(julian=julian)
     """
 
-    T = (julian - 2451545) / 36525
-    T2, T3 = T ** 2, T ** 3
+    T1, T2, T3 = _calculate_elapsed_JD_century_powers(julian, 3)
 
-    D = (297.85036 + 445267.111480 * T - 0.0019142 * T2 + T3 / 189474) % 360
-    M = (357.52772 + 35999.050340 * T - 0.0001603 * T2 - T3 / 300000) % 360
-    N = (134.96298 + 477198.867398 * T + 0.0086972 * T2 + T3 / 56250) % 360
-    F = (93.27191 + 483202.017538 * T - 0.0036825 * T2 + T3 / 327270) % 360
-    O = (125.04452 - 1934.136261 * T + 0.0020708 * T2 + T3 / 450000) % 360
+    D = _get_mean_elongation_moon_from_sun_deg(T1, T2, T3)
+    M = _get_mean_anomaly_of_sun_deg(T1, T2, T3)
+    N = _get_mean_anomaly_of_moon_deg(T1, T2, T3)
+    F = _get_moons_argument_of_latitude_deg(T1, T2, T3)
+    O = _get_longitude_of_ascending_node_deg(T1, T2, T3)
 
     return D, M, N, F, O
+
+
+def _calculate_elapsed_JD_century_powers(julian, highest_power):
+
+    elapsd_centuries = (julian - 2451545) / 36525
+    return [elapsd_centuries ** i for i in range(1, highest_power + 1)]
+
+
+def _get_mean_elongation_moon_from_sun_deg(T, T2, T3):
+
+    return (297.85036 + 445267.111480 * T - 0.0019142 * T2 + T3 / 189474) % 360
+
+
+def _get_mean_anomaly_of_sun_deg(T, T2, T3):
+
+    return (357.52772 + 35999.050340 * T - 0.0001603 * T2 - T3 / 300000) % 360
+
+
+def _get_mean_anomaly_of_moon_deg(T, T2, T3):
+
+    return (134.96298 + 477198.867398 * T + 0.0086972 * T2 + T3 / 56250) % 360
+
+
+def _get_moons_argument_of_latitude_deg(T, T2, T3):
+
+    return (93.27191 + 483202.017538 * T - 0.0036825 * T2 + T3 / 327270) % 360
+
+
+def _get_longitude_of_ascending_node_deg(T, T2, T3):
+
+    return (125.04452 - 1934.136261 * T + 0.0020708 * T2 + T3 / 450000) % 360
 
 
 def nutation_components(julian: np.ndarray) -> Tuple:
@@ -98,33 +129,60 @@ def nutation_components(julian: np.ndarray) -> Tuple:
     >>> delta_psi, delta_epsilon = nutation_componenets(julian=julian)
     """
 
-    T = (julian - 2451545) / 36525
+    T1, T2, T3 = _calculate_elapsed_JD_century_powers(julian, 3)
 
-    omega = 125.04452 - 1934.136261 * T + 0.0020708 * T ** 2 + T ** 3 / 450000
-    omega = np.radians(omega)
-    omega_2 = 2 * omega
+    ascending_node_longitude = _get_longitude_of_ascending_node_deg(T1, T2, T3)
+    sun_mean_lontitude = _get_mean_longitude_of_sun_deg(T1)
+    moon_mean_longitude = _get_mean_longitude_of_moon_deg(T1)
 
-    L = 2 * np.radians(280.4665 + 36000.7698 * T)
-    LP = 2 * np.radians(218.3165 + 481267.8813 * T)
+    ascending_node_longitude = np.radians(ascending_node_longitude)
+    sun_mean_lontitude = np.radians(sun_mean_lontitude)
+    moon_mean_longitude = np.radians(moon_mean_longitude)
 
-    P1 = -17.20 * np.sin(omega)
-    P2 = -1.32 * np.sin(L)
-    P3 = -0.23 * np.sin(LP)
-    P4 = 0.21 * np.sin(omega_2)
+    nutation_in_longitude = _get_nutation_in_longitude(ascending_node_longitude,
+                                                       sun_mean_lontitude,
+                                                       moon_mean_longitude)
+    nutation_in_obliquity = _get_nutation_in_obliquity(ascending_node_longitude,
+                                                       sun_mean_lontitude,
+                                                       moon_mean_longitude)
 
-    E1 = 9.20 * np.cos(omega)
-    E2 = 0.57 * np.cos(L)
-    E3 = 0.10 * np.cos(LP)
-    E4 = -0.09 * np.cos(omega_2)
-
-    delta_psi = P1 + P2 + P3 + P4
-    delta_epsilon = E1 + E2 + E3 + E4
-
-    return delta_psi, delta_epsilon
+    return nutation_in_longitude, nutation_in_obliquity
 
 
-def precession_angles(julian: np.ndarray) -> Tuple:
-    """Return precession angles.
+def _get_mean_longitude_of_sun_deg(T):
+
+    return (280.46645 + 36000.76983 * T)
+
+
+def _get_mean_longitude_of_moon_deg(T):
+
+    return 218.3165 + 481267.8813 * T
+
+
+def _get_nutation_in_longitude(ascending_node_longitude, sun_mean_longitude,
+                               moon_mean_longitude):
+
+    P1 = -17.20 * np.sin(ascending_node_longitude)
+    P2 = -1.32 * np.sin(2 * sun_mean_longitude)
+    P3 = -0.23 * np.sin(2 * moon_mean_longitude)
+    P4 = 0.21 * np.sin(2 * ascending_node_longitude)
+
+    return P1 + P2 + P3 + P4
+
+
+def _get_nutation_in_obliquity(ascending_node_longitude, sun_mean_longitude,
+                               moon_mean_longitude):
+
+    E1 = 9.20 * np.cos(ascending_node_longitude)
+    E2 = 0.57 * np.cos(2 * sun_mean_longitude)
+    E3 = 0.10 * np.cos(2 * moon_mean_longitude)
+    E4 = -0.09 * np.cos(2 * ascending_node_longitude)
+
+    return E1 + E2 + E3 + E4
+
+
+def conventional_precession_angles(julian: np.ndarray) -> Tuple:
+    """Return conventional precession angles.
 
     Parameters
     ----------
@@ -147,22 +205,31 @@ def precession_angles(julian: np.ndarray) -> Tuple:
        Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 219.
     """
 
-    # Get time constants.
-    t = (julian - 2451545.0) / 36525
-    t2 = t * t
-    t3 = t2 * t
-    t4 = t3 * t
-    t5 = t4 * t
+    T1, T2, T3, T4, T5 = _calculate_elapsed_JD_century_powers(julian, 5)
 
-    # Get precession angles.
-    zeta = 2.59796176 + 2306.0809506 * t + 0.3019015 * t2 + 0.0179663 * t3 - \
-        0.0000327 * t4 - 0.0000002 * t5
-    theta = 2004.1917476 * t - 0.4269353 * t2 - 0.0418251 * t3 - \
-        0.0000601 * t4 - 0.0000001 * t5
-    z = - 2.5976176 + 2306.0803226 * t + 1.0947790 * t2 + 0.0182273 * t3 + \
-        0.0000470 * t4 - 0.0000003 * t5
+    zeta = _calculate_zeta_precession_angle_arcseconds(T1, T2, T3, T4, T5)
+    theta = _calculate_theta_precession_angle_arcseconds(T1, T2, T3, T4, T5)
+    z = _calculate_z_precession_angle_arcseconds(T1, T2, T3, T4, T5)
 
     return zeta, theta, z
+
+
+def _calculate_zeta_precession_angle_arcseconds(T1, T2, T3, T4, T5):
+
+    return 2.59796176 + 2306.0809506 * T1 + 0.3019015 * T2 + 0.0179663 * T3 - \
+        0.0000327 * T4 - 0.0000002 * T5
+
+
+def _calculate_theta_precession_angle_arcseconds(T1, T2, T3, T4, T5):
+
+    return 2004.1917476 * T1 - 0.4269353 * T2 - 0.0418251 * T3 - \
+        0.0000601 * T4 - 0.0000001 * T5
+
+
+def _calculate_z_precession_angle_arcseconds(T1, T2, T3, T4, T5):
+
+    return - 2.5976176 + 2306.0803226 * T1 + 1.0947790 * T2 + 0.0182273 * T3 + \
+        0.0000470 * T4 - 0.0000003 * T5
 
 
 def mean_obliquity(julian: np.ndarray) -> np.ndarray:
@@ -201,24 +268,15 @@ def mean_obliquity(julian: np.ndarray) -> np.ndarray:
     >>> epsilon_0 = mean_obliquity(julian=julian)
     """
 
-    T = (julian - 2451545) / 36525
+    T = _calculate_elapsed_JD_century_powers(julian, 1)[0]
     U = T / 100
 
-    epsilon_0 = 84381.448
-    epsilon_0 -= 4680.93 * U
-    epsilon_0 -= 1.55 * U ** 2
-    epsilon_0 += 1999.25 * U ** 3
-    epsilon_0 -= 51.38 * U ** 4
-    epsilon_0 -= 249.67 * U ** 5
-    epsilon_0 -= 39.05 * U ** 6
-    epsilon_0 += 7.12 * U ** 7
-    epsilon_0 += 27.87 * U ** 8
-    epsilon_0 += 5.79 * U ** 9
-    epsilon_0 += 2.45 * U ** 10
+    mean_obliquity = (84381.448 - 4680.93 * U - 1.55 * U ** 2 +
+                      1999.25 * U ** 3 - 51.38 * U ** 4 - 249.67 * U ** 5 -
+                      39.05 * U ** 6 + 7.12 * U ** 7 + 27.87 * U ** 8 +
+                      5.79 * U ** 9 + 2.45 * U ** 10) / 3600
 
-    epsilon_0 = epsilon_0 / 3600
-
-    return epsilon_0
+    return mean_obliquity
 
 
 def apparent_obliquity(julian: np.ndarray) -> np.ndarray:
@@ -257,11 +315,10 @@ def apparent_obliquity(julian: np.ndarray) -> np.ndarray:
     >>> epsilon = apparent_obliquity(julian=julian)
     """
 
-    epsilon_0 = mean_obliquity(julian)
-    _, delta_epsilon = nutation_components(julian)
-    epsilon = epsilon_0 + delta_epsilon / 3600
+    average_obliquity = mean_obliquity(julian)
+    _, nutation_in_obliquity = nutation_components(julian)
 
-    return epsilon
+    return average_obliquity + nutation_in_obliquity / 3600
 
 
 def from_julian(julian: np.ndarray) -> Tuple:
@@ -395,23 +452,27 @@ def equation_of_time(julian: np.ndarray) -> np.ndarray:
     3.427351
     """
 
-    T = (julian - 2451545) / 36525
+    T1, T2, T3 = _calculate_elapsed_JD_century_powers(julian, 3)
 
-    L0 = np.radians(280.46646 + 36000.76983 * T + 0.0003032 * T ** 2)
-    M = np.radians(357.52911 + 35999.05029 * T - 0.0001537 * T ** 2)
-    e = 0.016708634 - 0.000042037 * T - 0.0000001267 * T ** 2
+    sun_mean_longitude = np.radians(_get_mean_longitude_of_sun_deg(T1))
+    sun_mean_anomaly = np.radians(_get_mean_anomaly_of_sun_deg(T1, T2, T3))
+    earth_eccentricity = _get_earth_eccentricity(T1)
 
-    epsilon = apparent_obliquity(julian=julian)
-    y = np.tan(np.radians(epsilon / 2)) ** 2
+    sun_apparent_obliquity = np.radians(apparent_obliquity(julian))
+    y = np.tan(sun_apparent_obliquity / 2) ** 2
 
-    EOT = y * np.sin(2 * L0)
-    EOT = EOT - 2 * e * np.sin(M)
-    EOT = EOT + 4 * e * y * np.sin(M) * np.cos(2 * L0)
-    EOT = EOT - 0.5 * y ** 2 * np.sin(4 * L0)
-    EOT = EOT - 1.25 * e ** 2 * np.sin(2 * M)
-    EOT = np.degrees(EOT)
+    equation_of_time = y * np.sin(2 * sun_mean_longitude) - \
+        2 * earth_eccentricity * np.sin(sun_mean_anomaly) + \
+        4 * earth_eccentricity * y * np.sin(sun_mean_anomaly) * np.cos(2 * sun_mean_longitude) - \
+        0.5 * y ** 2 * np.sin(4 * sun_mean_longitude) - \
+        1.25 * earth_eccentricity ** 2 * np.sin(2 * sun_mean_anomaly)
 
-    return EOT
+    return np.degrees(equation_of_time)
+
+
+def _get_earth_eccentricity(T):
+
+    return 0.016708634 - 0.000042037 * T - 0.0000001267 * T ** 2
 
 
 def equation_of_equinoxes(julian: np.ndarray) -> np.ndarray:
@@ -446,11 +507,10 @@ def equation_of_equinoxes(julian: np.ndarray) -> np.ndarray:
     -0.2317
     """
 
-    delta_psi, _ = nutation_components(julian)
-    epsilon = apparent_obliquity(julian)
-    EoE = delta_psi * np.cos(np.radians(epsilon)) / 15
+    nutation_in_longitude, _ = nutation_components(julian)
+    obliquity = np.radians(apparent_obliquity(julian))
 
-    return EoE
+    return nutation_in_longitude * np.cos(obliquity) / 15
 
 
 def sun_right_ascension(julian: np.ndarray) -> np.ndarray:
@@ -487,23 +547,18 @@ def sun_right_ascension(julian: np.ndarray) -> np.ndarray:
     np.array([198.38166])
     """
 
-    t_U = (julian - 2451545) / 36525
-    t_U2 = t_U * t_U
+    T1, T2, T3 = _calculate_elapsed_JD_century_powers(julian, 3)
 
-    L0 = 280.46646 + 36000.76983 * t_U + 0.0003032 * t_U2
-    M = 357.52911 + 35999.05029 * t_U - 0.0001537 * t_U2
+    mean_sun_longitude = _get_mean_longitude_of_sun_deg(T1)
+    mean_sun_anomaly = np.radians(_get_mean_anomaly_of_sun_deg(T1, T2, T3))
 
-    m = np.deg2rad(M)
-    C = (1.914602 - 0.004817 * t_U - 0.000014 * t_U2) * np.sin(m)
-    C = C + (0.019993 - 0.000101 * t_U) * np.sin(2 * m)
-    C = C + 0.000289 * np.sin(3 * m)
+    sun_center = (1.914602 - 0.004817 * T1 - 0.000014 * T2) * np.sin(mean_sun_anomaly) + \
+        (0.019993 - 0.000101 * T1) * np.sin(2 * mean_sun_anomaly) + \
+        0.000289 * np.sin(3 * mean_sun_anomaly)
 
-    dot = np.radians(L0 + C)
+    sun_true_longitude = np.radians(mean_sun_longitude + sun_center)
+    obliquity = np.radians(mean_obliquity(julian))
 
-    epsilon = mean_obliquity(julian=julian)
-    epsilon = np.radians(epsilon)
+    alpha = np.arctan2(np.cos(obliquity) * np.sin(sun_true_longitude), np.cos(sun_true_longitude))
 
-    alpha = np.arctan2(np.cos(epsilon) * np.sin(dot), np.cos(dot))
-    alpha = np.rad2deg(alpha) % 360
-
-    return alpha
+    return np.degrees(alpha) % 360

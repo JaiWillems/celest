@@ -105,22 +105,21 @@ class Satellite(Coordinate):
         >>> roll, pitch, yaw = s.attitude(location)
         """
 
-        x, y, z, _, _, _ = self.lvlh()
-        x, y, z = [i.reshape((-1, 1)) for i in (x, y, z)]
-        sat_pos = np.concatenate((x, y, z), axis=1)
+        x, y, z, _, _, _ = [i.reshape((-1, 1)) for i in self.lvlh()]
+        satellite_position = np.concatenate((x, y, z), axis=1)
 
-        lat, lon, height = location.latitude, location.longitude, location.height
-        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]]))
-        gnd_gcrs = self._gcrs_and_itrs(np.repeat(gnd_itrs, self._length, axis=0), "itrs")
+        ground_itrs = self._calculate_ground_location_itrs(location).reshape((1, -1))
+        repeated_ground_itrs = np.repeat(ground_itrs, self._length, axis=0)
+        ground_gcrs = self._itrs_to_gcrs(repeated_ground_itrs)
 
         Aoi = self._gcrs_to_lvlh_matrix()
-        gnd_lvlh = np.einsum('jki, ik -> ij', Aoi, gnd_gcrs)
+        ground_lvlh = np.einsum('jki, ik -> ij', Aoi, ground_gcrs)
 
-        s_norm = np.linalg.norm(sat_pos, axis=1)
-        s = - sat_pos / s_norm[:, None]
+        satellite_position_norm = np.linalg.norm(satellite_position, axis=1)
+        s = - satellite_position / satellite_position_norm[:, None]
 
-        g_norm = np.linalg.norm(gnd_lvlh - sat_pos, axis=1)
-        g = (gnd_lvlh - sat_pos) / g_norm[:, None]
+        ground_norm = np.linalg.norm(ground_lvlh - satellite_position, axis=1)
+        g = (ground_lvlh - satellite_position) / ground_norm[:, None]
 
         v, c = np.cross(s, g, axis=1), np.sum(s * g, axis=1)
 
@@ -134,10 +133,9 @@ class Satellite(Coordinate):
         pitch = np.degrees(np.arctan2(a31, a33))
         yaw = np.degrees(np.arctan2(a12, a22))
 
-        if not stroke:
-            return roll, pitch, yaw
+        if stroke:
+            return tuple([self._stroke_init(i) for i in (roll, pitch, yaw)])
         else:
-            roll, pitch, yaw = [self._stroke_init(i) for i in (roll, pitch, yaw)]
             return roll, pitch, yaw
 
     def save(self, times=("julian",), positions=("gcrs",), path=None,
@@ -183,11 +181,11 @@ class Satellite(Coordinate):
 
         for time in times:
             if time not in key_mapping:
-                raise ValueError(f"{time} is not a valid time representation.")
+                raise ValueError(f"{time} is not a valid time type.")
 
         for position in positions:
             if position not in key_mapping:
-                raise ValueError(f"{position} is not a valid position representation.")
+                raise ValueError(f"{position} is not a valid position type.")
 
         data = {}
 

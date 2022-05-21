@@ -1,7 +1,10 @@
 
 
 from celest.satellite._astronomical_quantities import (
-    mean_obliquity, nutation_components, precession_angles
+    _calculate_elapsed_JD_century_powers,
+    mean_obliquity,
+    nutation_components,
+    conventional_precession_angles
 )
 import numpy as np
 
@@ -75,7 +78,7 @@ def precession_matrix(julian: np.ndarray) -> np.ndarray:
        Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 197-233.
     """
 
-    zeta, theta, z = precession_angles(julian=julian)
+    zeta, theta, z = conventional_precession_angles(julian=julian)
 
     a1 = np.radians(zeta / 3600)
     a2 = np.radians(theta / 3600)
@@ -85,7 +88,6 @@ def precession_matrix(julian: np.ndarray) -> np.ndarray:
     s2, c2 = np.sin(a2), np.cos(a2)
     s3, c3 = np.sin(a3), np.cos(a3)
 
-    # Construct matrix.
     matrix = np.zeros((julian.size, 3, 3))
     matrix[:, 0, 0] = - s1 * s3 + c1 * c2 * c3
     matrix[:, 0, 1] = c1 * s3 + s1 * c2 * c3
@@ -125,25 +127,19 @@ def nutation_matrix(julian: np.ndarray) -> np.ndarray:
        Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 197-233.
     """
 
-    # Get time constants.
-    t = (julian - 2451545.0) / 36525
-    t2 = t * t
-    t3 = t2 * t
+    T1, T2, T3 = _calculate_elapsed_JD_century_powers(julian, 3)
 
-    # Get angles.
-    delta_psi, delta_eps = nutation_components(julian)
-    eps_A = 3600 * mean_obliquity(julian) - 46.84024 * t - 0.00059 * t2 + \
-        0.001813 * t3
+    nutation_in_longitude, nutation_in_obliquity = nutation_components(julian)
+    eps_A = 3600 * mean_obliquity(julian) - 46.84024 * T1 - 0.00059 * T2 + 0.001813 * T3
 
     a1 = np.radians(eps_A / 3600)
-    a2 = - np.radians(delta_psi / 3600)
-    a3 = - np.radians(eps_A / 3600 + delta_eps / 3600)
+    a2 = - np.radians(nutation_in_longitude / 3600)
+    a3 = - np.radians(eps_A / 3600 + nutation_in_obliquity / 3600)
 
     s1, c1 = np.sin(a1), np.cos(a1)
     s2, c2 = np.sin(a2), np.cos(a2)
     s3, c3 = np.sin(a3), np.cos(a3)
 
-    # Construct matrix.
     matrix = np.zeros((julian.size, 3, 3))
     matrix[:, 0, 0] = c2
     matrix[:, 0, 1] = s1 * s2

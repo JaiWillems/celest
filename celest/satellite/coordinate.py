@@ -12,6 +12,13 @@ from typing import Tuple, Union
 import numpy as np
 
 
+WGS84_MAJOR_AXIS = 6378.137
+WGS84_MINOR_AXIS = 6356.752314245
+
+EARTH_ROTATION_RATE = 360.9856123035484
+ERA_AT_JD2000 = 280.46
+
+
 class Coordinate(Time):
     """Coordinate(position, velocity, frame, julian, offset=0)
 
@@ -71,55 +78,32 @@ class Coordinate(Time):
 
         position = np.array(position)
         velocity = np.array(velocity)
-        time = np.array(julian)
+        julian = np.array(julian)
 
         if frame not in ["gcrs", "itrs"]:
             raise ValueError(f"{frame} is not a valid frame.")
-
         if position.ndim != 2:
             raise ValueError("position input must be 2-D.")
-
         if velocity.ndim != 2:
             raise ValueError("velocity input must be 2-D.")
-
-        if time.ndim != 1:
+        if julian.ndim != 1:
             raise ValueError("time input must be 1-D.")
+        if position.shape[0] != julian.size:
+            raise ValueError("position and time lengths are mismatched")
+        if velocity.shape[0] != julian.size:
+            raise ValueError("velocity and time lengths are mismatched")
 
-        if position.shape[0] != time.size:
-            raise ValueError(f"position and time data lengths are mismatched:"
-                             f" lengths are {len(position)} and {len(time)}")
-
-        if velocity.shape[0] != time.size:
-            raise ValueError(f"velocity and time data lengths are mismatched:"
-                             f" lengths are {len(velocity)} and {len(time)}")
-
-        kind_dict = {1: "zero", 2: "linear", 3: "quadratic"}
-        self._kind = "cubic" if len(position) > 3 else kind_dict[len(position)]
-
-        self._GCRS = None
-        self._ITRS = None
-        self._length = None
-
+        self._set_interpolataion_kind(julian.size)
         self._set_base_data(position, velocity, frame)
 
     def __len__(self) -> int:
 
         return self._length
 
-    def _stroke_init(self, data) -> Stroke:
-        """Initialize data Stroke.
+    def _set_interpolataion_kind(self, data_length):
 
-        Parameters
-        ----------
-        data : np.ndarray
-            1-D array containing data.
-
-        Returns
-        -------
-        Stroke
-        """
-
-        return Stroke(self._julian, data, self._kind)
+        length_to_kind = {1: "zero", 2: "linear", 3: "quadratic"}
+        self._kind = "cubic" if data_length > 3 else length_to_kind[data_length]
 
     def _set_base_data(self, position, velocity, frame) -> None:
         """Initialize base data.
@@ -145,92 +129,27 @@ class Coordinate(Time):
 
         self._length = len(position)
 
+        base_coor = np.concatenate((position, velocity), axis=1)
+
+        converted_position = self._gcrs_and_itrs(position, frame)
+        converted_velocity = self._gcrs_and_itrs(velocity, frame)
+        converted_coor = np.concatenate((converted_position, converted_velocity),
+                                        axis=1)
+
         if frame == "gcrs":
-            x, y, z = [self._stroke_init(position[:, i]) for i in range(3)]
-            vx, vy, vz = [self._stroke_init(velocity[:, i]) for i in range(3)]
-            self._GCRS = np.array([x, y, z, vx, vy, vz])
+            self._GCRS = self._stroke_array_from_2D_array_cols(base_coor)
+            self._ITRS = self._stroke_array_from_2D_array_cols(converted_coor)
         elif frame == "itrs":
-            x, y, z = [self._stroke_init(position[:, i]) for i in range(3)]
-            vx, vy, vz = [self._stroke_init(velocity[:, i]) for i in range(3)]
-            self._ITRS = np.array([x, y, z, vx, vy, vz])
-        else:
-            raise ValueError(f"{frame} is not a valid frame.")
+            self._GCRS = self._stroke_array_from_2D_array_cols(converted_coor)
+            self._ITRS = self._stroke_array_from_2D_array_cols(base_coor)
 
-    def _geo_to_itrs(self, position) -> np.ndarray:
-        """Geographical to itrs transformation.
+    def _stroke_array_from_2D_array_cols(self, data):
 
-        Parameters
-        ----------
-        position : np.ndarray
-            2-D array with columns of geodetic latitude, terrestrial longitude,
-            and geodetic altitude given in decimal degrees and kilometres.
+        return np.array([self._stroke_init(i) for i in data.T])
 
-        Returns
-        -------
-        np.ndarray
-            2-D array with columns of x, y, z cartesian coordinates in ITRS.
+    def _stroke_init(self, data):
 
-        See Also
-        --------
-        _itrs_to_geo : Itrs to geographical transformation.
-
-        Notes
-        -----
-        An Earth ellipsoid model is used for the geographical to itrs
-        conversion using the methods described in "Coordinate Systems in
-        Geodesy" by E. J. Krakiwsky and D.E. Wells as presented by Christopher
-        Lum. [KW98a]_ [Lum20]_
-
-        References
-        ----------
-        .. [KW98a] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
-           Geodesy. Jan. 1998.
-        .. [Lum20] Christopher Lum. Geodetic Coordinates: Computing Latitude and
-           Longitude. June 2020.url:https://www.youtube.com/watch?v=4BJ-GpYbZlU.
-        """
-
-        a = 6378.137  # WGS84 major axis in km.
-        b = 6356.752314245  # WGS84 minor axis in km.
-
-        lat, lon = np.copy(np.radians(position[:, 0:2])).T
-        clat, slat = np.cos(lat), np.sin(lat)
-        clon, slon = np.cos(lon), np.sin(lon)
-
-        e = np.sqrt(1 - b ** 2 / a ** 2)
-        n = a / np.sqrt(1 - e ** 2 * slat ** 2)
-        h = position[:, 2]
-
-        x = ((n + h) * clat * clon).reshape((-1, 1))
-        y = ((n + h) * clat * slon).reshape((-1, 1))
-        z = ((n * (1 - e ** 2) + h) * slat).reshape((-1, 1))
-
-        return np.concatenate((x, y, z), axis=1)
-
-    def _itrs_to_geo(self, position) -> np.ndarray:
-        """Itrs to geographical transformation.
-
-        Parameters
-        ----------
-        position : np.ndarray
-            2-D array with columns of x, y, z cartesian coordinates in ITRS.
-
-        Returns
-        -------
-        np.ndarray
-            2-D array with columns of latitude, longitude, and altitude given
-            in decimal degrees and kilometres.
-
-        See Also
-        --------
-        _geo_to_itrs : Geographical to itrs transformation.
-        """
-
-        # Calculate latitude and longitude.
-        x, y, z = position
-        lat = np.degrees(np.arctan(z / np.sqrt(x ** 2 + y ** 2)))
-        lon = np.degrees(np.arctan2(y, x))
-
-        return lat, lon
+        return Stroke(self._julian, data, self._kind)
 
     def geo(self, iso=False, stroke=False) -> Union[Tuple, np.ndarray]:
         """Return geographical coordinates.
@@ -289,32 +208,90 @@ class Coordinate(Time):
                '03°42′10.85″N 23°21′06.73″W 493.60km'])
         """
 
-        if self._ITRS is None:
-            x, y, z, vx, vy, vz = self._GCRS
-
-            gcrs_pos = np.array([i(self._julian) for i in [x, y, z]]).T
-            gcrs_vel = np.array([i(self._julian) for i in [vx, vy, vz]]).T
-
-            itrs_pos = self._gcrs_and_itrs(gcrs_pos, "gcrs")
-            x, y, z = [self._stroke_init(itrs_pos[:, i]) for i in range(3)]
-
-            itrs_vel = self._gcrs_and_itrs(gcrs_vel, "gcrs")
-            vx, vy, vz = [self._stroke_init(itrs_vel[:, i]) for i in range(3)]
-
-            self._ITRS = np.array([x, y, z, vx, vy, vz])
-
-        lat, lon = self._itrs_to_geo(self._ITRS[:3])
-        alt = self.altitude(stroke=True)
+        latitude, longitude = self._itrs_to_geo(self._ITRS[:3])
+        altitude = self.altitude(True)
 
         if stroke:
-            return lat, lon, alt
+            return latitude, longitude, altitude
 
-        lat, lon, alt = lat(self._julian), lon(self._julian), alt(self._julian)
+        latitude = latitude(self._julian)
+        longitude = longitude(self._julian)
+        altitude = altitude(self._julian)
 
         if iso:
-            return _ISO6709_representation(lat, lon, alt)
+            return _ISO6709_representation(latitude, longitude, altitude)
         else:
-            return lat, lon, alt
+            return latitude, longitude, altitude
+
+    def _itrs_to_geo(self, position) -> np.ndarray:
+        """Itrs to geographical transformation.
+
+        Parameters
+        ----------
+        position : np.ndarray
+            2-D array with columns of x, y, z cartesian coordinates in ITRS.
+
+        Returns
+        -------
+        np.ndarray
+            2-D array with columns of latitude, longitude, and altitude given
+            in decimal degrees and kilometres.
+
+        See Also
+        --------
+        _geo_to_itrs : Geographical to itrs transformation.
+        """
+
+        x, y, z = position
+        latitude = np.arctan(z / np.sqrt(x ** 2 + y ** 2))
+        longitude = np.arctan2(y, x)
+
+        return np.degrees(latitude), np.degrees(longitude)
+
+    def _geo_to_itrs(self, position) -> np.ndarray:
+        """Geographical to itrs transformation.
+
+        Parameters
+        ----------
+        position : np.ndarray
+            2-D array with columns of geodetic latitude, terrestrial longitude,
+            and geodetic altitude given in decimal degrees and kilometres.
+
+        Returns
+        -------
+        np.ndarray
+            2-D array with columns of x, y, z cartesian coordinates in ITRS.
+
+        See Also
+        --------
+        _itrs_to_geo : Itrs to geographical transformation.
+
+        Notes
+        -----
+        An Earth ellipsoid model is used for the geographical to itrs
+        conversion using the methods described in "Coordinate Systems in
+        Geodesy" by E. J. Krakiwsky and D.E. Wells as presented by Christopher
+        Lum. [KW98a]_ [Lum20]_
+
+        References
+        ----------
+        .. [KW98a] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
+           Geodesy. Jan. 1998.
+        .. [Lum20] Christopher Lum. Geodetic Coordinates: Computing Latitude and
+           Longitude. June 2020.url:https://www.youtube.com/watch?v=4BJ-GpYbZlU.
+        """
+
+        latitude, longitude, height = position.T
+        latitude, longitude = np.radians(latitude), np.radians(longitude)
+
+        e = np.sqrt(1 - WGS84_MINOR_AXIS ** 2 / WGS84_MAJOR_AXIS ** 2)
+        n = WGS84_MAJOR_AXIS / np.sqrt(1 - e ** 2 * np.sin(latitude) ** 2)
+
+        x = (n + height) * np.cos(latitude) * np.cos(longitude)
+        y = (n + height) * np.cos(latitude) * np.sin(longitude)
+        z = (n * (1 - e ** 2) + height) * np.sin(latitude)
+
+        return np.concatenate([i.reshape((-1, 1)) for i in [x, y, z]], axis=1)
 
     def era(self, stroke=False) -> Union[np.ndarray, Stroke]:
         """Return Earth rotation angle in decimal degrees.
@@ -366,12 +343,11 @@ class Coordinate(Time):
         array([249.65772, 249.90840])
         """
 
-        # Multiply time elapsed since J2000 by Earth rotation rate and add
-        # J2000 orientation.
-        dJulian = self._julian - 2451545
-        ang = (360.9856123035484 * dJulian + 280.46) % 360
+        time_since_JD2000 = self._julian - 2451545
+        rotation_angle = (EARTH_ROTATION_RATE * time_since_JD2000 +
+                          ERA_AT_JD2000) % 360
 
-        return Stroke(self._julian, ang, self._kind) if stroke else ang
+        return self._stroke_init(rotation_angle) if stroke else rotation_angle
 
     def _gcrs_and_itrs(self, data, frame) -> np.ndarray:
         """Transform between gcrs and itrs coordinates.
@@ -395,42 +371,53 @@ class Coordinate(Time):
         due to their poor predictability.
         """
 
-        pos_data = np.copy(data)
+        return self._gcrs_to_itrs(data) if frame == "gcrs" else self._itrs_to_gcrs(data)
 
-        # Get dependencies.
-        era = self.era()
+    def _gcrs_to_itrs(self, gcrs) -> np.ndarray:
+
+        gcrs = np.copy(gcrs)
+
+        earth_rotation_angle = self.era()
         bias_mtrx = bias_matrix()
         precession_mtrx = precession_matrix(self._julian)
         nutation_mtrx = nutation_matrix(self._julian)
 
-        # Apply nutation-precession model before ERA rotation.
-        if frame == "gcrs":
-            pos_data = np.einsum('ij, kj -> ki', bias_mtrx, pos_data)
-            pos_data = np.einsum('ijk, ik -> ij', precession_mtrx, pos_data)
-            pos_data = np.einsum('ijk, ik -> ij', nutation_mtrx, pos_data)
+        gcrs = np.einsum('ij, kj -> ki', bias_mtrx, gcrs)
+        gcrs = np.einsum('ijk, ik -> ij', precession_mtrx, gcrs)
+        gcrs = np.einsum('ijk, ik -> ij', nutation_mtrx, gcrs)
 
-        # Pre-process ERA angle and sign.
-        theta = np.radians(era)
-        theta = -theta if frame == "gcrs" else theta
+        gcrs = self._rotate_by_earth_rotation_angle(gcrs, -earth_rotation_angle)
 
-        # Rotate position by the ERA rotational matrix.
-        c, s = np.cos(theta), np.sin(theta)
-        c1, c2, c3 = np.copy(pos_data).T
+        return gcrs
 
-        pos_data[:, 0] = c * c1 - s * c2
-        pos_data[:, 1] = s * c1 + c * c2
-        pos_data[:, 2] = c3
+    def _rotate_by_earth_rotation_angle(self, data, degree_era):
 
-        # Apply nutation-precession model after ERA rotation if frame is ITRS.
-        if frame == "itrs":
-            pos_data = np.einsum('ijk, ik -> ij',
-                                 np.linalg.inv(nutation_mtrx), pos_data)
-            pos_data = np.einsum('ijk, ik -> ij',
-                                 np.linalg.inv(precession_mtrx), pos_data)
-            pos_data = np.einsum('ij, kj -> ki',
-                                 np.linalg.inv(bias_mtrx), pos_data)
+        radian_era = np.radians(degree_era)
+        c, s = np.cos(radian_era), np.sin(radian_era)
+        c1, c2, c3 = np.copy(data).T
 
-        return pos_data
+        data[:, 0] = c * c1 - s * c2
+        data[:, 1] = s * c1 + c * c2
+        data[:, 2] = c3
+
+        return data
+
+    def _itrs_to_gcrs(self, itrs) -> np.ndarray:
+
+        itrs = np.copy(itrs)
+
+        earth_rotation_angle = self.era()
+        bias_mtrx = bias_matrix()
+        precession_mtrx = precession_matrix(self._julian)
+        nutation_mtrx = nutation_matrix(self._julian)
+
+        itrs = self._rotate_by_earth_rotation_angle(itrs, earth_rotation_angle)
+
+        itrs = np.einsum('ijk, ik -> ij', np.linalg.inv(nutation_mtrx), itrs)
+        itrs = np.einsum('ijk, ik -> ij', np.linalg.inv(precession_mtrx), itrs)
+        itrs = np.einsum('ij, kj -> ki', np.linalg.inv(bias_mtrx), itrs)
+
+        return itrs
 
     def gcrs(self, stroke=False) -> Tuple:
         """Return gcrs coordinates.
@@ -478,27 +465,7 @@ class Coordinate(Time):
          array([7.57919, 7.56237]))
         """
 
-        if self._GCRS is None:
-            x, y, z, vx, vy, vz = self._ITRS
-
-            itrs_pos = np.array([i(self._julian) for i in [x, y, z]]).T
-            itrs_vel = np.array([i(self._julian) for i in [vx, vy, vz]]).T
-
-            gcrs_pos = self._gcrs_and_itrs(itrs_pos, "itrs")
-            x, y, z = [self._stroke_init(gcrs_pos[:, i]) for i in range(3)]
-
-            gcrs_vel = self._gcrs_and_itrs(itrs_vel, "itrs")
-            vx, vy, vz = [self._stroke_init(gcrs_vel[:, i]) for i in range(3)]
-
-            self._GCRS = np.array([x, y, z, vx, vy, vz])
-
-        x, y, z, vx, vy, vz = self._GCRS
-
-        if stroke:
-            return x, y, z, vx, vy, vz
-        else:
-            return x(self._julian), y(self._julian), z(self._julian), \
-                   vx(self._julian), vy(self._julian), vz(self._julian)
+        return tuple(self._GCRS if stroke else [i(self._julian) for i in self._GCRS])
 
     def itrs(self, stroke=False) -> np.ndarray:
         """Return itrs coordinates.
@@ -546,77 +513,7 @@ class Coordinate(Time):
          array([7.57747, 7.56150]))
         """
 
-        if self._ITRS is None:
-            x, y, z, vx, vy, vz = self._GCRS
-
-            gcrs_pos = np.array([i(self._julian) for i in [x, y, z]]).T
-            gcrs_vel = np.array([i(self._julian) for i in [vx, vy, vz]]).T
-
-            itrs_pos = self._gcrs_and_itrs(gcrs_pos, "gcrs")
-            x, y, z = [self._stroke_init(itrs_pos[:, i]) for i in range(3)]
-
-            itrs_vel = self._gcrs_and_itrs(gcrs_vel, "gcrs")
-            vx, vy, vz = [self._stroke_init(itrs_vel[:, i]) for i in range(3)]
-
-            self._ITRS = np.array([x, y, z, vx, vy, vz])
-
-        x, y, z, vx, vy, vz = self._ITRS
-
-        if stroke:
-            return x, y, z, vx, vy, vz
-        else:
-            return x(self._julian), y(self._julian), z(self._julian), \
-                   vx(self._julian), vy(self._julian), vz(self._julian)
-
-    def _gcrs_to_lvlh_matrix(self, stroke=False) -> np.ndarray:
-        """Return the gcrs to lvlh rotation matrix.
-
-        Parameters
-        ----------
-        stroke : bool, optional
-            Formats output as a 2-D array of Stroke objects if true.
-            Otherwise, the output is a 3-D array.
-
-        Returns
-        -------
-        np.ndarray
-            2-D rotation matrix containing Stroke objects if `stroke=True`.
-            Otherwise, 3-D rotation matrix.
-        """
-
-        gcrs_x, gcrs_y, gcrs_z, gcrs_vx, gcrs_vy, gcrs_vz = self._GCRS
-        r = np.array([gcrs_x, gcrs_y, gcrs_z])
-        v = np.array([gcrs_vx, gcrs_vy, gcrs_vz])
-
-        norm_r = np.linalg.norm(r)
-        r_cross_v = np.cross(r, v)
-        norm_r_cross_v = np.linalg.norm(r_cross_v)
-
-        lvlh_z = - np.array([gcrs_x / norm_r,
-                             gcrs_y / norm_r,
-                             gcrs_z / norm_r])
-        lvlh_y = - np.array([r_cross_v[0] / norm_r_cross_v,
-                             r_cross_v[1] / norm_r_cross_v,
-                             r_cross_v[2] / norm_r_cross_v])
-        lvlh_x = np.cross(lvlh_y, lvlh_z)
-
-        Aoi = np.array([lvlh_x, lvlh_y, lvlh_z])
-
-        if stroke:
-            return Aoi
-        else:
-            a11 = Aoi[0, 0](self._julian)
-            a12 = Aoi[0, 1](self._julian)
-            a13 = Aoi[0, 2](self._julian)
-            a21 = Aoi[1, 0](self._julian)
-            a22 = Aoi[1, 1](self._julian)
-            a23 = Aoi[1, 2](self._julian)
-            a31 = Aoi[2, 0](self._julian)
-            a32 = Aoi[2, 1](self._julian)
-            a33 = Aoi[2, 2](self._julian)
-            return np.array([[a11, a12, a13],
-                             [a21, a22, a23],
-                             [a31, a32, a33]])
+        return tuple(self._ITRS if stroke else [i(self._julian) for i in self._ITRS])
 
     def lvlh(self, stroke=False) -> Tuple:
         """Return the LVLH (Hill frame) coordinates.
@@ -675,26 +572,59 @@ class Coordinate(Time):
          array([5.55112e-17, -2.83622e-03]))
         """
 
-        if self._GCRS is None:
-            self.gcrs()
-
-        gcrs_x, gcrs_y, gcrs_z, gcrs_vx, gcrs_vy, gcrs_vz = self._GCRS
-        r = np.array([gcrs_x, gcrs_y, gcrs_z])
-        v = np.array([gcrs_vx, gcrs_vy, gcrs_vz])
+        gcrs_position, gcrs_velocity = self._GCRS[:3], self._GCRS[3:]
 
         Aoi = self._gcrs_to_lvlh_matrix(stroke=True)
+        lvlh_position = np.dot(Aoi, gcrs_position)
+        lvlh_velocity = np.dot(Aoi, gcrs_velocity)
 
-        lvlh_r = np.dot(Aoi, r)
-        lvlh_v = np.dot(Aoi, v)
+        lvlh = np.concatenate((lvlh_position, lvlh_velocity), axis=0)
 
-        x, y, z = lvlh_r
-        vx, vy, vz = lvlh_v
+        return tuple(lvlh if stroke else [i(self._julian) for i in lvlh.T])
+
+    def _gcrs_to_lvlh_matrix(self, stroke=False) -> np.ndarray:
+        """Return the gcrs to lvlh rotation matrix.
+
+        Parameters
+        ----------
+        stroke : bool, optional
+            Formats output as a 2-D array of Stroke objects if true.
+            Otherwise, the output is a 3-D array.
+
+        Returns
+        -------
+        np.ndarray
+            2-D rotation matrix containing Stroke objects if `stroke=True`.
+            Otherwise, 3-D rotation matrix.
+        """
+
+        position, velocity = self._GCRS[:3], self._GCRS[3:]
+
+        norm_position = np.linalg.norm(position)
+        position_cross_velocity = np.cross(position, velocity)
+        n = np.linalg.norm(position_cross_velocity)
+
+        lvlh_z = - np.array([i / norm_position for i in position])
+        lvlh_y = - np.array([i / n for i in position_cross_velocity])
+        lvlh_x = np.cross(lvlh_y, lvlh_z)
+
+        Aoi = np.array([lvlh_x, lvlh_y, lvlh_z])
 
         if stroke:
-            return x, y, z, vx, vy, vz
+            return Aoi
         else:
-            return x(self._julian), y(self._julian), z(self._julian), \
-                   vx(self._julian), vy(self._julian), vz(self._julian)
+            a11 = Aoi[0, 0](self._julian)
+            a12 = Aoi[0, 1](self._julian)
+            a13 = Aoi[0, 2](self._julian)
+            a21 = Aoi[1, 0](self._julian)
+            a22 = Aoi[1, 1](self._julian)
+            a23 = Aoi[1, 2](self._julian)
+            a31 = Aoi[2, 0](self._julian)
+            a32 = Aoi[2, 1](self._julian)
+            a33 = Aoi[2, 2](self._julian)
+            return np.array([[a11, a12, a13],
+                             [a21, a22, a23],
+                             [a31, a32, a33]])
 
     def _get_ang(self, u, v) -> np.ndarray:
         """Return the degree angle bewteen two vectors.
@@ -716,73 +646,11 @@ class Coordinate(Time):
         ua = None if u.ndim == 1 else 1
         va = None if v.ndim == 1 else 1
 
-        n = np.sum(u * v, axis=(ua or va))
-        d = np.linalg.norm(u, axis=ua) * np.linalg.norm(v, axis=va)
-        ang = np.degrees(np.arccos(n / d))
+        numerator = np.sum(u * v, axis=(ua or va))
+        denominator = np.linalg.norm(u, axis=ua) * np.linalg.norm(v, axis=va)
+        ang = np.degrees(np.arccos(numerator / denominator))
 
         return ang
-
-    def _elevation(self, location) -> Stroke:
-        """Return the elevation angle of a satellite.
-
-        Parameters
-        ----------
-        location : GroundPosition
-            Eath bound origin of the horizontal system.
-
-        Returns
-        -------
-        Stroke
-            Stroke containing the elevation of the satellite.
-        """
-
-        if self._ITRS is None:
-            self.itrs()
-
-        # Get origin of horizontal system.
-        lat, lon, height = location.latitude, location.longitude, location.height
-        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
-
-        return 90 - self._get_ang(self._ITRS[:3] - gnd_itrs, gnd_itrs)
-
-    def _azimuth(self, location) -> Stroke:
-        """Return the azimuth angle of the satellite.
-
-        Parameters
-        ----------
-        location : GroundPosition
-            Eath bound origin of the horizontal system.
-
-        Returns
-        -------
-        Stroke
-            Stroke containing the azimuth of the satellite.
-        """
-
-        if self._ITRS is None:
-            self.itrs()
-
-        # Get origin of horizontal system.
-        lat, lon = location.latitude, location.longitude
-        radius, height = location.radius, location.height
-        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]])).reshape((3,))
-
-        los = self._ITRS[:3] - gnd_itrs
-
-        # Find Earth tangent passing through horizontal origin and z-axis.
-        st = [0, 0, radius / np.sin(np.radians(lat))] - gnd_itrs
-
-        # Find LOS projection on tangent plane.
-        los_on_n = np.sum(los * gnd_itrs)
-        los_proj = los - np.array([los_on_n * gnd_itrs[i] for i in range(3)]) / radius ** 2
-
-        # Determing azimuth.
-        direc = np.cross(st, gnd_itrs)
-        neg_ind = np.sum(los_proj * direc) < 0
-        az = self._get_ang(st, los_proj)
-        az = 360 * neg_ind - 1 * (2 * neg_ind - 1) * az
-
-        return az
 
     def horizontal(self, location, stroke=False) -> Tuple:
         """Return horizontal coordinates in decimal degrees.
@@ -828,14 +696,67 @@ class Coordinate(Time):
          array([94.73900, 92.99101]))
         """
 
-        # Calculate the elevation and azimuth angles.
-        alt = self._elevation(location)
-        az = self._azimuth(location)
+        el_az = [self._elevation(location), self._azimuth(location)]
 
-        if stroke:
-            return alt, az
-        else:
-            return alt(self._julian), az(self._julian)
+        return tuple(el_az if stroke else [i(self._julian) for i in el_az])
+
+    def _elevation(self, location) -> Stroke:
+        """Return the elevation angle of a satellite.
+
+        Parameters
+        ----------
+        location : GroundPosition
+            Eath bound origin of the horizontal system.
+
+        Returns
+        -------
+        Stroke
+            Stroke containing the elevation of the satellite.
+        """
+
+        ground_itrs = self._calculate_ground_location_itrs(location)
+        return 90 - self._get_ang(self._ITRS[:3] - ground_itrs, ground_itrs)
+    
+    def _calculate_ground_location_itrs(self, location):
+
+        ground_geographic = np.array([[location.latitude, location.longitude,
+                                       location.height]])
+
+        return self._geo_to_itrs(ground_geographic).reshape((3,))
+
+
+    def _azimuth(self, location) -> Stroke:
+        """Return the azimuth angle of the satellite.
+
+        Parameters
+        ----------
+        location : GroundPosition
+            Eath bound origin of the horizontal system.
+
+        Returns
+        -------
+        Stroke
+            Stroke containing the azimuth of the satellite.
+        """
+
+        latitude, radius = location.latitude, location.radius
+        ground_itrs = self._calculate_ground_location_itrs(location)
+
+        ground_to_satellite = self._ITRS[:3] - ground_itrs
+
+        z_axis_vector = [0, 0, radius / np.sin(np.radians(latitude))]
+        surface_tangent = z_axis_vector - ground_itrs
+
+        sat_to_ground_on_normal = np.sum(ground_to_satellite * ground_itrs)
+        misc_vector = np.array([sat_to_ground_on_normal * ground_itrs[i] for i in range(3)]) / radius ** 2
+        sat_to_ground_on_plane = ground_to_satellite - misc_vector
+
+        direction = np.cross(surface_tangent, ground_itrs)
+        negative_indices = np.sum(sat_to_ground_on_plane * direction) < 0
+        azimuth = self._get_ang(surface_tangent, sat_to_ground_on_plane)
+        azimuth = 360 * negative_indices - 1 * (2 * negative_indices - 1) * azimuth
+
+        return azimuth
 
     def off_nadir(self, location, stroke=False) -> Union[Stroke, np.ndarray]:
         """Return off-nadir angle in decimal degrees.
@@ -879,16 +800,13 @@ class Coordinate(Time):
         array([67.10070, 65.29457])
         """
 
-        if self._ITRS is None:
-            self.itrs()
+        ground_itrs = self._calculate_ground_location_itrs(location)
+        ground_to_satellite = (self._ITRS[:3] - ground_itrs).reshape((3,))
+        off_nadir = self._get_ang(ground_to_satellite, self._ITRS[:3])
 
-        lat, lon, height = location.latitude, location.longitude, location.height
-        loc = self._geo_to_itrs(np.array([[lat, lon, height]]))
-        ang = self._get_ang((self._ITRS[:3] - loc).reshape((3,)), self._ITRS[:3])
+        return off_nadir if stroke else off_nadir(self._julian)
 
-        return ang if stroke else ang(self._julian)
-
-    def _WGS84_radius(self, lattitude) -> np.ndarray:
+    def _WGS84_radius(self, latitude) -> np.ndarray:
         """Return Earth's geocentric radius using WGS84.
 
         Parameters
@@ -912,17 +830,10 @@ class Coordinate(Time):
            https://planetcalc.com/7721/.
         """
 
-        # Get lattidue parameter.
-        phi = np.radians(lattitude)
+        c, s = np.cos(np.radians(latitude)), np.sin(np.radians(latitude))
 
-        # Define WGS84 Parameters.
-        a = 6378.137
-        b = 6356.752314245
-
-        c, s = np.cos(phi), np.sin(phi)
-
-        num = (a ** 2 * c) ** 2 + (b ** 2 * s) ** 2
-        denom = (a * c) ** 2 + (b * s) ** 2
+        num = (WGS84_MAJOR_AXIS ** 2 * c) ** 2 + (WGS84_MINOR_AXIS ** 2 * s) ** 2
+        denom = (WGS84_MAJOR_AXIS * c) ** 2 + (WGS84_MINOR_AXIS * s) ** 2
         radius = np.sqrt(num / denom)
 
         return radius
@@ -976,15 +887,11 @@ class Coordinate(Time):
         array([493.42306, 493.59714])
         """
 
-        if self._ITRS is None:
-            self.itrs()
-
-        # Define WGS84 Parameters.
-        a, b = 6378.137, 6356.752314245
+        a, b = WGS84_MAJOR_AXIS, WGS84_MINOR_AXIS
 
         tol = 10e-10
 
-        x, y, z = self._ITRS[:3]
+        x, y, z, _, _, _ = self._ITRS
 
         e = np.sqrt(1 - b ** 2 / a ** 2)
         p = np.sqrt(x ** 2 + y ** 2)
@@ -1007,10 +914,7 @@ class Coordinate(Time):
             n, h, phi = Np, hp, phip
             Np, hp, phip = new_vals(a, b, e, p, n, h, phi, z)
 
-        if stroke:
-            return h
-        else:
-            return h(self._julian)
+        return h if stroke else h(self._julian)
 
     def distance(self, location, stroke=False) -> Union[Stroke, np.ndarray]:
         """Return distance to the ground location.
@@ -1050,11 +954,7 @@ class Coordinate(Time):
         array([9070.80824, 8777.02141])
         """
 
-        if self._ITRS is None:
-            self.itrs()
-
-        lat, lon, height = location.latitude, location.longitude, location.height
-        gnd_itrs = self._geo_to_itrs(np.array([[lat, lon, height]]))
-        distance = np.linalg.norm(self._ITRS[:3] - gnd_itrs)
+        ground_itrs = self._calculate_ground_location_itrs(location)
+        distance = np.linalg.norm(self._ITRS[:3] - ground_itrs)
 
         return distance if stroke else distance(self._julian)
