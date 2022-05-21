@@ -33,7 +33,7 @@ class TestSatellite(TestCase):
         self.geo = self.satellite.geo()
         self.gcrs = self.satellite.gcrs()
         self.itrs = self.satellite.itrs()
-    
+
     def test_attitude(self):
 
         location = GroundPosition(52.1579, -106.6702, 0.482)
