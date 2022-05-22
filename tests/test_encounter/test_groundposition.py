@@ -6,6 +6,10 @@ import numpy as np
 import unittest
 
 
+WGS84_MAJOR_AXIS = 6378.137
+WGS84_MINOR_AXIS = 6356.752314245
+
+
 class TestGroundPosition(TestCase):
 
     def setUp(self):
@@ -27,17 +31,18 @@ class TestGroundPosition(TestCase):
            https://planetcalc.com/7721/.
         """
 
-        ground_pos = GroundPosition(self.latitude, self.longitude, self.elevation)
+        location = GroundPosition(self.latitude, self.longitude, self.elevation)
 
-        a = 6378.1370
-        b = 6356.7523142
-        latitude = np.radians(ground_pos.latitude)
-        clat, slat = np.cos(latitude), np.sin(latitude)
-        num = (a ** 2 * clat) ** 2 + (b ** 2 * slat) ** 2
-        denom = (a * clat) ** 2 + (b * slat) ** 2
-        radius = np.sqrt(num / denom) + self.elevation
+        cos_latitude = np.cos(np.radians(self.latitude))
+        sin_latitude = np.sin(np.radians(self.latitude))
 
-        self.assertAlmostEqual(radius, ground_pos.radius, delta=0.001)
+        numinator = (WGS84_MAJOR_AXIS ** 2 * cos_latitude) ** 2 + \
+            (WGS84_MINOR_AXIS ** 2 * sin_latitude) ** 2
+        denominator = (WGS84_MAJOR_AXIS * cos_latitude) ** 2 + \
+            (WGS84_MINOR_AXIS * sin_latitude) ** 2
+        radius = np.sqrt(numinator / denominator) + self.elevation
+
+        self.assertAlmostEqual(radius, location.radius, delta=0.001)
 
 
 if __name__ == "__main__":
