@@ -3,6 +3,10 @@
 import numpy as np
 
 
+WGS84_MAJOR_AXIS = 6378.137
+WGS84_MINOR_AXIS = 6356.752314245
+
+
 class GroundPosition:
     """GroundPosition(latitude, longitude, height=0)
 
@@ -61,17 +65,12 @@ class GroundPosition:
            https://planetcalc.com/7721/.
         """
 
-        # Get lattidue parameter.
-        phi = np.radians(latitude)
+        cos_latitude = np.cos(np.radians(latitude))
+        sin_latitude = np.sin(np.radians(latitude))
 
-        # Define WGS84 Parameters.
-        semi_major = 6378.137
-        semi_minor = 6356.752314245
+        numerator = (WGS84_MAJOR_AXIS ** 2 * cos_latitude) ** 2 + \
+            (WGS84_MINOR_AXIS ** 2 * sin_latitude) ** 2
+        denominator = (WGS84_MAJOR_AXIS * cos_latitude) ** 2 + \
+            (WGS84_MINOR_AXIS * sin_latitude) ** 2
 
-        c_phi, s_phi = np.cos(phi), np.sin(phi)
-
-        num = (semi_major ** 2 * c_phi) ** 2 + (semi_minor ** 2 * s_phi) ** 2
-        denom = (semi_major * c_phi) ** 2 + (semi_minor * s_phi) ** 2
-        radius = np.sqrt(num / denom)
-
-        return radius
+        return np.sqrt(numerator / denominator)
