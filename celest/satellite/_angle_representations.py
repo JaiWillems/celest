@@ -3,6 +3,11 @@
 import numpy as np
 
 
+DEGREE_SYMBOL = "\u00B0"
+MINUTE_SYMBOL = "\u2032"
+SECOND_SYMBOL = "\u2033"
+
+
 def sexagesimal(angles: np.ndarray) -> np.ndarray:
     """Convert decimal angles into sexagesimal angles.
 
@@ -27,27 +32,23 @@ def sexagesimal(angles: np.ndarray) -> np.ndarray:
               '+149°06′00.00″'])
     """
 
-    deg, min, sec = u"\u00B0", u"\u2032", u"\u2033"
+    sexagesimal_angles = []
+    for angle in angles:
+        angle_sign = "+" if angle >= 0 else "-"
+        sexagesimal_string = _get_sexagesimal_string(abs(angle))
+        sexagesimal_angles.append(angle_sign + sexagesimal_string)
 
-    n = angles.shape[0]
-    out_arr = np.empty((n,), dtype="<U32")
+    return np.array(sexagesimal_angles)
 
-    for i in range(n):
 
-        ang = angles[i]
+def _get_sexagesimal_string(absolute_angle: float) -> str:
 
-        sign = "+" if ang >= 0 else "-"
-        degree = int(abs(ang))
-        minute = int(60 * np.round(abs(ang) - degree, 2))
-        second = np.round(abs(60 * (60 * (abs(ang) - degree) - minute)), 2)
+    degree_string = "%.3s" % str(int(absolute_angle)).zfill(2)
+    minute_string = "%.2s" % str(int(absolute_angle * 60 % 60)).zfill(2)
+    second_string = str("%.2f" % (absolute_angle * 3600 % 60)).zfill(5)
 
-        degree = "%.3s" % str(degree).zfill(2)
-        minute = "%.2s" % str(minute).zfill(2)
-        second = str("%.2f" % second).zfill(5)
-
-        out_arr[i] = f"{sign}{degree}{deg}{minute}{min}{second}{sec}"
-
-    return out_arr
+    return degree_string + DEGREE_SYMBOL + minute_string + MINUTE_SYMBOL + \
+        second_string + SECOND_SYMBOL
 
 
 def _ISO6709_representation(latitude: np.ndarray, longitude: np.ndarray,
@@ -69,43 +70,33 @@ def _ISO6709_representation(latitude: np.ndarray, longitude: np.ndarray,
         1-D array containing ISO6709 standardized position strings.
     """
 
-    deg, min, sec = "\u00B0", "\u2032", "\u2033"
-    n = len(latitude)
+    iso_strings = []
+    for lat, lon, alt in zip(latitude, longitude, altitude):
+        latitude_string = _get_latitude_string(lat)
+        longitude_string = _get_longitude_string(lon)
+        altitude_string = _get_altitude_string(alt)
 
-    out_arr = np.empty((n,), dtype="<U37")
+        iso_strings.append(latitude_string + " " + longitude_string + " " + altitude_string)
 
-    for i in range(n):
+    return np.array(iso_strings)
 
-        lat, lon, alt = latitude[i], longitude[i], altitude[i]
 
-        # Format latitude string.
-        degree = int(abs(lat))
-        minute = int(60 * np.round(abs(lat) - degree, 2))
-        second = np.round(abs(60 * (60 * (abs(lat) - degree) - minute)), 2)
-        direction = "N" if lat >= 0 else "S"
+def _get_latitude_string(latitude: float) -> str:
 
-        degree = "%.2s" % str(degree).zfill(2)
-        minute = "%.2s" % str(minute).zfill(2)
-        second = str("%.2f" % second).zfill(5)
+    sexigesimal_latitude = _get_sexagesimal_string(abs(latitude))
+    direction = "N" if latitude >= 0 else "S"
 
-        lat_str = f"{degree}{deg}{minute}{min}{second}{sec}{direction} "
+    return sexigesimal_latitude + direction
 
-        # Format longitude string.
-        degree = int(abs(lon))
-        minute = int(60 * np.round(abs(lon) - degree, 2))
-        second = np.round(abs(60 * (60 * (abs(lon) - degree) - minute)), 2)
-        direction = "E" if lon >= 0 else "W"
 
-        degree = "%.3s" % str(degree).zfill(2)
-        minute = "%.2s" % str(minute).zfill(2)
-        second = str("%.2f" % second).zfill(5)
+def _get_longitude_string(longitude: float) -> str:
 
-        lon_str = f"{degree}{deg}{minute}{min}{second}{sec}{direction} "
+    sexigesimal_longitude = _get_sexagesimal_string(abs(longitude))
+    direction = "E" if longitude >= 0 else "W"
 
-        # Format height string.
-        alt = "%.2f" % alt
-        h_str = f"{alt}km"
+    return sexigesimal_longitude + direction
 
-        out_arr[i] = lat_str + lon_str + h_str
 
-    return out_arr
+def _get_altitude_string(altitude: float) -> str:
+
+    return ("%.2f" % altitude) + "km"

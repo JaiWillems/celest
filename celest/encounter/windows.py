@@ -7,6 +7,71 @@ import numpy as np
 import pkg_resources
 
 
+def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VTWHandler:
+    """Return visible window times for a satellite-ground combination.
+
+    This function generates the visible window times where the satellite has
+    an elevation angle greater than `vis_threshold` and where lighting
+    conditions are met.
+
+    Parameters
+    ----------
+    satellite : Satellite
+        Satellite object.
+    location : Location
+        Location of ground station.
+    vis_threshold : float
+        Visibility threshold in degrees.
+    lighting : float, optional
+        Lighting condition specifier.
+
+        `-1` indicates nighttime encounters, `0` indicates anytime encounters,
+        and `1` indicates daytime encounters.
+    tol : float, optional
+        Window start and end time tolerance in days.
+
+    Returns
+    -------
+    VTWHandler
+        The visible time windows.
+    """
+
+    if vis_threshold < 0 or vis_threshold >= 90:
+        raise ValueError("Visibility threshold shall be in the range [0, 90).")
+    if lighting not in (-1, 0, 1):
+        raise ValueError("Valid lighting conditions include -1, 0, and 1.")
+
+    window_locations = _get_base_vtws(satellite, location, vis_threshold)
+    window_locations *= _lighting_constraint_factor(satellite, location, lighting)
+
+    julian = satellite._julian
+    roll, pitch, yaw = satellite.attitude(location, stroke=True)
+
+    window_indices = _get_window_indices(window_locations, julian)
+    if window_indices.size == 0:
+        return None
+
+    windows = VTWHandler()
+    for window_indices in window_indices:
+
+        rt1, rt2 = julian[window_indices[0] - 1], julian[window_indices[0]]
+        rise_time = _root_find(window_locations, rt1, rt2, tol)
+
+        st1, st2 = julian[window_indices[-1]], julian[window_indices[-1] + 1]
+        set_time = _root_find(window_locations, st1, st2, tol)
+
+        window = VTW(rise_time, set_time, roll, pitch, yaw)
+        windows._add_window(window)
+
+    return windows
+
+
+def _get_base_vtws(satellite, location, vis_threshold):
+
+    elevation = satellite._elevation(location)
+    return _constraint_highlighter(elevation, "ge", vis_threshold)
+
+
 def _constraint_highlighter(decision_var, constraint, ang):
     """Return raw window highlighter.
 
@@ -47,6 +112,33 @@ def _constraint_highlighter(decision_var, constraint, ang):
         raise ValueError("Invalid constraint type.")
 
 
+def _lighting_constraint_factor(satellite, location, lighting):
+
+    if lighting == -1:
+        return _get_night_constraint_factor(satellite._julian, location)
+    elif lighting == 0:
+        return 1
+    elif lighting == 1:
+        return _get_day_constraint_factor(satellite._julian, location)
+
+
+def _get_day_constraint_factor(julian, location):
+
+    return _get_lighting_constraint_factor(julian, location, 1)
+
+
+def _get_night_constraint_factor(julian, location):
+
+    return _get_lighting_constraint_factor(julian, location, -1)
+
+
+def _get_lighting_constraint_factor(julian, location, lighting):
+
+    sun_elevation, _ = _sun_coor(julian).horizontal(location, stroke=True)
+    comparison = "gt" if lighting == 1 else "le"
+    return _constraint_highlighter(sun_elevation, comparison, 0)
+
+
 def _sun_coor(julian) -> Coordinate:
     """Return the sun's coordinates.
 
@@ -73,23 +165,30 @@ def _sun_coor(julian) -> Coordinate:
 
     SPK.close(kernal)
 
-    sun_coor = Coordinate(e2sun_pos, e2sun_vel, "gcrs", julian)
-
-    return sun_coor
+    return Coordinate(e2sun_pos, e2sun_vel, "gcrs", julian)
 
 
-def _root_find(f, tl, tr, tol) -> float:
+def _get_window_indices(window_locations, julian):
+
+    ind = np.arange(0, julian.size, 1) * window_locations(julian).astype(int)
+    ind = ind[ind != 0]
+    ind = np.split(ind, np.where(np.diff(ind) != 1)[0] + 1)
+
+    return np.array(ind, dtype=object)
+
+
+def _root_find(func, lower_bound, upper_bound, tolerance) -> float:
     """Return root of f(t) between lg and rg.
 
     Parameters
     ----------
-    f : Stroke
+    func : Stroke
         Stroke object representing the function to be evaluated.
     tl : float
         Lower bound of the search interval.
-    tr : float
+    upper_bound : float
         Upper bound of the search interval.
-    tol : float
+    tolerance : float
         Search tolerance.
 
     Returns
@@ -98,89 +197,18 @@ def _root_find(f, tl, tr, tol) -> float:
         Root of `f(t)` between `lg` and `rg`.
     """
 
-    l, r = tl, tr
-    fl = int(f(l))
+    left_value, right_value = lower_bound, upper_bound
+    left_function_value = int(func(left_value))
 
-    while abs(r - l) > tol:
+    while abs(right_value - left_value) > tolerance:
 
-        c = (l + r) / 2
-        fc = int(f(c))
+        center_value = (left_value + right_value) / 2
+        center_function_value = int(func(center_value))
 
-        if abs(fl - fc) == 1:
-            r = c
+        if abs(left_function_value - center_function_value):
+            right_value = center_value
         else:
-            l = c
-            fl = fc
+            left_value = center_value
+            left_function_value = center_function_value
 
-    return (l if fl == 1 else r)
-
-
-def generate_vtw(satellite, location, vis_threshold, lighting=0, tol=1e-5) -> VTWHandler:
-    """Return visible window times for a satellite-ground combination.
-
-    This function generates the visible window times where the satellite has
-    an elevation angle greater than `vis_threshold` and where lighting
-    conditions are met.
-
-    Parameters
-    ----------
-    satellite : Satellite
-        Satellite object.
-    location : Location
-        Location of ground station.
-    vis_threshold : float
-        Visibility threshold in degrees.
-    lighting : float, optional
-        Lighting condition specifier.
-
-        `-1` indicates nighttime encounters, `0` indicates anytime encounters,
-        and `1` indicates daytime encounters.
-    tol : float, optional
-        Window start and end time tolerance in days.
-
-    Returns
-    -------
-    VTWHandler
-        The visible time windows.
-    """
-
-    if vis_threshold < 0 or vis_threshold >= 90:
-        raise ValueError("Visibility threshold should be in the range [0, 90).")
-
-    if lighting not in (-1, 0, 1):
-        raise ValueError("Valid ighting conditions include -1, 0, and 1.")
-
-    dv = satellite._elevation(location)
-    raw_windows = _constraint_highlighter(dv, "ge", vis_threshold)
-
-    if lighting != 0:
-        sun_coor = _sun_coor(satellite._julian)
-        sun_alt, _ = sun_coor.horizontal(location, stroke=True)
-        comp = "gt" if lighting == 1 else "le"
-        raw_windows = raw_windows * _constraint_highlighter(sun_alt, comp, 0)
-
-    julian = satellite._julian
-    ind = np.arange(0, julian.size, 1) * raw_windows(julian).astype(int)
-    ind = ind[ind != 0]
-    ind = np.split(ind, np.where(np.diff(ind) != 1)[0] + 1)
-    ind = np.array(ind, dtype=object)
-
-    windows = VTWHandler()
-    roll, pitch, yaw = satellite.attitude(location, stroke=True)
-
-    # Populate Windows object.
-    if ind.size == 0:
-        return windows
-
-    for i in ind:
-
-        rt1, rt2 = julian[i[0] - 1], julian[i[0]]
-        rise_time = _root_find(raw_windows, rt1, rt2, tol)
-
-        st1, st2 = julian[i[-1]], julian[i[-1] + 1]
-        set_time = _root_find(raw_windows, st1, st2, tol)
-
-        window = VTW(rise_time, set_time, roll, pitch, yaw)
-        windows._add_window(window)
-
-    return windows
+    return (left_value if left_function_value else right_value)

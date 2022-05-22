@@ -53,7 +53,8 @@ class VTW:
 
     def __str__(self) -> str:
 
-        return f"Rise: {self.rise_time}, Set:{self.set_time}, Duration: {self.duration}s"
+        return f"Rise: {self.rise_time}, Set:{self.set_time}, \
+            Duration: {self.duration}s"
 
 
 class OW:
@@ -111,7 +112,8 @@ class OW:
 
     def __str__(self) -> str:
 
-        return f"Location: {(self.location.latitude, self.location.longitude)}, Start: {self.start_time}, Duration:{self.duration}s"
+        return f"Location: {(self.location.latitude, self.location.longitude)}, \
+            Start: {self.start_time}, Duration:{self.duration}s"
 
 
 class WindowHandler:
@@ -123,7 +125,8 @@ class WindowHandler:
     def __init__(self) -> None:
 
         self.windows = pd.Series(dtype="object")
-        self.index_head = 0
+        self._index_of_current_window = 0
+        self._length = 0
 
     def __iter__(self) -> Any:
 
@@ -131,14 +134,13 @@ class WindowHandler:
 
     def __next__(self) -> Any:
 
-        if self.index_head == len(self.windows):
-            self.index_head = 0
+        if self._index_of_current_window == self._length:
+            self._index_of_current_window = 0
             raise StopIteration
         else:
-            index = self.windows.index[self.index_head]
-            self.index_head += 1
-
-            return self.windows[index]
+            current_index = self.windows.index[self._index_of_current_window]
+            self._index_of_current_window += 1
+            return self.windows[current_index]
 
     def __getitem__(self, key) -> Literal[VTW, OW]:
         """Return window closest to key time.
@@ -149,47 +151,32 @@ class WindowHandler:
         times closest to each tuple entry will be returned.
         """
 
-        inds = self.windows.index.to_numpy()
-
         if isinstance(key, (int, float)):
-
-            ind = np.argmin(np.abs(inds - key))
-            rtn = self.windows[inds[ind]]
-
+            return self.windows[self._get_start_time_of_min_diff(key)]
         elif isinstance(key, slice):
-
-            rtn = self.windows[key].to_numpy()
-
+            return self.windows[key].to_numpy()
         elif isinstance(key, tuple):
+            start_times = [self._get_start_time_of_min_diff(k) for k in key]
+            return self.windows[set(start_times)].to_numpy()
 
-            inds_new = []
-            for k in key:
-                ind = np.argmin(np.abs(inds - k))
-                inds_new.append(inds[ind])
+    def _get_start_time_of_min_diff(self, window_start_time):
 
-            inds_new = list(set(inds_new))
-            rtn = self.windows[inds_new].to_numpy()
-
-        return rtn
+        window_start_times = self.windows.index.to_numpy()
+        min_diff_index = np.abs(window_start_times - window_start_time).argmin()
+        return window_start_times[min_diff_index]
 
     def __len__(self) -> int:
 
-        return len(self.windows)
+        return self._length
 
     def _window_start(self, window) -> float:
 
         return window.rise_time if isinstance(window, VTW) else window.start_time
 
-    def _add_window_base(self, window) -> None:
-        """Add new window to data base.
+    def _add_window_to_window_handler(self, window) -> None:
 
-        Parameters
-        ----------
-        window : VTW or OW
-        """
-
-        temp_series = pd.Series(window, index=[self._window_start(window)])
-        self.windows = pd.concat([self.windows, temp_series])
+        partial_window_series = pd.Series(window, index=[self._window_start(window)])
+        self.windows = pd.concat([self.windows, partial_window_series])
         self.windows.sort_index(inplace=True)
 
     def get_window(self, julian) -> Literal[VTW, OW]:
@@ -257,19 +244,13 @@ class VTWHandler(WindowHandler):
     def __init__(self) -> None:
 
         super().__init__()
-    
+
     def _add_window(self, window) -> None:
-        """Add new window to data base.
 
-        Parameters
-        ----------
-        window : VTW
-        """
-
-        if isinstance(window, VTW):
-            self._add_window_base(window)
-        else:
+        if not isinstance(window, VTW):
             raise TypeError("Expected VTW object.")
+
+        self._add_window_to_window_handler(window)
 
     def stats(self) -> pd.DataFrame:
         """Return visible time window statistics.
@@ -302,14 +283,9 @@ class VTWHandler(WindowHandler):
         if len(self.windows) == 0:
             return None
 
-        duration = []
-        rise_times = []
-        set_times = []
-
-        for window in self.windows:
-            duration.append(window.duration)
-            rise_times.append(window.rise_time)
-            set_times.append(window.set_time)
+        duration = [window.duration for window in self.windows]
+        rise_times = [window.rise_time for window in self.windows]
+        set_times = [window.set_time for window in self.windows]
 
         data = {}
         data['Min Duration (s)'] = np.min(duration)
@@ -317,7 +293,7 @@ class VTWHandler(WindowHandler):
         data['Q50 Duration (s)'] = np.percentile(duration, 50)
         data['Q95 Duration (s)'] = np.percentile(duration, 95)
         data['Max Duration (s)'] = np.max(duration)
-        data['Encounter Frequency (per day)'] = len(self) / (np.max(set_times) - np.min(rise_times))
+        data['Encounter Frequency (per day)'] = self._length / (np.max(set_times) - np.min(rise_times))
 
         df = pd.DataFrame(pd.Series(data), columns=["Statistic"])
 
@@ -334,19 +310,19 @@ class VTWHandler(WindowHandler):
             String or character separating columns.
         """
 
-        np_data = self.to_numpy()
+        heading = [[
+            "Rise Time (JD2000)",
+            "Set Time (JD2000)",
+            "Duration (s)"
+        ]]
+        data = [[
+            w.rise_time,
+            w.set_time,
+            w.duration
+        ] for w in self.to_numpy()]
+        window_data = np.array(heading + data)
 
-        out_data = np.empty(shape=(np_data.shape[0] + 1, 3), dtype="<U25")
-        out_data[0, :] = ["Rise Time (JD2000)", "Set Time (JD2000)", "Duration (s)"]
-
-        for i, window in enumerate(np_data):
-
-            out_data[i + 1, 0] = window.rise_time
-            out_data[i + 1, 1] = window.set_time
-            out_data[i + 1, 2] = window.duration
-
-        np.savetxt(fname, out_data, delimiter=delimiter,
-                   fmt="%s,%s,%s")
+        np.savetxt(fname, window_data, delimiter=delimiter, fmt="%s,%s,%s")
 
 
 class OWHandler(WindowHandler):
@@ -358,19 +334,13 @@ class OWHandler(WindowHandler):
     def __init__(self) -> None:
 
         super().__init__()
-    
+
     def _add_window(self, window) -> None:
-        """Add new window to data base.
 
-        Parameters
-        ----------
-        window : OW
-        """
-
-        if isinstance(window, OW):
-            self._add_window_base(window)
-        else:
+        if not isinstance(window, OW):
             raise TypeError("Expected OW object.")
+
+        self._add_window_to_window_handler(window)
 
     def save(self, fname, delimiter) -> None:
         """Save observation window information.
@@ -383,26 +353,20 @@ class OWHandler(WindowHandler):
             String or character separating columns.
         """
 
-        np_data = self.to_numpy()
-
-        out_data = np.empty(shape=(np_data.shape[0] + 1, 6), dtype="<U25")
-        out_data[0, :] = [
+        heading = [[
             "Latitude (deg)",
             "Longitude (deg)",
             "Start Time (JD2000)",
             "Duration (s)",
-            "Quality (1-10)",
             "Deadline (JD2000)"
-        ]
+        ]]
+        data = [[
+            w.location.latitude,
+            w.location.longitude,
+            w.start_time,
+            w.duration,
+            w.deadline
+        ] for w in self.to_numpy()]
+        window_data = np.array(heading + data)
 
-        for i, window in enumerate(np_data):
-
-            out_data[i + 1, 0] = window.location.latitude
-            out_data[i + 1, 1] = window.location.longitude
-            out_data[i + 1, 2] = window.start_time
-            out_data[i + 1, 3] = window.duration
-            out_data[i + 1, 4] = window.quality
-            out_data[i + 1, 5] = window.deadline
-
-        np.savetxt(fname, out_data, delimiter=delimiter,
-                   fmt="%s,%s,%s,%s,%s,%s")
+        np.savetxt(fname, window_data, delimiter=delimiter, fmt="%s,%s,%s,%s,%s")

@@ -20,43 +20,42 @@ class TestWindows(TestCase):
                           max_rows=max_rows)
 
         times = data[:, 0]
-        GCRS = data[:, 1:4]
-        GCRS_vel = data[:, 4:7]
+        gcrs_position = data[:, 1:4]
+        gcrs_velocity = data[:, 4:7]
 
         offset = 2430000
-        self.satellite = Satellite(GCRS, GCRS_vel, "gcrs", times, offset)
+        self.satellite = Satellite(gcrs_position, gcrs_velocity, "gcrs", times,
+                                   offset)
 
     def test_sun_coor(self):
 
         from astropy.coordinates import get_body, ITRS
         from astropy import time, units
 
-        julData = np.array([2455368.75, 2456293.5416666665, 2459450.85])
-        astropy_time = time.Time(julData, format="jd")
+        julian = np.array([2455368.75000, 2456293.54167, 2459450.85000])
+        astropy_time = time.Time(julian, format="jd")
 
-        sun_pos = get_body("sun", astropy_time)
-        sun_pos.representation_type = "cartesian"
+        sun_position = get_body("sun", astropy_time)
+        sun_position.representation_type = "cartesian"
 
-        itrsCoor = sun_pos.transform_to(ITRS(obstime=astropy_time))
+        itrsCoor = sun_position.transform_to(ITRS(obstime=astropy_time))
 
-        x = itrsCoor.x.to(units.km).value
-        y = itrsCoor.y.to(units.km).value
-        z = itrsCoor.z.to(units.km).value
+        true_x = itrsCoor.x.to(units.km).value
+        true_y = itrsCoor.y.to(units.km).value
+        true_z = itrsCoor.z.to(units.km).value
 
-        calc_x, calc_y, calc_z, _, _, _ = _sun_coor(julData).itrs(stroke=False)
-        self.assertTrue(np.allclose(x, calc_x, rtol=0.05))
-        self.assertTrue(np.allclose(y, calc_y, rtol=0.05))
-        self.assertTrue(np.allclose(z, calc_z, rtol=0.05))
+        test_x, test_y, test_z, _, _, _ = _sun_coor(julian).itrs(False)
+        self.assertTrue(np.allclose(true_x, test_x, rtol=0.05))
+        self.assertTrue(np.allclose(true_y, test_y, rtol=0.05))
+        self.assertTrue(np.allclose(true_z, test_z, rtol=0.05))
 
     def test_windows(self):
 
         location = GroundPosition(43.6532, -79.3832)
-        elevation, _ = self.satellite.horizontal(location, stroke=True)
+        elevation, _ = self.satellite.horizontal(location, True)
 
-        sun_coor = _sun_coor(self.satellite._julian)
-        sun_alt, _ = sun_coor.horizontal(location, stroke=True)
-
-        # Test the window generator for all day case.
+        sun_coordinates = _sun_coor(self.satellite._julian)
+        sun_elevation, _ = sun_coordinates.horizontal(location, True)
 
         vis_threshold, lighting, tol = 10, 0, 1e-5
         windows = generate_vtw(self.satellite, location, vis_threshold, lighting, tol)
@@ -67,20 +66,16 @@ class TestWindows(TestCase):
 
             self.assertTrue(np.all(elevation(window_times) > vis_threshold))
 
-        # Test the window generator for day only case.
-
         vis_threshold, lighting, tol = 10, 1, 1e-5
         windows = generate_vtw(self.satellite, location, vis_threshold, lighting, tol)
 
         for window in windows:
             rise_time, set_time = window.rise_time, window.set_time
             window_times = np.linspace(rise_time, set_time, 10)
-            sa = sun_alt(window_times)
+            sun_elev = sun_elevation(window_times)
 
             self.assertTrue(np.all(elevation(window_times) > vis_threshold))
-            self.assertTrue(np.all((0 < sa)))
-
-        # Test the window generator for night only case.
+            self.assertTrue(np.all((0 < sun_elev)))
 
         vis_threshold, lighting, tol = 10, -1, 1e-5
         windows = generate_vtw(self.satellite, location, vis_threshold, lighting, tol)
@@ -88,10 +83,10 @@ class TestWindows(TestCase):
         for window in windows:
             rise_time, set_time = window.rise_time, window.set_time
             window_times = np.linspace(rise_time, set_time, 10)
-            sa = sun_alt(window_times)
+            sun_elev = sun_elevation(window_times)
 
             self.assertTrue(np.all(elevation(window_times) > vis_threshold))
-            self.assertTrue(np.all((sa <= 0)))
+            self.assertTrue(np.all((sun_elev <= 0)))
 
 
 if __name__ == "__main__":

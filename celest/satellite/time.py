@@ -1,7 +1,11 @@
 
 
 from celest.satellite._astronomical_quantities import (
-    equation_of_time, from_julian, sun_right_ascension, equation_of_equinoxes
+    equation_of_time,
+    from_julian,
+    _calculate_elapsed_JD_century_powers,
+    sun_right_ascension,
+    equation_of_equinoxes
 )
 from datetime import datetime, timedelta
 import numpy as np
@@ -106,15 +110,11 @@ class Time:
         np.array([10.773109])
         """
 
-        EoT = equation_of_time(julian=self._julian)
+        eqn_of_time = equation_of_time(julian=self._julian)
+        utc_time = 24 * (self._julian % 1) - 12
+        true_solar_time = (utc_time + (np.array(longitude) + eqn_of_time) / 15) % 24
 
-        idx = np.where(self._julian % 1 < 0.5)
-
-        UTC = 24 * (self._julian % 1) - 12
-        UTC[idx] = UTC[idx] + 12
-        TST = (UTC + (np.array(longitude) + EoT) / 15) % 24
-
-        return TST
+        return true_solar_time
 
     def mean_solar_time(self, longitude) -> np.ndarray:
         """Return mean solar time in decimal hours.
@@ -156,13 +156,10 @@ class Time:
         np.array([10.830667])
         """
 
-        idx = np.where(self._julian % 1 < 0.5)
+        utc_time = 24 * (self._julian % 1) - 12
+        mean_solar_time = (utc_time + np.array(longitude) / 15) % 24
 
-        UTC = 24 * (self._julian % 1) - 12
-        UTC[idx] = UTC[idx] + 12
-        MST = (UTC + np.array(longitude) / 15) % 24
-
-        return MST
+        return mean_solar_time
 
     def true_hour_angle(self, longitude) -> np.ndarray:
         """Return true hour angle in decimal hours.
@@ -214,10 +211,7 @@ class Time:
                   12.47807655])
         """
 
-        TST = self.true_solar_time(longitude=longitude)
-        HRA = (TST - 12) % 24
-
-        return HRA
+        return (self.true_solar_time(longitude) - 12) % 24
 
     def mean_hour_angle(self, longitude) -> np.ndarray:
         """Return mean hour angle in decimal hours.
@@ -266,10 +260,7 @@ class Time:
         np.array([22.83066666])
         """
 
-        MST = self.mean_solar_time(longitude=longitude)
-        HRA = (MST - 12) % 24
-
-        return HRA
+        return (self.mean_solar_time(longitude) - 12) % 24
 
     def ut1(self) -> np.ndarray:
         """Return the universal time (same as GMT) in decimal hours.
@@ -303,9 +294,7 @@ class Time:
                   1.00000])
         """
 
-        ut1 = self.mean_solar_time(longitude=0)
-
-        return ut1
+        return self.mean_solar_time(0)
 
     def julian(self) -> np.ndarray:
         """Convenience method to return Julian times.
@@ -343,19 +332,16 @@ class Time:
                   datetime.datetime(2013, 1, 1, 0, 59, 59, 999987)])
         """
 
-        julian = self._julian
+        year, month, day = from_julian(self._julian)
+        full_days, fractional_day = day.astype(int), day % 1
 
-        year, month, day = from_julian(julian)
-        remainder = day % 1
-        day = day.astype(int)
+        datetime_list = []
+        for y, m, d, f in zip(year, month, full_days, fractional_day):
+            integer_date = datetime(year=y, month=m, day=d)
+            extra_date = timedelta(days=f)
+            datetime_list.append(integer_date + extra_date)
 
-        datetime_arr = np.zeros(julian.shape).astype("O")
-        for i in range(julian.size):
-            y, m, d, r = year[i], month[i], day[i], remainder[i]
-            dt = datetime(year=y, month=m, day=d) + timedelta(days=r)
-            datetime_arr[i] = dt
-
-        return datetime_arr
+        return np.array(datetime_list)
 
     def gmst(self) -> np.ndarray:
         """Return Greenwich Mean Sidereal Time in decimal hours.
@@ -385,17 +371,12 @@ class Time:
                   7.723214])
         """
 
-        T = (self._julian - 2451545) / 36525
-        T2 = T * T
-        T3 = T2 * T
+        T1, T2, T3 = _calculate_elapsed_JD_century_powers(self._julian, 3)
 
-        gmst = 280.46061837
-        gmst = gmst + 360.98564736629 * (self._julian - 2451545)
-        gmst = gmst + 0.000387933 * T2
-        gmst = gmst - T3 / 38710000
-        gmst = gmst % 360 / 15
+        gmst = 280.46061837 + 360.98564736629 * T1 * 36525 + \
+            0.000387933 * T2 - T3 / 38710000
 
-        return gmst
+        return gmst % 360 / 15
 
     def lmst(self, longitude) -> np.ndarray:
         """Return Local Mean Sidereal Time in decimal hours.
@@ -437,11 +418,9 @@ class Time:
         """
 
         hour_angle = self.mean_hour_angle(longitude)
-        alpha_sun = sun_right_ascension(self._julian) / 15
+        right_ascension_of_sun = sun_right_ascension(self._julian) / 15
 
-        lmst = (hour_angle + alpha_sun) % 24
-
-        return lmst
+        return (hour_angle + right_ascension_of_sun) % 24
 
     def gast(self) -> np.ndarray:
         """Return Greenwich Apparent Sidereal Time in decimal hours.
@@ -472,11 +451,9 @@ class Time:
         """
 
         gmst = self.gmst()
-        EoE = equation_of_equinoxes(self._julian) / 3600
+        eqn_of_equinoxes = equation_of_equinoxes(self._julian) / 3600
 
-        gast = gmst + EoE
-
-        return gast
+        return gmst + eqn_of_equinoxes
 
     def last(self, longitude) -> np.ndarray:
         """Return Local Apparent Sidereal Time in hours and degrees.
@@ -514,9 +491,9 @@ class Time:
         """
 
         ut1 = self.ut1()
-        alpha_sun = sun_right_ascension(self._julian) / 15
-        EoE = equation_of_equinoxes(self._julian) / 3600
+        right_ascendion_of_sun = sun_right_ascension(self._julian) / 15
+        eqn_of_equinoxes = equation_of_equinoxes(self._julian) / 3600
 
-        last = (ut1 - 12 + alpha_sun + EoE + np.array(longitude) / 15) % 24
+        last = ut1 - 12 + right_ascendion_of_sun + eqn_of_equinoxes + np.array(longitude) / 15
 
-        return last
+        return last % 24

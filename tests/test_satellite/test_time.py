@@ -12,8 +12,8 @@ class TestTime(TestCase):
 
     def setUp(self):
 
-        self.julData = [2455368.75, 2459450.85, 2456293.5416666665]
-        self.astropy_time = time.Time(self.julData, format="jd")
+        self.julian = [2455368.75, 2459450.85, 2456293.5416666665]
+        self.astropy_time = time.Time(self.julian, format="jd")
 
     def test_true_solar_time(self):
         """Test `Time.true_solar_time`.
@@ -33,14 +33,13 @@ class TestTime(TestCase):
         """
 
         julian = [2455368.75, 2459450.85, 2456293.5416666665]
-        lon = [-105, -118.24, 147.46]
-        tst = np.array([23.0715, 0.378059, 10.76556])
+        longitude = [-105, -118.24, 147.46]
 
-        calc_tst = Time(julian=julian).true_solar_time(longitude=lon)
+        true_true_solar_time = np.array([23.0715, 0.378059, 10.76556])
+        test_true_solar_time = Time(julian).true_solar_time(longitude)
 
-        for i in range(calc_tst.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(tst[i], calc_tst[i], delta=0.11)
+        self.assertTrue(np.allclose(true_true_solar_time, test_true_solar_time,
+                        atol=0.11))
 
     def test_mean_solar_time(self):
         """Test `Time.mean_solar_time`.
@@ -55,15 +54,14 @@ class TestTime(TestCase):
            http://www.bom.gov.au/climate/data-services/solar/content/data-time.html.
         """
 
-        julData = 2456293.5416666665
-        lon = 147.46
-        tst = np.array([10.83056])
+        julian = 2456293.5416666665
+        longitude = 147.46
 
-        calc_tst = Time(julian=julData).mean_solar_time(longitude=lon)
+        true_mean_solar_time = np.array([10.83056])
+        test_mean_solar_time = Time(julian).mean_solar_time(longitude)
 
-        for i in range(calc_tst.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(tst[i], calc_tst[i], delta=0.001)
+        self.assertTrue(np.allclose(true_mean_solar_time, test_mean_solar_time,
+                        atol=0.001))
 
     def test_true_hour_angle(self):
         """Test `Time.true_hour_angle`.
@@ -79,148 +77,90 @@ class TestTime(TestCase):
            https://gml.noaa.gov/grad/solcalc/.
         """
 
-        julData = [2455368.75, 2459450.85, 2456293.5416666665]
-        lon = [-105, -118.24, 147.46]
-        hour_angle = np.array([166.0734, 185.671, 341.53]) / 15 % 24
+        julian = [2455368.75, 2459450.85, 2456293.5416666665]
+        longitude = [-105, -118.24, 147.46]
 
-        calc_hour_angle = Time(julian=julData).true_hour_angle(longitude=lon)
+        true_true_hour_angle = np.array([166.0734, 185.671, 341.53]) / 15 % 24
+        test_true_hour_angle = Time(julian).true_hour_angle(longitude)
 
-        for i in range(calc_hour_angle.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(hour_angle[i], calc_hour_angle[i],
-                                       delta=1.51)
+        self.assertTrue(np.allclose(true_true_hour_angle, test_true_hour_angle,
+                        atol=1.51))
 
     def test_mean_hour_angle(self):
-        """Test `Time.true_hour_angle`.
 
-        Notes
-        -----
-        Test cases are self generated using the definition of the mean hour
-        angle.
-        """
+        julian = 2456293.5416666665
+        longitude = 147.46
 
-        julData = 2456293.5416666665
-        lon = 147.46
-        hour_angle = np.array([342.4584]) / 15 % 24
+        true_mean_hour_angle = np.array([342.4584]) / 15 % 24
+        test_mean_hour_angle = Time(julian).mean_hour_angle(longitude)
 
-        calc_hour_angle = Time(julian=julData).mean_hour_angle(longitude=lon)
-
-        for i in range(calc_hour_angle.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(hour_angle[i], calc_hour_angle[i],
-                                       delta=0.01)
+        self.assertTrue(np.allclose(true_mean_hour_angle, test_mean_hour_angle,
+                        atol=0.01))
 
     def test_ut1(self):
-        """Test `Time.UT1`.
 
-        Notes
-        -----
-        Test cases are generated using the `Astropy` Python package.
-        """
+        ut1_utc_diff = self.astropy_time.get_delta_ut1_utc().value / 3600
 
-        dt = self.astropy_time.get_delta_ut1_utc().value / 3600
+        true_ut1 = self.astropy_time.to_value("decimalyear") % 1
+        true_ut1 = (true_ut1 * 365 * 24) % 24 + ut1_utc_diff
+        test_ut1 = Time(self.julian).ut1()
 
-        ut1 = self.astropy_time.to_value("decimalyear") % 1
-        ut1 = (ut1 * 365 * 24) % 24 + dt
-
-        calc_ut1 = Time(julian=self.julData).ut1()
-
-        for i in range(calc_ut1.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(ut1[i], calc_ut1[i], delta=0.001)
+        self.assertTrue(np.allclose(true_ut1, test_ut1, atol=0.001))
 
     def test_julian(self):
-        """Test `Time.julian`."""
 
-        calc_julian = Time(julian=self.julData).julian()
-
-        for i in range(calc_julian.size):
-            with self.subTest(i=i):
-                self.assertEqual(self.julData[i], calc_julian[i])
+        test_julian = Time(julian=self.julian).julian()
+        self.assertTrue(np.array_equal(self.julian, test_julian))
 
     def test_datetime(self):
-        """Test `Time.datetime`."""
 
-        calc_datetime = Time(julian=self.julData).datetime()
+        test_datetime = Time(julian=self.julian).datetime()
 
-        for i in range(calc_datetime.size):
-            with self.subTest(i=i):
-                dt = jd.from_jd(self.julData[i])
+        for julian, test_datetime_instace in zip(self.julian, test_datetime):
+            true_datetime_instance = jd.from_jd(julian)
 
-                self.assertEqual(calc_datetime[i].year, dt.year)
-                self.assertEqual(calc_datetime[i].month, dt.month)
-                self.assertEqual(calc_datetime[i].day, dt.day)
-                self.assertEqual(calc_datetime[i].second, dt.second)
-                self.assertAlmostEqual(calc_datetime[i].microsecond,
-                                       dt.microsecond, delta=1)
+            self.assertEqual(test_datetime_instace.year,
+                             true_datetime_instance.year)
+            self.assertEqual(test_datetime_instace.month,
+                             true_datetime_instance.month)
+            self.assertEqual(test_datetime_instace.day,
+                             true_datetime_instance.day)
+            self.assertEqual(test_datetime_instace.second,
+                             true_datetime_instance.second)
+            self.assertAlmostEqual(test_datetime_instace.microsecond,
+                                   true_datetime_instance.microsecond, delta=1)
 
     def test_gmst(self):
-        """Test `Time.gmst`.
 
-        Notes
-        -----
-        Test cases are generated using the `Astropy` Python package.
-        """
+        true_gmst = self.astropy_time.sidereal_time("mean", "greenwich")
+        true_gmst = coordinates.Angle(true_gmst).hour
+        test_gmst = Time(self.julian).gmst()
 
-        gmst = self.astropy_time.sidereal_time("mean", "greenwich")
-        gmst = coordinates.Angle(gmst).hour
-
-        calc_gmst = Time(julian=self.julData).gmst()
-
-        for i in range(calc_gmst.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(gmst[i], calc_gmst[i], delta=0.0001)
+        self.assertTrue(np.allclose(true_gmst, test_gmst, atol=0.0001))
 
     def test_lmst(self):
-        """Test `Time.lmst`.
 
-        Notes
-        -----
-        Test cases are generated using the `Astropy` Python package.
-        """
+        true_lmst = self.astropy_time.sidereal_time("mean", longitude="150")
+        true_lmst = coordinates.Angle(true_lmst).hour
+        test_lmst = Time(self.julian).lmst(150)
 
-        lmst = self.astropy_time.sidereal_time("mean", longitude="150")
-        lmst = coordinates.Angle(lmst).hour
-
-        calc_lmst = Time(julian=self.julData).lmst(longitude=150)
-
-        for i in range(calc_lmst.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(lmst[i], calc_lmst[i], delta=0.1)
+        self.assertTrue(np.allclose(true_lmst, test_lmst, atol=0.1))
 
     def test_gast(self):
-        """Test `Time.gast`.
 
-        Notes
-        -----
-        Test cases are generated using the `Astropy` Python package.
-        """
+        true_gast = self.astropy_time.sidereal_time("apparent", "greenwich")
+        true_gast = coordinates.Angle(true_gast).hour
+        test_gast = Time(self.julian).gast()
 
-        gast = self.astropy_time.sidereal_time("apparent", "greenwich")
-        gast = coordinates.Angle(gast).hour
-
-        calc_gast = Time(julian=self.julData).gast()
-
-        for i in range(calc_gast.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(gast[i], calc_gast[i], delta=0.0001)
+        self.assertTrue(np.allclose(true_gast, test_gast, atol=0.0001))
 
     def test_last(self):
-        """Test `Time.last`.
 
-        Notes
-        -----
-        Test cases are generated using the `Astropy` Python package.
-        """
-
-        last = self.astropy_time.sidereal_time("apparent", longitude="150")
-        last = coordinates.Angle(last).hour
-
-        calc_last = Time(julian=self.julData).last(longitude=150)
-
-        for i in range(calc_last.size):
-            with self.subTest(i=i):
-                self.assertAlmostEqual(last[i], calc_last[i], delta=0.1)
+        true_last = self.astropy_time.sidereal_time("apparent", longitude="150")
+        true_last = coordinates.Angle(true_last).hour
+        test_last = Time(self.julian).last(150)
+        
+        self.assertTrue(np.allclose(true_last, test_last, atol=0.1))
 
 
 if __name__ == "__main__":
