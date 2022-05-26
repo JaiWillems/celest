@@ -179,6 +179,8 @@ class WindowHandler:
         self.windows = pd.concat([self.windows, partial_window_series])
         self.windows.sort_index(inplace=True)
 
+        self._length += 1
+
     def get_window(self, julian) -> Literal[VTW, OW]:
         """Return window closest to julian time.
 
