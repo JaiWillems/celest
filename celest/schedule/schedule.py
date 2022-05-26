@@ -24,10 +24,10 @@ class Request:
         Deadline of the request in Julian days.
     duration : float
         Duration of the request in seconds.
-    priority : float, optional
-        Priority of the request. The default is 1.
-    quality : float, optional
-        Quality of the request. The default is 1.
+    priority : float
+        Priority of the request.
+    quality : float
+        Quality of the request.
     look_ang : float, optional
         Look angle of the request. The default is None.
 
@@ -51,7 +51,7 @@ class Request:
         The scheduled duration of the request in seconds.
     """
 
-    def __init__(self, location, deadline, duration, priority=1, quality=1,
+    def __init__(self, location, deadline, duration, priority, quality,
                  look_ang=None) -> None:
 
         self.location = location
@@ -93,7 +93,7 @@ class Schedule(ALNS):
         self.requests = []
 
     def add_request(self, location, deadline, duration, priority=1,
-                    look_ang=None) -> None:
+                    quality=1, look_ang=None) -> None:
         """Add an encounter request to the satellite.
 
         Parameters
@@ -109,15 +109,17 @@ class Schedule(ALNS):
 
             If all requests have the same priority, the algorithm will
             maximize the number of requests scheduled.
+        quality : int, optional
+            Encounter quality on a range from 1 to 10, by default 1.
         look_ang : float, optional
             A specific encounter look angle, by default None.
         """
 
-        rq = Request(location, deadline, duration, priority, look_ang)
+        request = Request(location, deadline, duration, priority, quality, look_ang)
         vtws = generate_vtw(self.satellite, location, self.vis_threshold, 1)
-        rq._add_vtw_info(vtws.to_numpy())
+        request._add_vtw_info(vtws.to_numpy())
 
-        self.requests.append(rq)
+        self.requests.append(request)
 
     def generate(self, max_iter, annealing_coeff, react_factor) -> OWHandler:
         """Return a near optimal schedule.
@@ -143,18 +145,24 @@ class Schedule(ALNS):
 
         super().__init__(_initial_solution(self.requests))
 
-        self.add_cost_func(_cost)
-        self.add_destroy_funcs(_REMOVAL_FUNCTIONS)
-        self.add_repair_funcs(_INSERTION_FUNCTIONS)
-        self.add_is_complete_func(_is_complete)
+        self.add_cost_function(_cost)
+        self.add_destroy_functions(_REMOVAL_FUNCTIONS)
+        self.add_repair_functions(_INSERTION_FUNCTIONS)
+        self.add_completeness_function(_is_complete)
 
-        na = len(self.requests)
-        nr = math.ceil(na / 4)
+        additions_per_iteration = len(self.requests)
+        removal_per_iterations = math.ceil(additions_per_iteration / 4)
 
-        xb = self.solve(max_iter, annealing_coeff, react_factor, nr, na)
+        best_solution = self.solve(max_iter, annealing_coeff, react_factor,
+                                   removal_per_iterations,
+                                   additions_per_iteration)
 
-        soln = OWHandler()
-        for request in xb:
+        return self._generate_OWHandler_from_request_list(best_solution)
+    
+    def _generate_OWHandler_from_request_list(self, request_list):
+
+        ow_handler = OWHandler()
+        for request in request_list:
 
             if request.is_scheduled:
 
@@ -165,6 +173,6 @@ class Schedule(ALNS):
 
                 ow = OW(request.scheduled_start, request.scheduled_duration,
                         request.location, request.deadline, roll, pitch, yaw)
-                soln._add_window(ow)
+                ow_handler._add_window(ow)
 
-        return soln
+        return ow_handler
