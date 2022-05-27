@@ -1,5 +1,29 @@
 
 
+def _get_OW_start(vtw, look_ang) -> float:
+    """Return observation window start time.
+
+    Parameters
+    ----------
+    vtw : VTW
+        Visible time window under consideration.
+    look_ang : float
+        Encounter look angle.
+
+    Returns
+    -------
+    float
+        Observation window start time.
+    """
+
+    if look_ang is not None:
+        start = _look_ang_time(vtw.pitch, look_ang, vtw.rise_time, vtw.set_time)
+    else:
+        start = (vtw.rise_time + vtw.set_time - vtw.duration / 86400) / 2
+
+    return start
+
+
 def _look_ang_time(pitch_stroke, look_ang, rise_time, set_time, tol=1e-5) -> float:
     """Return the time where the look angle is acheived.
 
@@ -45,30 +69,6 @@ def _look_ang_time(pitch_stroke, look_ang, rise_time, set_time, tol=1e-5) -> flo
             l, fl = c, fc
 
     return (l + r) / 2
-
-
-def _get_OW_start(vtw, look_ang) -> float:
-    """Return observation window start time.
-
-    Parameters
-    ----------
-    vtw : VTW
-        Visible time window under consideration.
-    look_ang : float
-        Encounter look angle.
-
-    Returns
-    -------
-    float
-        Observation window start time.
-    """
-
-    if look_ang is not None:
-        start = _look_ang_time(vtw.pitch, look_ang, vtw.rise_time, vtw.set_time)
-    else:
-        start = (vtw.rise_time + vtw.set_time) / 2
-
-    return start
 
 
 def _insert_conflict(request_list, start, duration) -> bool:
@@ -150,108 +150,6 @@ def _insert_window(request_list, i) -> bool:
     return False
 
 
-def _overlap(vtw1, vtw2) -> bool:
-    """Check if two visible time windows overlap.
-
-    Parameters
-    ----------
-    vtw1, vtw2 : VTW
-
-    Returns
-    -------
-    bool
-        Returns True if an overlap exists, otherwise False.
-    """
-
-    s1, s2 = vtw1.rise_time, vtw2.rise_time
-    e1, e2 = vtw1.set_time, vtw2.set_time
-
-    if (e1 < s2) | (e2 < s1):
-        return False
-    else:
-        return True
-
-
-def _over(request_list, curr_vtw) -> list:
-    """Determine the set of overlapping visible time windows.
-
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    curr_vtw : VTW
-
-    Returns
-    -------
-    list
-        List of visible time windows overlapping with `curr_vtw`.
-    """
-
-    overlap_vtws = []
-
-    for request in request_list:
-        for vtw in request.vtws:
-
-            if _overlap(curr_vtw, vtw):
-                overlap_vtws.append(vtw)
-
-    return overlap_vtws
-
-
-def _time_span(vtw1, vtw2) -> float:
-    """Return the overlap between two visible time windows.
-
-    Parameters
-    ----------
-    vtw1, vtw2 : VTW
-
-    Returns
-    -------
-    float
-        The overlap between the two visible time windows in Julian days.
-    """
-
-    s1, s2 = vtw1.rise_time, vtw2.rise_time
-    e1, e2 = vtw1.set_time, vtw2.set_time
-
-    if (e1 < s2) | (e2 < s1):
-        return 0
-    elif (s1 < s2) & (e2 < e1):
-        return e2 - s2
-    elif (s2 < s1) & (e1 < e2):
-        return e1 - s1
-    elif s2 < e1:
-        return e1 - s2
-    elif s1 < e2:
-        return e2 - s1
-
-
-def _conflict_degree(request_list, vtw) -> float:
-    """Return the conflict degree of `vtw`.
-
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    vtw : VTW
-
-    Returns
-    -------
-    float
-        The conflict degree of `vtw`.
-    """
-
-    over = _over(request_list, vtw)
-    time_sum = 0
-
-    for tw in over:
-        time_sum += _time_span(vtw, tw)
-
-    cd = time_sum / len(over)
-
-    return cd
-
-
 def _min_conflict_degree(request_list, i) -> list:
     """Return the vtw conflict degrees for the ith request.
 
@@ -281,3 +179,105 @@ def _min_conflict_degree(request_list, i) -> list:
     cd_arr = sorted(cd_arr, key=lambda x: x[0])
 
     return cd_arr
+
+
+def _conflict_degree(request_list, vtw) -> float:
+    """Return the conflict degree of `vtw`.
+
+    Parameters
+    ----------
+    request_list : list
+        List of requests.
+    vtw : VTW
+
+    Returns
+    -------
+    float
+        The conflict degree of `vtw`.
+    """
+
+    over = _over(request_list, vtw)
+    time_sum = 0
+
+    for tw in over:
+        time_sum += _time_span(vtw, tw)
+
+    cd = time_sum / len(over)
+
+    return cd
+
+
+def _over(request_list, curr_vtw) -> list:
+    """Determine the set of overlapping visible time windows.
+
+    Parameters
+    ----------
+    request_list : list
+        List of requests.
+    curr_vtw : VTW
+
+    Returns
+    -------
+    list
+        List of visible time windows overlapping with `curr_vtw`.
+    """
+
+    overlap_vtws = []
+
+    for request in request_list:
+        for vtw in request.vtws:
+
+            if _overlap(curr_vtw, vtw):
+                overlap_vtws.append(vtw)
+
+    return overlap_vtws
+
+
+def _overlap(vtw1, vtw2) -> bool:
+    """Check if two visible time windows overlap.
+
+    Parameters
+    ----------
+    vtw1, vtw2 : VTW
+
+    Returns
+    -------
+    bool
+        Returns True if an overlap exists, otherwise False.
+    """
+
+    s1, s2 = vtw1.rise_time, vtw2.rise_time
+    e1, e2 = vtw1.set_time, vtw2.set_time
+
+    if (e1 < s2) | (e2 < s1):
+        return False
+    else:
+        return True
+
+
+def _time_span(vtw1, vtw2) -> float:
+    """Return the overlap between two visible time windows.
+
+    Parameters
+    ----------
+    vtw1, vtw2 : VTW
+
+    Returns
+    -------
+    float
+        The overlap between the two visible time windows in Julian days.
+    """
+
+    s1, s2 = vtw1.rise_time, vtw2.rise_time
+    e1, e2 = vtw1.set_time, vtw2.set_time
+
+    if (e1 < s2) | (e2 < s1):
+        return 0
+    elif (s1 < s2) & (e2 < e1):
+        return e2 - s2
+    elif (s2 < s1) & (e1 < e2):
+        return e1 - s1
+    elif s2 < e1:
+        return e1 - s2
+    elif s1 < e2:
+        return e2 - s1

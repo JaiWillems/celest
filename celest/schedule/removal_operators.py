@@ -152,3 +152,4 @@ _REMOVAL_FUNCTIONS = [
     opportunity_removal,
     conflict_removal
 ]
+    
