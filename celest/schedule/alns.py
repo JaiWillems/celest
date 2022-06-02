@@ -1,6 +1,6 @@
 
 
-from typing import Any, List, Callable
+from typing import Any, Callable, List
 import copy
 import math
 import random
@@ -74,8 +74,9 @@ class ALNS:
         """
 
         self.completeness_function = completeness_function
-    
-    def solve(self, max_iter: int, p: float, l: float, number_to_remove: int, number_to_add: int) -> Any:
+
+    def solve(self, max_iter: int, p: float, l: float, number_to_remove: int,
+              number_to_add: int) -> Any:
         """Determine the optimal solution.
 
         Parameters
@@ -113,8 +114,8 @@ class ALNS:
             j = self._get_repair_index()
 
             temporary_solution = copy.deepcopy(current_solution)
-            temporary_solution = self._get_destroy_function(i)(temporary_solution, number_to_remove)
-            temporary_solution = self._get_repair_function(j)(temporary_solution, number_to_add)
+            self._get_destroy_function(i)(temporary_solution, number_to_remove)
+            self._get_repair_function(j)(temporary_solution, number_to_add)
             score = _REJECT_SCORE
 
             if self._accept(temporary_solution, current_solution, temperature):
@@ -147,11 +148,10 @@ class ALNS:
             Index of the destroy function to be used.
         """
 
-        p = self._get_probabilities(self.destroy_weights)
-        i = random.choices([j for j in range(len(self.destroy_functions))], p)[0]
+        probabilities = self._get_probabilities(self.destroy_weights)
+        return random.choices([i for i in range(len(self.destroy_functions))],
+                              probabilities)[0]
 
-        return i
-    
     def _get_probabilities(self, weights: list) -> list:
         """Get probabilities from weights.
 
@@ -166,10 +166,8 @@ class ALNS:
             list of probabilities.
         """
 
-        s = sum(weights)
-        p = [w / s for w in weights]
-
-        return p
+        weight_sum = sum(weights)
+        return [weight / weight_sum for weight in weights]
 
     def _get_repair_index(self) -> int:
         """Return index of the repair function to be used.
@@ -180,17 +178,16 @@ class ALNS:
             Index of the repair function to be used.
         """
 
-        p = self._get_probabilities(self.repair_weights)
-        i = random.choices([j for j in range(len(self.repair_functions))], p)[0]
+        probabilities = self._get_probabilities(self.repair_weights)
+        return random.choices([i for i in range(len(self.repair_functions))],
+                              probabilities)[0]
 
-        return i
-
-    def _get_destroy_function(self, i) -> Callable:
-        """Return destroy function at index i.
+    def _get_destroy_function(self, destroy_function_index) -> Callable:
+        """Return destroy function at index.
 
         Parameters
         ----------
-        i : int
+        destroy_function_index : int
             Destroy function index.
 
         Returns
@@ -198,14 +195,14 @@ class ALNS:
         function
         """
 
-        return self.destroy_functions[i]
+        return self.destroy_functions[destroy_function_index]
 
-    def _get_repair_function(self, i) -> Callable:
-        """Return repair function at index i.
+    def _get_repair_function(self, repair_function_index) -> Callable:
+        """Return repair function at index.
 
         Parameters
         ----------
-        i : int
+        repair_function_index : int
             Repair function index.
 
         Returns
@@ -213,9 +210,10 @@ class ALNS:
         function
         """
 
-        return self.repair_functions[i]
-    
-    def _accept(self, temporary_solution: Any, current_solution: Any, T: float) -> bool:
+        return self.repair_functions[repair_function_index]
+
+    def _accept(self, temporary_solution: Any, current_solution: Any,
+                T: float) -> bool:
         """Accpetance criterion.
 
         This method implements a simulated annealing acceptance criterion.
@@ -241,11 +239,12 @@ class ALNS:
         if temporary_cost < current_cost:
             return True
         else:
-            probability = math.exp(100 * (temporary_cost - current_cost) / 
+            probability = math.exp(100 * (temporary_cost - current_cost) /
                                    (T * current_cost))
             return random.choices([False, True], [1 - probability, probability])[0]
 
-    def _update_destroy_weights(self, l: float, score: int, i: int) -> None:
+    def _update_destroy_weights(self, l: float, score: int,
+                                destroy_function_index: int) -> None:
         """Update the destroy weights.
 
         Parameters
@@ -257,13 +256,16 @@ class ALNS:
             performance of the destroy function.
         score : int
             Score update of the destroy function.
-        i : int
+        destroy_function_index : int
             Destroy function index.
         """
 
-        self.destroy_weights[i] = (1 - l) * self.destroy_weights[i] + l * score / _SUM_SCORE
+        carry_over = (1 - l) * self.destroy_weights[destroy_function_index]
+        update = l * score / _SUM_SCORE
+        self.destroy_weights[destroy_function_index] = carry_over + update
 
-    def _update_repair_weights(self, l: float, score: int, i: int) -> None:
+    def _update_repair_weights(self, l: float, score: int,
+                               repair_function_index: int) -> None:
         """Update the repair weights.
 
         Parameters
@@ -275,8 +277,10 @@ class ALNS:
             performance of the repair function.
         score : int
             Score update of the repair function.
-        i : int
+        repair_function_index : int
             Repair function index.
         """
 
-        self.repair_weights[i] = (1 - l) * self.repair_weights[i] + l * score / _SUM_SCORE
+        carry_over = (1 - l) * self.repair_weights[repair_function_index]
+        update = l * score / _SUM_SCORE
+        self.repair_weights[repair_function_index] = carry_over + update
