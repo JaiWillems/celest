@@ -1,119 +1,120 @@
 
 
-from celest.schedule.adaptation_utils import (
-    _insert_window,
-    _min_conflict_degree,
-    _get_OW_start,
-    _insert_conflict
-)
+import math
 
 
-def greedy_insertion(request_list, q):
-    """Insert requests with highest priority.
+def greedy_insertion(request_handler, number_to_insert):
 
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    q : int
-        The number of requests to insert.
+    request_handler.sort_by_decreasing_priority()
+    insert_first_n_requests(request_handler, number_to_insert)
 
-    Returns
-    -------
-    list
-        List of requests with items inserted.
-    """
 
-    request_list = sorted(request_list, key=lambda x: x.priority, reverse=True)
+def insert_first_n_requests(request_handler, number_to_insert):
 
-    for i, request in enumerate(request_list):
+    for request_index in range(request_handler.number_of_requests):
 
-        if not request.is_scheduled:
-            if _insert_window(request_list, i):
-                q -= 1
-        if q == 0:
+        if not number_to_insert:
             break
 
-    return request_list
+        if request_handler.is_request_scheduled(request_index):
+            continue
 
+        deadline = request_handler.deadline(request_index)
+        duration = request_handler.duration(request_index)
+        minimum_image_quality = request_handler.image_quality(request_index)
+        look_angle = request_handler.look_angle(request_index)
+        request_vtw_list = request_handler.vtw_list(request_index)
 
-def minimum_opportunity_insertion(request_list, q):
-    """Insert requests with the fewest number of vtws.
+        duration_in_days = duration / 86400
 
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    q : int
-        The number of requests to insert.
+        for vtw_index, vtw in enumerate(request_vtw_list):
 
-    Returns
-    -------
-    list
-        List of requests with items inserted.
-    """
+            if look_angle is not None:
+                start = _look_angle_time(vtw.pitch, look_angle, vtw.rise_time, vtw.set_time)
+                if start is None:
+                    continue
+            else:
+                start = (vtw.rise_time + vtw.set_time + duration_in_days) / 2
 
-    request_list = sorted(request_list, key=lambda x: len(x.vtws))
+            if (start < vtw.rise_time) or (start + duration_in_days > vtw.set_time):
+                continue
+            if start + duration_in_days > deadline:
+                continue
+            if not image_quality_is_met(vtw, start, minimum_image_quality):
+                continue
+            if does_conflict_exists(request_handler, start, duration):
+                continue
 
-    for i, request in enumerate(request_list):
-
-        if not request.is_scheduled:
-            if _insert_window(request_list, i):
-                q -= 1
-        if q == 0:
+            request_handler.schedule_request(request_index, vtw_index, start, duration)
+            number_to_insert -= 1
             break
 
-    return request_list
+
+def _look_angle_time(look_angle, desired_look_angle, start, end, tol=1e-6):
+
+    look_angle = look_angle - desired_look_angle
+
+    left_value = start
+    right_value = end
+
+    left_look_angle = look_angle(left_value)
+    right_look_angle = look_angle(right_value)
+
+    if left_look_angle * right_look_angle > 0:
+        return None
+
+    while (right_value - left_value > tol):
+        mid_value = (left_value + right_value) / 2
+        mid_look_angle = look_angle(mid_value)
+        if left_look_angle * mid_look_angle > 0:
+            left_value = mid_value
+            left_look_angle = mid_look_angle
+        else:
+            right_value = mid_value
+            right_look_angle = mid_look_angle
+
+    return (left_value + right_value) / 2
 
 
-def minimum_conflict_insertion(request_list, q) -> list:
-    """Insert q requests with the minimum conflict degree.
+def image_quality_is_met(vtw, start, minimum_image_quality):
 
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    q : int
-        The number of requests to insert.
+    return image_quality(vtw, start) >= minimum_image_quality
 
-    Returns
-    -------
-    list
-        List of requests with items inserted.
-    """
 
-    for i, request in enumerate(request_list):
+def image_quality(vtw, start):
 
-        if not request.is_scheduled:
-            cd_info = _min_conflict_degree(request_list, i)
+    nadir_time = (vtw.rise_time + vtw.set_time) / 2
+    return math.floor(10 - 9 * abs(start - nadir_time) / (nadir_time - vtw.rise_time))
 
-            for _, j in cd_info:
 
-                vtw = request.vtws[j]
+def does_conflict_exists(request_handler, start, duration_in_days):
 
-                start = _get_OW_start(vtw, request.look_ang)
-                duration = request.duration
+    for request in request_handler:
+        if not request[0]:
+            continue
+        scheduled_start = request[2]
+        scheduled_end = scheduled_start + request[3] / 86400
 
-                if start + duration / 86400 > vtw.set_time:
-                    continue
-                if start + duration / 86400 > request.deadline:
-                    continue
-                if _insert_conflict(request_list, start, duration):
-                    continue
+        if start < scheduled_start and scheduled_start < start + duration_in_days:
+            return True
+        if start < scheduled_end and scheduled_end < start + duration_in_days:
+            return True
+        if scheduled_start < start and start + duration_in_days < scheduled_end:
+            return True
 
-                request.is_scheduled = True
-                request.scheduled_idx = j
-                request.scheduled_start = start
-                request.scheduled_duration = duration
+    return False
 
-                q -= 1
 
-                break
+def minimum_opportunity_insertion(request_handler, number_to_insert):
 
-        if q == 0:
-            break
+    request_handler.sort_by_decreasing_opportunity()
+    insert_first_n_requests(request_handler, number_to_insert)
 
-    return request_list
+
+def minimum_conflict_insertion(request_handler, number_to_insert):
+
+    request_handler.sort_vtws_by_increasing_conflict_degree()
+    insert_first_n_requests(request_handler, number_to_insert)
 
 
 _INSERTION_FUNCTIONS = [

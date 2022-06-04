@@ -1,149 +1,63 @@
 
 
-from celest.schedule.adaptation_utils import _conflict_degree
 import random
 
 
-def random_removal(request_list, q) -> list:
-    """Randomly remove q requestrs from the request list.
+def random_removal(request_handler, number_to_remove):
 
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    q : int
-        The number of requests to remove.
+    if number_to_remove > request_handler.number_of_scheduled_requests:
+        request_handler.unschedule_all_requests()
+        return request_handler
 
-    Return
-    ------
-    list
-        The request list with items removed.
-    """
+    while (number_to_remove > 0):
+        request_index = random.randint(0, len(request_handler.requests) - 1)
+        if request_handler.is_request_scheduled(request_index):
+            request_handler.unschedule_request(request_index)
+            number_to_remove -= 1
 
-    while q > 0:
-
-        i = random.randint(0, len(request_list) - 1)
-
-        if request_list[i].is_scheduled:
-
-            request_list[i].is_scheduled = False
-            request_list[i].scheduled_idx = None
-            request_list[i].scheduled_start = None
-            request_list[i].scheduled_duration = None
-
-            q -= 1
-
-    return request_list
+    return request_handler
 
 
-def priority_removal(request_list, q) -> list:
-    """Remove q requests with the lowest priority from the request list.
+def priority_removal(request_handler, number_to_remove):
 
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    q : int
-        The number of requests to remove.
+    if number_to_remove >= request_handler.number_of_scheduled_requests:
+        request_handler.unschedule_all_requests()
+        return request_handler
 
-    Return
-    ------
-    list
-        The request list with items removed.
-    """
-
-    request_list = sorted(request_list, key=lambda x: x.priority, reverse=True)
-
-    i = 0
-    while (q > 0) and (i < len(request_list)):
-
-        if request_list[i].is_scheduled:
-
-            request_list[i].is_scheduled = False
-            request_list[i].scheduled_idx = None
-            request_list[i].scheduled_start = None
-            request_list[i].scheduled_duration = None
-
-            q -= 1
-
-        i += 1
-
-    return request_list
+    request_handler.sort_by_decreasing_priority()
+    return remove_first_n_scheduled_requests(request_handler, number_to_remove)
 
 
-def opportunity_removal(request_list, q) -> list:
-    """Remove q requests with the most number of vtws from the request list.
+def remove_first_n_scheduled_requests(request_handler, number_to_remove):
 
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    q : int
-        The number of requests to remove.
+    index = 0
+    while (number_to_remove > 0):
+        if request_handler.is_request_scheduled(index):
+            request_handler.unschedule_request(index)
+            number_to_remove -= 1
+        index += 1
 
-    Return
-    ------
-    list
-        The request list with items removed.
-    """
-
-    request_list = sorted(request_list, key=lambda x: len(x.vtws), reverse=True)
-
-    i = 0
-    while (q > 0) and (i < len(request_list)):
-
-        if request_list[i].is_scheduled:
-
-            request_list[i].is_scheduled = False
-            request_list[i].scheduled_idx = None
-            request_list[i].scheduled_start = None
-            request_list[i].scheduled_duration = None
-
-            q -= 1
-
-        i += 1
-
-    return request_list
+    return request_handler
 
 
-def conflict_removal(request_list, q) -> list:
-    """Remove q requests with the highest conflict degree.
+def opportunity_removal(request_handler, number_to_remove):
 
-    Parameters
-    ----------
-    request_list : list
-        List of requests.
-    q : int
-        The number of requests to remove.
+    if number_to_remove >= request_handler.number_of_scheduled_requests:
+        request_handler.unschedule_all_requests()
+        return request_handler
 
-    Returns
-    -------
-    list
-        The request list with items removed.
-    """
+    request_handler.sort_by_decreasing_opportunity()
+    return remove_first_n_scheduled_requests(request_handler, number_to_remove)
 
-    cd_arr = []
-    for i, request in enumerate(request_list):
 
-        if request.is_scheduled:
+def conflict_removal(request_handler, number_to_remove):
 
-            idx = request.scheduled_idx
-            cd = _conflict_degree(request_list, request.vtws[idx])
-            cd_arr.append((i, cd))
+    if number_to_remove >= request_handler.number_of_scheduled_requests:
+        request_handler.unschedule_all_requests()
+        return request_handler
 
-    for i, _ in sorted(cd_arr, key=lambda x: x[1], reverse=True):
-
-        request_list[i].is_scheduled = False
-        request_list[i].scheduled_idx = None
-        request_list[i].scheduled_start = None
-        request_list[i].scheduled_duration = None
-
-        q -= 1
-
-        if q == 0:
-            break
-
-    return request_list
+    request_handler.sort_by_decreasing_conflict_degree()
+    return remove_first_n_scheduled_requests(request_handler, number_to_remove)
 
 
 _REMOVAL_FUNCTIONS = [
