@@ -1,6 +1,7 @@
 
 
 from celest.units.core import NamedUnit
+from celest import units as u
 from unittest import TestCase
 
 
@@ -37,3 +38,33 @@ class TestToString(TestCase):
         composite_unit = NamedUnit("m", 'meter') / NamedUnit("s", 'second') ** 2
         composite_unit = 5 * composite_unit
         self.assertEqual(str(composite_unit), "5 m / s2")
+
+
+class TestGetUnitDimensionalityString(TestCase):
+
+    def test_get_dimension_string_from_elementary_length_unit(self):
+        self.assertEqual("L", u.m.dimension)
+
+    def test_get_dimension_string_from_elementary_time_unit(self):
+        self.assertEqual("T", u.s.dimension)
+
+    def test_get_dimension_string_from_elementary_angle_unit(self):
+        self.assertEqual("A", u.deg.dimension)
+
+    def test_get_dimension_string_with_no_denominator_unit(self):
+        self.assertEqual("L3", (u.m ** 3).dimension)
+
+    def test_get_dimension_string_with_no_numerator_unit(self):
+        self.assertEqual("1 / L3", (u.m ** -3).dimension)
+
+    def test_get_dimension_string_from_non_repeating_compound_unit(self):
+        self.assertEqual("L A / T3", (u.m * u.deg / u.s ** 3).dimension)
+
+    def test_get_dimension_string_with_repeating_numerator(self):
+        self.assertEqual("L2 / T3", (u.m * u.km / u.s ** 3).dimension)
+
+    def test_get_dimension_string_with_repeating_denominator(self):
+        self.assertEqual("L / T4", (u.m / (u.s ** 3 * u.min)).dimension)
+
+    def test_get_dimension_string_with_cancelling_dimensions(self):
+        self.assertEqual("L / T2", (u.m * u.min / u.s ** 3).dimension)
