@@ -1,6 +1,6 @@
 
 
-from celest.units.display import _to_string
+from celest.units.display import _to_string, get_dimension_string
 
 
 class BaseUnit:
@@ -11,6 +11,10 @@ class BaseUnit:
 
     def __str__(self):
         return _to_string(self)
+
+    @property
+    def dimension(self):
+        return get_dimension_string(self)
 
     @property
     def scale(self):
