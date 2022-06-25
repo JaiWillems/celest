@@ -25,7 +25,9 @@ class TestQuantity(TestCase):
         self.assertEqual("Quantity(5, Unit(\"m\"))", repr(self.simple_quantity))
 
     def test_to_with_same_dimension(self):
-        self.assertEqual(0.005, self.simple_quantity.to(u.km))
+        simple_quantity_in_km = self.simple_quantity.to(u.km)
+        self.assertEqual(0.005, simple_quantity_in_km.data)
+        self.assertEqual(u.km, simple_quantity_in_km.unit)
 
     def test_to_with_different_dimension_raises_value_error(self):
         self.assertRaises(ValueError, self.simple_quantity.to, u.s)

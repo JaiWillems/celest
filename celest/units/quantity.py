@@ -1,6 +1,7 @@
 
 
 from celest.units.core import CompoundUnit
+from copy import deepcopy
 
 
 class Quantity:
@@ -38,45 +39,35 @@ class Quantity:
     def unit(self):
         return self._unit
 
-    def to(self, unit):
-        """Return data with the new unit.
+    def to(self, new_unit):
+        """Return Quantity with the new unit.
 
         Parameters
         ----------
-        unit : Unit, CompoundUnit
+        new_unit : Unit, CompoundUnit
 
         Returns
         -------
-        Any
-            Data in the new unit.
+        Quantity
 
         Examples
         --------
         >>> quantity_in_kilometers = quantity_in_meters.to(u.km)
         """
-        if self._unit.dimension != unit.dimension:
-            raise ValueError("Unit dimensionality is mismatched.")
-        scale = self._get_unit_scale(self.unit) / self._get_unit_scale(unit)
-        return self._data * scale
 
-    def _get_unit_scale(self, unit):
-        if isinstance(unit, CompoundUnit):
-            scale = 1.0
-            for base, power in zip(unit.bases, unit.powers):
-                scale *= base.scale ** power
-            return scale
-        else:
-            return unit.scale
+        quantity_in_new_unit = deepcopy(self)
+        quantity_in_new_unit.convert_to(new_unit)
+        return quantity_in_new_unit
 
     def get_unit(self):
         return self._unit
 
-    def convert_to(self, unit):
+    def convert_to(self, new_unit):
         """Convert data to different units.
 
         Parameters
         ----------
-        unit : Unit, CompoundUnit
+        new_unit : Unit, CompoundUnit
             New unit with the same dimension as the current unit.
 
         Examples
@@ -94,8 +85,17 @@ class Quantity:
         0.005
         """
 
-        if self._unit.dimension != unit.dimension:
+        if self._unit.dimension != new_unit.dimension:
             raise ValueError("Unit dimensionality is mismatched.")
 
-        self._data *= self._get_unit_scale(self.unit) / self._get_unit_scale(unit)
-        self._unit = unit
+        def _get_unit_scale(unit):
+            if isinstance(unit, CompoundUnit):
+                scale = 1.0
+                for base, power in zip(unit.bases, unit.powers):
+                    scale *= base.scale ** power
+                return scale
+            else:
+                return unit.scale
+
+        self._data *= _get_unit_scale(self.unit) / _get_unit_scale(new_unit)
+        self._unit = new_unit
