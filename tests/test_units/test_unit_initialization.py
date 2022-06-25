@@ -78,6 +78,12 @@ class TestUnitInitialization(TestCase):
         self.assertEqual(u.dy.bases, [u.s])
         self.assertEqual(u.dy.powers, [1])
 
+    def test_julian_day_2000(self):
+        self.assertIsInstance(u.jd2000, u.core.Unit)
+        self.assertEqual(u.jd2000.scale, 1.0)
+        self.assertEqual(u.jd2000.bases, [u.jd2000])
+        self.assertEqual(u.jd2000.powers, [1])
+
     def test_degree(self):
         self.assertIsInstance(u.deg, u.core.Unit)
         self.assertEqual(u.deg.scale, 1.0)
