@@ -92,7 +92,7 @@ class TestUnitInitialization(TestCase):
 
     def test_radian(self):
         self.assertIsInstance(u.rad, u.core.Unit)
-        self.assertEqual(u.rad.scale, 0.01745329)
+        self.assertEqual(u.rad.scale, 57.29577951308232)
         self.assertEqual(u.rad.bases, [u.deg])
         self.assertEqual(u.rad.powers, [1])
 
