@@ -1,18 +1,16 @@
 
 
-import os
-from celest.core.file_save import _save_data_as_txt, get_parameter_string
+from celest.file_save import get_parameter_string, _save_data_as_txt
 from unittest import TestCase
+import os
 
 
 class TestSaveDataAsTxt(TestCase):
 
     def setUp(self):
-
         self.file_name = "test_file"
 
     def tearDown(self):
-
         if os.path.exists(self.file_name + ".txt"):
             os.remove(self.file_name + ".txt")
 

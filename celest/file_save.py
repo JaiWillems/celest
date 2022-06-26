@@ -35,7 +35,7 @@ def _save_data_as_txt(file_name, header=None, parameters=None, data=None, data_f
     """
 
     processed_file_name = file_name + ".txt"
-    with open(processed_file_name, "w") as file:
+    with open(processed_file_name, "w", encoding='utf-8') as file:
 
         if header is not None:
             file.write(header)
