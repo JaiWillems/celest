@@ -1,7 +1,9 @@
 
+from celest.coordinates.coordinate import Coordinate
+
 from celest.coordinates.ground_location import GroundLocation
 
-from celest.coordinates.azel import AzEl
-from celest.coordinates.gcrs import GCRS
-from celest.coordinates.itrs import ITRS
-from celest.coordinates.wgs84 import WGS84
+from celest.coordinates.frames.azel import AzEl
+from celest.coordinates.frames.gcrs import GCRS
+from celest.coordinates.frames.itrs import ITRS
+from celest.coordinates.frames.wgs84 import WGS84
