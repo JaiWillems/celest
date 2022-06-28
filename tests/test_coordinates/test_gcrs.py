@@ -1,6 +1,6 @@
 
 
-from celest.coordinates.gcrs import GCRS
+from celest.coordinates.frames.gcrs import GCRS
 from celest import units as u
 from unittest import TestCase
 import numpy as np

@@ -1,6 +1,6 @@
 
 
-from celest.coordinates.base_positions import Position2d, Position3d
+from celest.coordinates.frames.base_positions import Position2d, Position3d
 from celest.units.quantity import Quantity
 from celest import units as u
 from unittest import TestCase

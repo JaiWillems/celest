@@ -1,6 +1,6 @@
 
 
-from celest.coordinates.itrs import ITRS
+from celest.coordinates.frames.itrs import ITRS
 from celest import units as u
 from unittest import TestCase
 import numpy as np

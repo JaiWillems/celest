@@ -1,6 +1,6 @@
 
 
-from celest.coordinates.wgs84 import WGS84
+from celest.coordinates.frames.wgs84 import WGS84
 from celest import units as u
 from unittest import TestCase
 import numpy as np

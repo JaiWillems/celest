@@ -1,6 +1,6 @@
 
 
-from celest.coordinates.azel import AzEl
+from celest.coordinates.frames.azel import AzEl
 from celest.coordinates.ground_location import GroundLocation
 from celest import units as u
 from unittest import TestCase
