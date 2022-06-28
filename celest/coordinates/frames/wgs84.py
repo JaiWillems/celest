@@ -1,6 +1,6 @@
 
 
-from celest.coordinates.base_positions import Position3d
+from celest.coordinates.frames.base_positions import Position3d
 from celest.file_save import _save_data_as_txt
 from celest.units.quantity import Quantity
 from celest import units as u
