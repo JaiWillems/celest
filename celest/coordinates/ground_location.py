@@ -31,7 +31,8 @@ class GroundLocation:
     height : Quantity
     radius : Quantity
         Earth radius at ground level at the specified position.
-
+    itrs_x, itrs_y, itrs_z : Quantity
+        The itrs coordinates of the ground location.
     """
 
     def __init__(self, latitude: float, longitude: float, height: float,
@@ -93,7 +94,7 @@ class GroundLocation:
         return Quantity(radius_km, u.km)
 
     @property
-    def itrs_x(self):
+    def itrs_x(self) -> Quantity:
         m = self._meridional_radius_of_curvature()
         itrs_x = (m + self._height.to(u.km).data) * \
             cos(self._latitude.to(u.rad).data) * \
@@ -109,7 +110,7 @@ class GroundLocation:
                                           2 * sin(self._latitude.to(u.rad).data) ** 2)
 
     @property
-    def itrs_y(self):
+    def itrs_y(self) -> Quantity:
         m = self._meridional_radius_of_curvature()
         itrs_y = (m + self._height.to(u.km).data) * \
             cos(self._latitude.to(u.rad).data) * \
@@ -118,7 +119,7 @@ class GroundLocation:
         return Quantity(itrs_y, u.km)
 
     @property
-    def itrs_z(self):
+    def itrs_z(self) -> Quantity:
         e = self._ellipse_eccentricity()
         m = self._meridional_radius_of_curvature()
         itrs_z = (m * (1 - e ** 2) + self._height.to(u.km).data) * \
