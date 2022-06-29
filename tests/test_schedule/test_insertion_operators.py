@@ -11,7 +11,7 @@ from celest.schedule.insertion_operators import (
 )
 from celest.schedule.request_handler import RequestHandler
 from polare import Stroke
-from tests.test_schedule.test_request_handler_utils import initialize_request_list
+from tests.test_schedule.request_handler_testing_utils import initialize_request_list
 from unittest import TestCase
 import numpy as np
 

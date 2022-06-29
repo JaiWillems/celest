@@ -225,8 +225,6 @@ class TestCoordinate(TestCase):
         latitude = Stroke(self.times, self.geographical[:, 0], "cubic")
         test_radius = Coordinate._WGS84_radius(self, latitude)(self.times)
 
-        print(type(test_radius))
-
         self.assertTrue(np.allclose(true_radius, test_radius, atol=0.01))
 
     def test_altitude(self):
