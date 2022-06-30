@@ -50,7 +50,9 @@ class BaseUnit:
             return NotImplemented
 
     def __rtruediv__(self, other):
-        if isinstance(other, BaseUnit):
+        if other == 1:
+            return CompoundUnit(1.0, [self], [-1])
+        elif isinstance(other, BaseUnit):
             return CompoundUnit(1.0, [other, self], [1, -1])
         else:
             return NotImplemented
@@ -225,8 +227,11 @@ class CompoundUnit(BaseUnit):
             if isinstance(base, CompoundUnit):
                 for b, p in zip(base.bases, base.powers):
                     if b not in bases:
-                        bases.append(b)
-                        powers.append(p * power)
+                        if b not in bases:
+                            bases.append(b)
+                            powers.append(p * power)
+                        else:
+                            handle_repeated_units(b, p * power)
                     else:
                         handle_repeated_units(b, p)
             elif base not in bases:

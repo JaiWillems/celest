@@ -31,6 +31,102 @@ class Quantity:
     def __repr__(self):
         return "Quantity(" + repr(self._data) + ", " + repr(self._unit) + ")"
 
+    def __neg__(self):
+        return Quantity(-self._data, self._unit)
+
+    def __add__(self, other):
+        if isinstance(other, (float, int)):
+            data = self._data + other
+            return Quantity(data, self._unit)
+        elif isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for Quantity addition.")
+            data = self._data + other._data
+            return Quantity(data, self._unit)
+        else:
+            return NotImplemented
+
+    def __radd__(self, other):
+        if isinstance(other, (float, int)):
+            data = self._data + other
+            return Quantity(data, self._unit)
+        elif isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for Quantity addition.")
+            data = self._data + other._data
+            return Quantity(data, self._unit)
+        else:
+            return NotImplemented
+
+    def __sub__(self, other):
+        if isinstance(other, (float, int)):
+            data = self._data - other
+            return Quantity(data, self._unit)
+        elif isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for Quantity subtraction.")
+            data = self._data - other._data
+            return Quantity(data, self._unit)
+        else:
+            return NotImplemented
+
+    def __rsub__(self, other):
+        if isinstance(other, (float, int)):
+            data = other - self._data
+            return Quantity(data, self._unit)
+        elif isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for Quantity subtraction.")
+            data = other._data - self._data
+            return Quantity(data, self._unit)
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, (float, int)):
+            data = self.data * other
+            return Quantity(data, self._unit)
+        elif isinstance(other, Quantity):
+            data = self._data * other._data
+            unit = self._unit * other._unit
+            return Quantity(data, unit)
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other):
+        if isinstance(other, (float, int)):
+            data = self._data * other
+            return Quantity(data, self._unit)
+        elif isinstance(other, Quantity):
+            data = self._data * other._data
+            unit = self._unit * other._unit
+            return Quantity(data, unit)
+        else:
+            return NotImplemented
+
+    def __truediv__(self, other):
+        if isinstance(other, (float, int)):
+            data = self._data / other
+            return Quantity(data, self._unit)
+        elif isinstance(other, Quantity):
+            data = self._data / other._data
+            unit = self._unit / other._unit
+            return Quantity(data, unit)
+        else:
+            return NotImplemented
+
+    def __rtruediv__(self, other):
+        if isinstance(other, (float, int)):
+            data = other / self._data
+            unit = 1 / self._unit
+            return Quantity(data, unit)
+        elif isinstance(other, Quantity):
+            data = other._data / self._data
+            unit = other._unit / self._unit
+            return Quantity(data, unit)
+        else:
+            return NotImplemented
+
     @property
     def data(self):
         return self._data
@@ -86,6 +182,7 @@ class Quantity:
         """
 
         if self._unit.dimension != new_unit.dimension:
+            # TODO: Make error statement more verbose and useuful.
             raise ValueError("Unit dimensionality is mismatched.")
 
         def _get_unit_scale(unit):
