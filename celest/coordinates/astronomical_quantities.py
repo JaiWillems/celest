@@ -354,9 +354,8 @@ def apparent_obliquity(julian: Quantity) -> Quantity:
     """
     average_obliquity = mean_obliquity(julian)
     _, nutation_in_obliquity = nutation_components(julian)
-    result = average_obliquity.data + nutation_in_obliquity.data / 3600
 
-    return Quantity(result, u.deg)
+    return average_obliquity + nutation_in_obliquity.to(u.deg)
 
 
 def from_julian(julian: Quantity) -> Tuple:
@@ -549,6 +548,7 @@ def equation_of_equinoxes(julian: Quantity) -> Quantity:
     nutation_in_longitude, _ = nutation_components(julian)
     obliquity = apparent_obliquity(julian).to(u.rad)
     result = nutation_in_longitude.data * np.cos(obliquity.data) / 15
+
     return Quantity(result, u.arcsec)
 
 

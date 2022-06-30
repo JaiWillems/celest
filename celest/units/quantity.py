@@ -182,8 +182,8 @@ class Quantity:
         """
 
         if self._unit.dimension != new_unit.dimension:
-            # TODO: Make error statement more verbose and useuful.
-            raise ValueError("Unit dimensionality is mismatched.")
+            raise ValueError("New unit has a different dimension then the \
+                             current unit.")
 
         def _get_unit_scale(unit):
             if isinstance(unit, CompoundUnit):
@@ -194,5 +194,8 @@ class Quantity:
             else:
                 return unit.scale
 
-        self._data *= _get_unit_scale(self.unit) / _get_unit_scale(new_unit)
-        self._unit = new_unit
+        if repr(self._unit) == repr(new_unit):
+            return self
+        else:
+            self._data *= _get_unit_scale(self.unit) / _get_unit_scale(new_unit)
+            self._unit = new_unit

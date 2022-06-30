@@ -98,13 +98,13 @@ class TestUnitInitialization(TestCase):
 
     def test_seconds_of_arc(self):
         self.assertIsInstance(u.arcsec, u.core.Unit)
-        self.assertEqual(u.arcsec.scale, 3600)
+        self.assertEqual(u.arcsec.scale, 1 / 3600)
         self.assertEqual(u.arcsec.bases, [u.deg])
         self.assertEqual(u.arcsec.powers, [1])
 
     def test_minutes_of_arc(self):
         self.assertIsInstance(u.arcmin, u.core.Unit)
-        self.assertEqual(u.arcmin.scale, 60)
+        self.assertEqual(u.arcmin.scale, 1 / 60)
         self.assertEqual(u.arcmin.bases, [u.deg])
         self.assertEqual(u.arcmin.powers, [1])
 
