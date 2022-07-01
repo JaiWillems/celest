@@ -4,6 +4,7 @@ from celest.coordinates.astronomical_quantities import earth_rotation_angle
 from celest.coordinates.frames.azel import AzEl
 from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.frames.itrs import ITRS
+from celest.coordinates.frames.lvlh import LVLH
 from celest.coordinates.frames.wgs84 import WGS84
 from celest.coordinates.nutation_precession_matrices import (
     bias_matrix,
@@ -14,6 +15,7 @@ from celest.coordinates.ground_location import GroundLocation
 from celest.constants import WGS84_MINOR_AXIS_KM, WGS84_MAJOR_AXIS_KM
 from celest import units as u
 from copy import deepcopy
+from typing import Tuple
 import numpy as np
 
 
@@ -132,9 +134,9 @@ def _itrs_to_gcrs(itrs: ITRS) -> GCRS:
     itrs = deepcopy(itrs)
     julian = itrs.time
 
-    itrs_x = itrs.x.to(u.km).data.reshape((-1, 1))
-    itrs_y = itrs.y.to(u.km).data.reshape((-1, 1))
-    itrs_z = itrs.z.to(u.km).data.reshape((-1, 1))
+    itrs_x = itrs.x.data.reshape((-1, 1))
+    itrs_y = itrs.y.data.reshape((-1, 1))
+    itrs_z = itrs.z.data.reshape((-1, 1))
     itrs = np.concatenate((itrs_x, itrs_y, itrs_z), axis=1)
 
     era = earth_rotation_angle(julian)
@@ -422,3 +424,96 @@ def _elevation(itrs: ITRS, location: GroundLocation) -> np.ndarray:
                             location.itrs_z.to(u.km).data])
 
     return 90 - _get_ang(sat_itrs - ground_itrs, ground_itrs)
+
+
+def _gcrs_to_lvlh(gcrs_position: GCRS, gcrs_velocity: GCRS) -> Tuple[LVLH, LVLH]:
+    """Return the LVLH (Hill frame) coordinates.
+
+    Parameters
+    ----------
+    gcrs_position, gcrs_velocity : GCRS
+
+    Returns
+    -------
+    Tuple
+        Tuple containing the position and velocity `LVLH` objects.
+
+    Notes
+    -----
+    The LVLH frame definition was taken from NASA's technical memorandum
+    on coordinate frames for the space shuttle program. [NASA1974]_
+
+    References
+    ----------
+    .. [NASA1974] Coordinate Systems for the Space Shuttle Program, Lyndon
+       B. Johnson Space Center, Houston, Texas 77058, Oct 1974, no. NASA
+       TM X-58153.
+    """
+
+    if not isinstance(gcrs_position, GCRS):
+        raise ValueError(f"Input position is in the {gcrs_position.__class__} "
+                         "frame and not the GCRS frame.")
+    if not isinstance(gcrs_velocity, GCRS):
+        raise ValueError(f"Input velocity is in the {gcrs_velocity.__class__} "
+                         "frame and not the GCRS frame.")
+
+    position_dimension = gcrs_position.x.unit
+    velocity_dimension = gcrs_velocity.x.unit
+
+    gcrs_position = deepcopy(gcrs_position)
+    julian = gcrs_position.time.data
+
+    gcrs_x = gcrs_position.x.data.reshape((-1, 1))
+    gcrs_y = gcrs_position.y.data.reshape((-1, 1))
+    gcrs_z = gcrs_position.z.data.reshape((-1, 1))
+    position = np.concatenate((gcrs_x, gcrs_y, gcrs_z), axis=1)
+
+    gcrs_vx = gcrs_velocity.x.data.reshape((-1, 1))
+    gcrs_vy = gcrs_velocity.y.data.reshape((-1, 1))
+    gcrs_vz = gcrs_velocity.z.data.reshape((-1, 1))
+    velocity = np.concatenate((gcrs_vx, gcrs_vy, gcrs_vz), axis=1)
+
+    transformation_matrix = _gcrs_to_lvlh_matrix(position, velocity)
+    transformed_position = np.einsum('ijk, ik -> ij', transformation_matrix,
+                                     position)
+    transformed_velocity = np.einsum('ijk, ik -> ij', transformation_matrix,
+                                     velocity)
+
+    lvlh_position = LVLH(julian, transformed_position[:, 0],
+                         transformed_position[:, 1], transformed_position[:, 2],
+                         position_dimension)
+    lvlh_velocity = LVLH(julian, transformed_velocity[:, 0],
+                         transformed_velocity[:, 1], transformed_velocity[:, 2],
+                         velocity_dimension)
+
+    return lvlh_position, lvlh_velocity
+
+
+def _gcrs_to_lvlh_matrix(gcrs_position: np.ndarray, gcrs_velocity:
+                         np.ndarray) -> np.ndarray:
+    """Return the gcrs to lvlh rotation matrix.
+
+    Parameters
+    ----------
+    gcrs_position, gcrs_velocity : GCRS
+
+    Returns
+    -------
+    np.ndarray
+        3-D rotation matrix.
+    """
+
+    norm_position = np.linalg.norm(gcrs_position, axis=1)
+    position_cross_velocity = np.cross(gcrs_position, gcrs_velocity)
+    norm_position_cross_velocity = np.linalg.norm(position_cross_velocity, axis=1)
+
+    lvlh_z = - gcrs_position / norm_position.reshape((-1, 1)).repeat(3, axis=1)
+    lvlh_y = - position_cross_velocity / norm_position_cross_velocity.reshape((-1, 1)).repeat(3, axis=1)
+    lvlh_x = np.cross(lvlh_y, lvlh_z)
+
+    transformation_matrix = np.zeros((gcrs_position.shape[0], 3, 3))
+    transformation_matrix[:, 0, :] = lvlh_x
+    transformation_matrix[:, 1, :] = lvlh_y
+    transformation_matrix[:, 2, :] = lvlh_z
+
+    return transformation_matrix

@@ -1,5 +1,4 @@
-
-
+from celest.coordinates import LVLH
 from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.ground_location import GroundLocation
 from celest.coordinates.frames.itrs import ITRS
@@ -10,7 +9,7 @@ from celest.coordinates.transforms import (
     _altitude,
     _itrs_to_wgs84,
     _wgs84_to_itrs,
-    _itrs_to_azel
+    _itrs_to_azel, _gcrs_to_lvlh
 )
 from celest import units as u
 from unittest import TestCase
@@ -21,7 +20,7 @@ class TestCoordinateTransformations(TestCase):
 
     def setUp(self):
         file_name = "tests/test_data/coordinate_validation_long.txt"
-        cols = (0, 5, 6, 7, 11, 12, 13, 17, 18, 19)
+        cols = (0, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19)
         skiprows = 1
         max_rows = 5000
         data = np.loadtxt(fname=file_name, usecols=cols, skiprows=skiprows,
@@ -31,11 +30,15 @@ class TestCoordinateTransformations(TestCase):
         wgs84 = data[:, 1:3]
         altitude = data[:, 3]
         gcrs = data[:, 4:7]
-        itrs = data[:, 7:]
+        gcrs_velocity = data[:, 7:10]
+        itrs = data[:, 10:]
 
         self.wgs84 = WGS84(julian, wgs84[:, 0], wgs84[:, 1], altitude, u.deg,
                            u.km)
         self.gcrs = GCRS(julian, gcrs[:, 0], gcrs[:, 1], gcrs[:, 2], u.km)
+        self.gcrs_velocity = GCRS(julian, gcrs_velocity[:, 0],
+                                  gcrs_velocity[:, 1], gcrs_velocity[:, 2],
+                                  u.m / u.s)
         self.itrs = ITRS(julian, itrs[:, 0], itrs[:, 1], itrs[:, 2], u.km)
 
         latitude, longitude, height = 52.1579, -106.6702, 0.482
@@ -131,3 +134,12 @@ class TestCoordinateTransformations(TestCase):
                                     actual_azel.elevation.data, atol=0.32))
         self.assertTrue(np.allclose(expected_azel.az.degree,
                                     actual_azel.azimuth.data, atol=7.3))
+
+    def test_gcrs_to_lvlh_raises_error_for_invalid_input_frame(self):
+        self.assertRaises(ValueError, _gcrs_to_lvlh, self.itrs,
+                          self.gcrs_velocity)
+
+    def test_gcrs_to_lvlh_returns_valid_LVLH_objects(self):
+        lvlh_position, lvlh_velocity = _gcrs_to_lvlh(self.gcrs, self.gcrs_velocity)
+        self.assertIsInstance(lvlh_position, LVLH)
+        self.assertIsInstance(lvlh_velocity, LVLH)
