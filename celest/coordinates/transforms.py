@@ -41,12 +41,20 @@ def _gcrs_to_itrs(gcrs: GCRS) -> ITRS:
     due to their poor predictability.
     """
 
+    if not isinstance(gcrs, GCRS):
+        raise ValueError(f"Input data is in the {gcrs.__class__} frame and not"
+                         " the GCRS frame.")
+    if not (gcrs.x.unit == gcrs.y.unit == gcrs.z.unit):
+        raise ValueError("Input dimensions have mismatched units.")
+
+    dimension = gcrs.x.unit
+
     gcrs = deepcopy(gcrs)
     julian = gcrs.time
 
-    gcrs_x = gcrs.x.to(u.km).data.reshape((-1, 1))
-    gcrs_y = gcrs.y.to(u.km).data.reshape((-1, 1))
-    gcrs_z = gcrs.z.to(u.km).data.reshape((-1, 1))
+    gcrs_x = gcrs.x.data.reshape((-1, 1))
+    gcrs_y = gcrs.y.data.reshape((-1, 1))
+    gcrs_z = gcrs.z.data.reshape((-1, 1))
     gcrs = np.concatenate((gcrs_x, gcrs_y, gcrs_z), axis=1)
 
     era = earth_rotation_angle(julian)
@@ -58,13 +66,9 @@ def _gcrs_to_itrs(gcrs: GCRS) -> ITRS:
     itrs = np.einsum('ijk, ik -> ij', precession_mtrx, itrs)
     itrs = np.einsum('ijk, ik -> ij', nutation_mtrx, itrs)
 
-    # TODO: Refactor negation when Quantity operations are implemented.
-    negative_era = deepcopy(era)
-    negative_era._data = -negative_era.data
+    itrs = _rotate_by_earth_rotation_angle(itrs, -era)
 
-    itrs = _rotate_by_earth_rotation_angle(itrs, negative_era)
-
-    return ITRS(julian.data, itrs[:, 0], itrs[:, 1], itrs[:, 2], u.km)
+    return ITRS(julian.data, itrs[:, 0], itrs[:, 1], itrs[:, 2], dimension)
 
 
 def _rotate_by_earth_rotation_angle(data, degree_era):
@@ -117,6 +121,14 @@ def _itrs_to_gcrs(itrs: ITRS) -> GCRS:
     due to their poor predictability.
     """
 
+    if not isinstance(itrs, ITRS):
+        raise ValueError(f"Input data is in the {itrs.__class__} frame and not"
+                         " the ITRS frame.")
+    if not (itrs.x.unit == itrs.y.unit == itrs.z.unit):
+        raise ValueError("Input dimensions have mismatched units.")
+
+    dimension = itrs.x.unit
+
     itrs = deepcopy(itrs)
     julian = itrs.time
 
@@ -136,8 +148,7 @@ def _itrs_to_gcrs(itrs: ITRS) -> GCRS:
     gcrs = np.einsum('ijk, ik -> ij', np.linalg.inv(precession_mtrx), gcrs)
     gcrs = np.einsum('ij, kj -> ki', np.linalg.inv(bias_mtrx), gcrs)
 
-    # TODO: Return the same unit as passed in.
-    return GCRS(julian.data, gcrs[:, 0], gcrs[:, 1], gcrs[:, 2], u.km)
+    return GCRS(julian.data, gcrs[:, 0], gcrs[:, 1], gcrs[:, 2], dimension)
 
 
 def _itrs_to_wgs84(itrs: ITRS) -> WGS84:
@@ -157,6 +168,10 @@ def _itrs_to_wgs84(itrs: ITRS) -> WGS84:
     --------
     _wgs84_to_itrs : Wgs84 to itrs transformation.
     """
+
+    if not isinstance(itrs, ITRS):
+        raise ValueError(f"Input data is in the {itrs.__class__} frame and not"
+                         " the ITRS frame.")
 
     julian = itrs.time.data
 
@@ -198,6 +213,10 @@ def _altitude(itrs: ITRS) -> np.ndarray:
     .. [KW98b] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
        Geodesy. Jan. 1998, pp. 31–33.
     """
+
+    if not isinstance(itrs, ITRS):
+        raise ValueError(f"Input data is in the {itrs.__class__} frame and not"
+                         " the ITRS frame.")
 
     a, b = WGS84_MAJOR_AXIS_KM, WGS84_MINOR_AXIS_KM
 
@@ -260,6 +279,10 @@ def _wgs84_to_itrs(wgs84: WGS84) -> ITRS:
        Longitude. June 2020.url:https://www.youtube.com/watch?v=4BJ-GpYbZlU.
     """
 
+    if not isinstance(wgs84, WGS84):
+        raise ValueError(f"Input data is in the {wgs84.__class__} frame and not"
+                         " the WGS84 frame.")
+
     julian = wgs84.time.data
 
     latitude = wgs84.latitude.to(u.rad).data
@@ -296,6 +319,10 @@ def _itrs_to_azel(itrs: ITRS, location: GroundLocation) -> AzEl:
         Azel coordinates.
     """
 
+    if not isinstance(itrs, ITRS):
+        raise ValueError(f"Input data is in the {itrs.__class__} frame and not"
+                         " the ITRS frame.")
+
     azimuth = _azimuth(itrs, location)
     elevation = _elevation(itrs, location)
 
@@ -303,7 +330,7 @@ def _itrs_to_azel(itrs: ITRS, location: GroundLocation) -> AzEl:
 
 
 def _azimuth(itrs: ITRS, location: GroundLocation) -> np.ndarray:
-    """Return the azimuth angle of the satellite.
+    """Return the azimuth angle of the satellite_old.
 
     Parameters
     ----------
