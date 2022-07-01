@@ -27,9 +27,13 @@ setup_unit("hr", "hour", namespace, 3600 * s)
 setup_unit("dy", "day", namespace, 86400 * s)
 
 
+# Date measures.
+setup_unit("jd2000", "Julian day 2000", namespace)
+
+
 # Angular measures.
 setup_unit("deg", "degree", namespace)
-setup_unit("rad", "radian", namespace, 0.01745329 * deg)
-setup_unit("arcsec", "seconds of arc", namespace, 3600 * deg)
-setup_unit("arcmin", "minutes of arc", namespace, 60 * deg)
+setup_unit("rad", "radian", namespace, 57.29577951308232 * deg)
+setup_unit("arcsec", "seconds of arc", namespace, (1 / 3600) * deg)
+setup_unit("arcmin", "minutes of arc", namespace, (1 / 60) * deg)
 setup_unit("hourangle", "hour angle", namespace, (1 / 15) * deg)

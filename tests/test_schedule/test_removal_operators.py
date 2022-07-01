@@ -6,7 +6,7 @@ from celest.schedule.removal_operators import (
     random_removal
 )
 from celest.schedule.request_handler import RequestHandler
-from tests.test_schedule.test_request_handler_utils import initialize_request_list
+from tests.test_schedule.request_handler_testing_utils import initialize_request_list
 from unittest import TestCase
 
 

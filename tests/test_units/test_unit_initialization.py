@@ -78,6 +78,12 @@ class TestUnitInitialization(TestCase):
         self.assertEqual(u.dy.bases, [u.s])
         self.assertEqual(u.dy.powers, [1])
 
+    def test_julian_day_2000(self):
+        self.assertIsInstance(u.jd2000, u.core.Unit)
+        self.assertEqual(u.jd2000.scale, 1.0)
+        self.assertEqual(u.jd2000.bases, [u.jd2000])
+        self.assertEqual(u.jd2000.powers, [1])
+
     def test_degree(self):
         self.assertIsInstance(u.deg, u.core.Unit)
         self.assertEqual(u.deg.scale, 1.0)
@@ -86,19 +92,19 @@ class TestUnitInitialization(TestCase):
 
     def test_radian(self):
         self.assertIsInstance(u.rad, u.core.Unit)
-        self.assertEqual(u.rad.scale, 0.01745329)
+        self.assertEqual(u.rad.scale, 57.29577951308232)
         self.assertEqual(u.rad.bases, [u.deg])
         self.assertEqual(u.rad.powers, [1])
 
     def test_seconds_of_arc(self):
         self.assertIsInstance(u.arcsec, u.core.Unit)
-        self.assertEqual(u.arcsec.scale, 3600)
+        self.assertEqual(u.arcsec.scale, 1 / 3600)
         self.assertEqual(u.arcsec.bases, [u.deg])
         self.assertEqual(u.arcsec.powers, [1])
 
     def test_minutes_of_arc(self):
         self.assertIsInstance(u.arcmin, u.core.Unit)
-        self.assertEqual(u.arcmin.scale, 60)
+        self.assertEqual(u.arcmin.scale, 1 / 60)
         self.assertEqual(u.arcmin.bases, [u.deg])
         self.assertEqual(u.arcmin.powers, [1])
 

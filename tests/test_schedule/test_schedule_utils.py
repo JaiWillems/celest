@@ -6,7 +6,7 @@ from celest.schedule.scheduling_utils import (
     initialize_solution,
     is_complete
 )
-from tests.test_schedule.test_request_handler_utils import initialize_request_list
+from tests.test_schedule.request_handler_testing_utils import initialize_request_list
 from unittest import TestCase
 
 

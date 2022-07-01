@@ -3,6 +3,7 @@
 from celest.units import core  # Import core to prevent circular import errors.
 
 
+# TODO: There is a lot of repeated code here, try to refactor.
 def _to_string(unit):
 
     if isinstance(unit, core.CompoundUnit):
@@ -50,6 +51,7 @@ UNIT_TO_DIMENSION_DICTIONARY = {
     "min": "T",
     "hr": "T",
     "dy": "T",
+    "jd2000": "D",
     "deg": "A",
     "rad": "A",
     "arcsec": "A",

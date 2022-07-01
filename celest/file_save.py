@@ -8,7 +8,7 @@ BLANK_LINE_STRING = "\n\n"
 COLUMN_DELIMITER = "\t"
 
 
-def _save_data_as_txt(file_name, header=None, parameters=None, data=None):
+def _save_data_as_txt(file_name, header=None, parameters=None, data=None, data_format="%.15f"):
     """Save information as a pretty formatted text file.
 
     Parameters
@@ -30,15 +30,17 @@ def _save_data_as_txt(file_name, header=None, parameters=None, data=None):
 
         A label-value pair of `["Data Label", Quantity(np.array([1, 2]), u.m)]`
         will have the heading "Data Label (m)".
+    data_format : str
+        Data value format string.
     """
 
     processed_file_name = file_name + ".txt"
-    with open(processed_file_name, "w") as file:
+    with open(processed_file_name, "w", encoding='utf-8') as file:
 
         if header is not None:
             file.write(header)
 
-        if (header is not None) and (parameters is not None or data is not None):
+        if (header is not None) and (parameters is not None):
             file.write(BLANK_LINE_STRING)
 
         if parameters is not None:
@@ -57,8 +59,13 @@ def _save_data_as_txt(file_name, header=None, parameters=None, data=None):
 
             for data_count, [data_label, data_value] in enumerate(data):
 
-                processed_column_label = data_label + " (" + \
-                                         str(data_value.unit) + ")"
+                value_width = get_value_width(data_format, data_value)
+                column_label = data_label + " (" + str(data_value.unit) + ")"
+
+                column_width = len(column_label)
+                actual_column_width = max(value_width, column_width)
+
+                processed_column_label = column_label.ljust(actual_column_width)
                 column_label_lengths.append(len(processed_column_label))
 
                 column_header_string += processed_column_label
@@ -84,7 +91,7 @@ def _save_data_as_txt(file_name, header=None, parameters=None, data=None):
             for row_index in range(number_of_rows):
                 data_row_string = ""
                 for column_index in range(number_of_columns):
-                    data_value_string = str(raw_data[row_index][column_index])
+                    data_value_string = data_format % raw_data[row_index][column_index]
                     data_row_string += data_value_string.ljust(column_label_lengths[column_index])
 
                     if column_index < number_of_columns - 1:
@@ -93,6 +100,10 @@ def _save_data_as_txt(file_name, header=None, parameters=None, data=None):
                     data_row_string += NEWLINE_STRING
 
                 file.write(data_row_string)
+
+
+def get_value_width(data_format, data_value):
+    return len(data_format % np.max(data_value.data))
 
 
 def get_parameter_string(parameter_count, number_of_parameters, label, value):
