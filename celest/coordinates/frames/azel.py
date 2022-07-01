@@ -3,8 +3,8 @@
 from celest.coordinates.frames.base_positions import Position2d
 from celest.coordinates.ground_location import GroundLocation
 from celest.file_save import _save_data_as_txt
-from celest.units.quantity import Quantity
 from celest.units.core import Unit
+from celest.units.quantity import Quantity
 from celest import units as u
 import numpy as np
 
@@ -47,8 +47,8 @@ class AzEl(Position2d):
     Examples
     --------
     Let `julian`, `azimuth`, and `elevation` be `np.ndarray` instances and
-    `location` be a `GroundPosition` instance. An `AzEl`coordinate object
-    can be initialized:
+    `location` be a `GroundLocation` instance. An `AzEl`coordinate object can
+    be initialized:
 
     >>> azel = AzEl(julian, azimuth, elevation, u.deg, location)
 
@@ -73,7 +73,7 @@ class AzEl(Position2d):
         return self.y
 
     @property
-    def location(self) -> Quantity:
+    def location(self) -> GroundLocation:
         return self._location
 
     def save_text_file(self, file_name: str) -> None:

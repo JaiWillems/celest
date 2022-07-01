@@ -14,8 +14,8 @@ class TestAzEl(TestCase):
         self.julian = np.random.rand(5)
         self.azimuth = np.random.rand(5)
         self.elevation = np.random.rand(5)
-        self.location = GroundLocation(43.6532, -79.3832, 175, u.deg, u.m)
         self.unit = u.deg
+        self.location = GroundLocation(43.6532, -79.3832, 175, u.deg, u.m)
         self.valid_azel = AzEl(self.julian, self.azimuth, self.elevation,
                                self.unit, self.location)
 
