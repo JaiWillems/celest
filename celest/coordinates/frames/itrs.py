@@ -2,12 +2,12 @@
 
 from celest.coordinates.frames.base_positions import Position3d
 from celest.file_save import _save_data_as_txt
+from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
 import numpy as np
 
 
-# TODO: Move preprocessing into external functions to remove repeated code.
 class ITRS(Position3d):
     """Coordinates in the Internation Terrestrial Reference System.
 
@@ -57,21 +57,12 @@ class ITRS(Position3d):
     >>> itrs.save_text_file("gcrs_data")
     """
 
-    def __init__(self, julian, x, y, z, unit):
+    def __init__(self, julian: np.ndarray, x: np.ndarray, y: np.ndarray, z:
+                 np.ndarray, unit: Unit) -> None:
 
-        if julian.ndim != 1 or x.ndim != 1 or y.ndim != 1 or z.ndim != 1:
-            raise ValueError("Input arrays should be one dimensional.")
-        if julian.size != x.size != y.size != z.size:
-            raise ValueError("Input arrays should have the same length.")
+        super().__init__(x, unit, y, unit, z, unit, julian, u.jd2000)
 
-        x_quantity = Quantity(x, unit)
-        y_quantity = Quantity(y, unit)
-        z_quantity = Quantity(z, unit)
-        julian_quantity = Quantity(julian, u.jd2000)
-
-        super().__init__(x_quantity, y_quantity, z_quantity, julian_quantity)
-
-    def save_text_file(self, file_name):
+    def save_text_file(self, file_name: str) -> None:
         header = "ITRS Coordinate Data"
         data = [
             ["Time", self.time],

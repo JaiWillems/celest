@@ -2,8 +2,10 @@
 
 from celest.coordinates.frames.base_positions import Position3d
 from celest.file_save import _save_data_as_txt
+from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
+import numpy as np
 
 
 class WGS84(Position3d):
@@ -53,34 +55,26 @@ class WGS84(Position3d):
     >>> wgs84.save_text_file("wgs84_data")
     """
 
-    def __init__(self, julian, latitude, longitude, height, angular_unit,
-                 length_unit):
+    def __init__(self, julian: np.ndarray, latitude: np.ndarray, longitude:
+                 np.ndarray, height: np.ndarray, angular_unit: Unit,
+                 length_unit: Unit) -> None:
 
-        if julian.ndim != 1 or latitude.ndim != 1 or longitude.ndim != 1 or height.ndim != 1:
-            raise ValueError("Input arrays should be one dimensional.")
-        if julian.size != latitude.size != longitude.size != height.size:
-            raise ValueError("Input arrays should have the same length.")
-
-        x_quantity = Quantity(latitude, angular_unit)
-        y_quantity = Quantity(longitude, angular_unit)
-        z_quantity = Quantity(height, length_unit)
-        julian_quantity = Quantity(julian, u.jd2000)
-
-        super().__init__(x_quantity, y_quantity, z_quantity, julian_quantity)
+        super().__init__(latitude, angular_unit, longitude, angular_unit,
+                         height, length_unit, julian, u.jd2000)
 
     @property
-    def latitude(self):
+    def latitude(self) -> Quantity:
         return self.x
 
     @property
-    def longitude(self):
+    def longitude(self) -> Quantity:
         return self.y
 
     @property
-    def height(self):
+    def height(self) -> Quantity:
         return self.z
 
-    def save_text_file(self, file_name):
+    def save_text_file(self, file_name: str) -> None:
         header = "WGS84 Coordinate Data"
         data = [
             ["Time", self.time],

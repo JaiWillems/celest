@@ -1,9 +1,12 @@
 
 
 from celest.coordinates.frames.base_positions import Position2d
+from celest.coordinates.ground_location import GroundLocation
 from celest.file_save import _save_data_as_txt
 from celest.units.quantity import Quantity
+from celest.units.core import Unit
 from celest import units as u
+import numpy as np
 
 
 class AzEl(Position2d):
@@ -17,6 +20,8 @@ class AzEl(Position2d):
         1-D array containing the coordinate data.
     unit : Unit
         The unit of the spatial data.
+    location : GroundLocation
+        Origin of the azel coordinate frame.
 
     Attributes
     ----------
@@ -52,34 +57,26 @@ class AzEl(Position2d):
     >>> azel.save_text_file("azel_data")
     """
 
-    def __init__(self, julian, azimuth, elevation, unit, location):
+    def __init__(self, julian: np.ndarray, azimuth: np.ndarray, elevation:
+                 np.ndarray, unit: Unit, location: GroundLocation) -> None:
 
-        if julian.ndim != 1 or azimuth.ndim != 1 or elevation.ndim != 1:
-            raise ValueError("Input arrays should be one dimensional.")
-        if julian.size != azimuth.size != elevation.size:
-            raise ValueError("Input arrays should have the same length.")
-
-        x_quantity = Quantity(azimuth, unit)
-        y_quantity = Quantity(elevation, unit)
-        julian_quantity = Quantity(julian, u.jd2000)
-
-        super().__init__(x_quantity, y_quantity, julian_quantity)
+        super().__init__(azimuth, unit, elevation, unit, julian, u.jd2000)
 
         self._location = location
 
     @property
-    def azimuth(self):
+    def azimuth(self) -> Quantity:
         return self.x
 
     @property
-    def elevation(self):
+    def elevation(self) -> Quantity:
         return self.y
 
     @property
-    def location(self):
+    def location(self) -> Quantity:
         return self._location
 
-    def save_text_file(self, file_name):
+    def save_text_file(self, file_name: str) -> None:
         header = "Azimuth-Elevation Coordinate Data"
         parameters = [
             ["Location", str(self._location)]

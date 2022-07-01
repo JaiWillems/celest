@@ -1,29 +1,34 @@
 
 
+from celest.units.core import Unit
 from celest.units.quantity import Quantity
+import numpy as np
 
 
 class Position2d:
-    """2D position data container.
+    """Position2d(x, x_unit, y, y_unit, time, time_unit)
+
+    2D position data container.
 
     Parameters
     ----------
-    x, y : Quantity
-        The x and y coordinate dimensions.
-    time : Quantity, optional
-        The time coordinate dimension.
+    x, y, time : np.ndarray
+        The spatial and temporal coordinate dimensions.
+    x_unit, y_unit, time_unit : Unit
+        Units of the spatial and temporal coordinate dimensions.
     """
 
-    def __init__(self, x: Quantity, y: Quantity, time: Quantity=None) -> None:
+    def __init__(self, x: np.ndarray, x_unit: Unit, y: np.ndarray, y_unit:
+                 Unit, time: np.ndarray, time_unit: Unit) -> None:
 
-        if not isinstance(x, Quantity) or not isinstance(y, Quantity):
-            raise ValueError("x and y should be Quantity objects.")
-        if time is not None and not isinstance(time, Quantity):
-            raise ValueError("time should be a Quantity object.")
+        if time.ndim != 1 or x.ndim != 1 or y.ndim != 1:
+            raise ValueError("Input arrays should be one dimensional.")
+        if time.size != x.size != y.size:
+            raise ValueError("Input arrays should have the same length.")
 
-        self._x = x
-        self._y = y
-        self._time = time
+        self._x = Quantity(x, x_unit)
+        self._y = Quantity(y, y_unit)
+        self._time = Quantity(time, time_unit)
 
     @property
     def x(self) -> Quantity:
@@ -39,27 +44,31 @@ class Position2d:
 
 
 class Position3d:
-    """3D position data container.
+    """Position2d(x, x_unit, y, y_unit, z, z_unit, time, time_unit)
 
-        Parameters
-        ----------
-        x, y, z : Quantity
-            The x and y coordinate dimensions.
-        time : Quantity, optional
-            The time coordinate dimension.
-        """
+    3D position data container.
 
-    def __init__(self, x: Quantity, y: Quantity, z: Quantity, time: Quantity=None) -> None:
+    Parameters
+    ----------
+    x, y, z, time : np.ndarray
+        The spatial and temporal coordinate dimensions.
+    x_unit, y_unit, z_unit time_unit : Unit
+        Units of the spatial and temporal coordinate dimensions.
+    """
 
-        if not isinstance(x, Quantity) or not isinstance(y, Quantity) or not isinstance(z, Quantity):
-            raise ValueError("x, y, and z should be Quantity objects.")
-        if time is not None and not isinstance(time, Quantity):
-            raise ValueError("time should be a Quantity object.")
+    def __init__(self, x: np.ndarray, x_unit: Unit, y: np.ndarray, y_unit:
+                 Unit, z: np.ndarray, z_unit: Unit, time: np.ndarray,
+                 time_unit: Unit) -> None:
 
-        self._x = x
-        self._y = y
-        self._z = z
-        self._time = time
+        if time.ndim != 1 or x.ndim != 1 or y.ndim != 1 or z.ndim != 1:
+            raise ValueError("Input arrays should be one dimensional.")
+        if time.size != x.size != y.size != z.size:
+            raise ValueError("Input arrays should have the same length.")
+
+        self._x = Quantity(x, x_unit)
+        self._y = Quantity(y, y_unit)
+        self._z = Quantity(z, z_unit)
+        self._time = Quantity(time, time_unit)
 
     @property
     def x(self) -> Quantity:
