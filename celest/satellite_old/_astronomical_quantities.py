@@ -1,6 +1,6 @@
 
 
-from statistics import mean
+from celest.units.quantity import Quantity
 from typing import Tuple
 import numpy as np
 
