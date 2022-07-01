@@ -12,20 +12,23 @@ import numpy as np
 class LVLH(Position3d):
     """Coordinates in the level-horizontal-level-vertical or Hill frame.
 
+    The local-vertical local-horizontal frame (also known as the Hill
+    frame) is a body frame where the z-axis is algigned with the negative
+    of the geocentric position vector, the y-axis is aligned with the
+    negative orbit normal, and the x-axis completes the right handed triad.
+
     Parameters
     ----------
     julian : np.ndarray
         1-D array containing time in the J2000 epoch.
-    roll, pitch, yaw : np.ndarray
+    x, y, z : np.ndarray
         1-D array containing the coordinate data.
     unit : Unit
         The unit of the spatial data.
-    location : GroundLocation
-        Target for satellite orientations.
 
     Attributes
     ----------
-    roll, pitch, yaw : Quantity
+    x, y, z : Quantity
         Coordinate data.
     location : GroundLocation
         Origin of the AzEl frame.
@@ -45,51 +48,40 @@ class LVLH(Position3d):
     LVLH : Local vertical local horizontal coordinates.
     WGS84 : Geographical coordinates.
 
+    Notes
+    -----
+    The LVLH frame definition was taken from NASA's technical memorandum
+    on coordinate frames for the space shuttle program. [NASA1974]_
+
+    References
+    ----------
+    .. [NASA1974] Coordinate Systems for the Space Shuttle Program, Lyndon
+       B. Johnson Space Center, Houston, Texas 77058, Oct 1974, no. NASA
+       TM X-58153.
+
     Examples
     --------
-    Let `julian`, `roll`, `pitch`, and `yaw` be `np.ndarray` instances and
-    `location` be a `GroundLocation` instance. A `LVLH`coordinate object can be
-    initialized:
+    Let `julian`, `x`, `y`, and `z` be `np.ndarray` instances. A `LVLH`
+    coordinate object can be initialized:
 
-    >>> lvlh = LVLH(julian, roll, pitch, yaw, u.deg, location)
+    >>> lvlh = LVLH(julian, x, y, z, u.km)
 
     Save `LVLH` data to a text file:
 
     >>> lvlh.save_text_file("lvlh_data")
     """
 
-    def __init__(self, julian: np.ndarray, roll: np.ndarray, pitch: np.ndarray,
-                 yaw: np.ndarray, unit: Unit, location: GroundLocation) -> None:
+    def __init__(self, julian: np.ndarray, x: np.ndarray, y: np.ndarray,
+                 z: np.ndarray, unit: Unit) -> None:
 
-        super().__init__(roll, unit, pitch, unit, yaw, unit, julian, u.jd2000)
-
-        self._location = location
-
-    @property
-    def roll(self) -> Quantity:
-        return self.x
-
-    @property
-    def pitch(self) -> Quantity:
-        return self.y
-
-    @property
-    def yaw(self) -> Quantity:
-        return self.z
-
-    @property
-    def location(self) -> GroundLocation:
-        return self._location
+        super().__init__(x, unit, y, unit, z, unit, julian, u.jd2000)
 
     def save_text_file(self, file_name: str) -> None:
-        header = "Satellite Attitude Data"
-        parameters = [
-            ["Location", str(self._location)]
-        ]
+        header = "Satellite LVLH Coordinate Data"
         data = [
             ["Time", self.time],
-            ["Roll", self.x],
-            ["Pitch", self.y],
-            ["Yaw", self.z]
+            ["X", self.x],
+            ["Y", self.y],
+            ["Z", self.z]
         ]
-        _save_data_as_txt(file_name, header, parameters, data)
+        _save_data_as_txt(file_name, header, data=data)
