@@ -2,7 +2,6 @@
 
 from celest.constants import (
     DAYS_IN_JULIAN_CENTURY,
-    EARTH_ROTATION_RATE_DEG_PER_DAY,
     ERA_AT_JD2000_DEG
 )
 from celest.coordinates.astronomical_quantities import (
@@ -364,7 +363,7 @@ class Time:
 
         T1, T2, T3 = _calculate_raw_elapsed_jd_century_powers(self.julian, 3)
 
-        gmst = ERA_AT_JD2000_DEG + EARTH_ROTATION_RATE_DEG_PER_DAY * T1 *\
+        gmst = ERA_AT_JD2000_DEG + 360.98564736629 * T1 *\
             DAYS_IN_JULIAN_CENTURY + 0.000387933 * T2 - T3 / 38710000
 
         return Quantity(gmst % 360 / 15, u.hourangle)
