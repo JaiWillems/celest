@@ -287,6 +287,9 @@ class Coordinate(Time):
         e = np.sqrt(1 - WGS84_MINOR_AXIS ** 2 / WGS84_MAJOR_AXIS ** 2)
         n = WGS84_MAJOR_AXIS / np.sqrt(1 - e ** 2 * np.sin(latitude) ** 2)
 
+        a = n + height
+        b = np.cos(latitude)
+        c = np.cos(longitude)
         x = (n + height) * np.cos(latitude) * np.cos(longitude)
         y = (n + height) * np.cos(latitude) * np.sin(longitude)
         z = (n * (1 - e ** 2) + height) * np.sin(latitude)

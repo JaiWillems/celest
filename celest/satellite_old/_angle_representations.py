@@ -25,7 +25,7 @@ def sexagesimal(angles: np.ndarray) -> np.ndarray:
     --------
     >>> angles = np.array([43.6532, -79.3832, -33.2833, 149.1000])
     >>> coor = Coordinate(...)
-    >>> coor.sexagesimal(angles=angles)
+    >>> coor.sexagesimal(angle=angles)
     np.array(['+43°39′11.52″',
               '-79°22′59.52″',
               '-33°16′59.88″',

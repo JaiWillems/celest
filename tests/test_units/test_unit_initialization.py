@@ -110,6 +110,6 @@ class TestUnitInitialization(TestCase):
 
     def test_hourangle(self):
         self.assertIsInstance(u.hourangle, u.core.Unit)
-        self.assertEqual(u.hourangle.scale, 1 / 15)
+        self.assertEqual(u.hourangle.scale, 15)
         self.assertEqual(u.hourangle.bases, [u.deg])
         self.assertEqual(u.hourangle.powers, [1])
