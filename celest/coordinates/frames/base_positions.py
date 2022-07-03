@@ -42,6 +42,24 @@ class Position2d:
     def time(self) -> Quantity:
         return self._time
 
+    def to_numpy(self, unit: Unit) -> np.ndarray:
+        """Convert coordinate data to NumPy array.
+
+        Parameters
+        ----------
+        unit : Unit
+            The unit of the output array.
+
+        Returns
+        -------
+        np.ndarray
+            The coordinate data in the specified unit.
+        """
+        return np.array([
+            self.x.to(unit).data,
+            self.y.to(unit).data
+        ]).T
+
 
 class Position3d:
     """Position2d(x, x_unit, y, y_unit, z, z_unit, time, time_unit)
@@ -85,3 +103,22 @@ class Position3d:
     @property
     def time(self) -> Quantity:
         return self._time
+
+    def to_numpy(self, unit: Unit) -> np.ndarray:
+        """Convert coordinate data to NumPy array.
+
+        Parameters
+        ----------
+        unit : Unit
+            The unit of the output array.
+
+        Returns
+        -------
+        np.ndarray
+            The coordinate data in the specified unit.
+        """
+        return np.array([
+            self.x.to(unit).data,
+            self.y.to(unit).data,
+            self.z.to(unit).data
+        ]).T

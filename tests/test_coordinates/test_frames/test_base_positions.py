@@ -48,6 +48,14 @@ class TestPosition2d(TestCase):
         self.assertTrue(np.array_equal(self.time, self.position.time.data))
         self.assertEqual(self.time_unit, self.position.time.unit)
 
+    def test_to_numpy(self):
+        expected_output = np.concatenate((
+            self.x.reshape((-1, 1)),
+            self.y.reshape((-1, 1))
+        ), axis=1)
+        actual_output = self.position.to_numpy(u.m)
+        self.assertTrue(np.array_equal(expected_output, actual_output))
+
 
 class TestPosition3d(TestCase):
 
@@ -98,3 +106,12 @@ class TestPosition3d(TestCase):
     def test_time(self):
         self.assertTrue(np.array_equal(self.time, self.position.time.data))
         self.assertEqual(self.time_unit, self.position.time.unit)
+
+    def test_to_numpy(self):
+        expected_output = np.concatenate((
+            self.x.reshape((-1, 1)),
+            self.y.reshape((-1, 1)),
+            self.z.reshape((-1, 1))
+        ), axis=1)
+        actual_output = self.position.to_numpy(u.m)
+        self.assertTrue(np.array_equal(expected_output, actual_output))
