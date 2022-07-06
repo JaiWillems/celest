@@ -1,5 +1,6 @@
 
 
+from celest.coordinates.frames.attitude import Attitude
 from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.frames.itrs import ITRS
 from celest.coordinates.ground_location import GroundLocation
@@ -69,8 +70,7 @@ class Satellite:
         else:
             self.velocity = None
 
-    def attitude(self, location: GroundLocation) -> Tuple[Quantity, Quantity,
-                                                          Quantity]:
+    def attitude(self, location: GroundLocation) -> Attitude:
         """Return satellite roll, pitch, and yaw angles.
 
         This method returns the attitude angles required to align the
@@ -115,9 +115,9 @@ class Satellite:
             self.position.time.data,
             np.full((len(lvlh_position.x.data),),
                     location.itrs_x.to(u.km).data),
-            np.full((len(lvlh_position.x.data),),
+            np.full((len(lvlh_position.y.data),),
                     location.itrs_y.to(u.km).data),
-            np.full((len(lvlh_position.x.data),),
+            np.full((len(lvlh_position.z.data),),
                     location.itrs_z.to(u.km).data),
             u.km
         )
@@ -149,11 +149,12 @@ class Satellite:
         a12 = - v[:, 2] + v[:, 0] * v[:, 1] / (1 + c)
         a22 = 1 - (v[:, 0] ** 2 + v[:, 2] ** 2) / (1 + c)
 
-        roll = Quantity(-np.arcsin(a32), u.rad)
-        pitch = Quantity(np.arctan2(a31, a33), u.rad)
-        yaw = Quantity(np.arctan2(a12, a22), u.rad)
+        roll = -np.arcsin(a32)
+        pitch = np.arctan2(a31, a33)
+        yaw = np.arctan2(a12, a22)
 
-        return roll, pitch, yaw
+        return Attitude(self.position.time.data, roll, pitch, yaw, u.rad,
+                        location)
 
     def look_angle(self, location: GroundLocation) -> Quantity:
         """Return look-angles to a ground location.

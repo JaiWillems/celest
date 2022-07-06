@@ -1,7 +1,10 @@
 
 
-from celest.coordinates import WGS84, ITRS, GroundLocation
+from celest.coordinates.frames.attitude import Attitude
 from celest.coordinates.frames.gcrs import GCRS
+from celest.coordinates.frames.itrs import ITRS
+from celest.coordinates.frames.wgs84 import WGS84
+from celest.coordinates.ground_location import GroundLocation
 from celest.satellite import Satellite
 from celest import units as u
 from unittest import TestCase
@@ -46,7 +49,7 @@ class TestSatellite(TestCase):
 
     def test_attitude(self):
         self.satellite.attitude(self.location)
-        self.assertIsNotNone(self.satellite.attitude(self.location))
+        self.assertIsInstance(self.satellite.attitude(self.location), Attitude)
 
     def test_look_angle(self):
         """
