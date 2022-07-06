@@ -29,13 +29,12 @@ class GCRS(Position3d):
 
     Methods
     -------
-    convert_to(frame, **kwargs)
-        Convert current frame into a new reference frame.
     save_text_file(file_name)
         Save data as a pretty text file.
 
     See Also
     --------
+    Attitude : Satellite attitude.
     AzEl : Azimuth elevation coordinates.
     ITRS : International Terrestrial Reference System.
     LVLH : Local vertical local horizontal coordinates.

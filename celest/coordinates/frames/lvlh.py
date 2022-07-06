@@ -42,10 +42,10 @@ class LVLH(Position3d):
 
     See Also
     --------
+    Attitude : Satellite attitude.
     AzEl : Azimuth elevation coordinates.
     GCRS : Geocentric Celestial Reference System.
     ITRS : International Terrestrial Reference System.
-    LVLH : Local vertical local horizontal coordinates.
     WGS84 : Geographical coordinates.
 
     Notes
