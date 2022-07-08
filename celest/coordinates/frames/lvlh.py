@@ -2,7 +2,7 @@
 
 from celest.coordinates.frames.base_positions import Position3d
 from celest.coordinates.ground_location import GroundLocation
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -77,6 +77,14 @@ class LVLH(Position3d):
         super().__init__(x, unit, y, unit, z, unit, julian, u.jd2000)
 
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file to save data to.
+        """
+
         header = "Satellite LVLH Coordinate Data"
         data = [
             ["Time", self.time],
@@ -84,4 +92,6 @@ class LVLH(Position3d):
             ["Y", self.y],
             ["Z", self.z]
         ]
-        _save_data_as_txt(file_name, header, data=data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(data=data)
+        writer.save()
