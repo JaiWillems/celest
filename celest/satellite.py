@@ -12,7 +12,7 @@ from celest.coordinates.transforms import (
     _gcrs_to_lvlh,
     _gcrs_to_lvlh_matrix
 )
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.quantity import Quantity
 from celest import units as u
 from typing import Union, Tuple
@@ -234,23 +234,33 @@ class Satellite:
         return Quantity(distance, u.km)
 
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file to save data to.
+        """
+
         gcrs_position = _itrs_to_gcrs(self.position)
         gcrs_velocity = _itrs_to_gcrs(self.velocity)
 
-        header = "Satellite position and velocity."
+        header = "Satellite Position and Velocity"
         data = [
             ["Time", self.position.time],
-            ["ITRS X", self.position.x],
-            ["ITRS Y", self.position.y],
-            ["ITRS Z", self.position.z],
-            ["ITRS VX", self.velocity.x],
-            ["ITRS VY", self.velocity.y],
-            ["ITRS VZ", self.velocity.z],
-            ["GCRS X", gcrs_position.x],
-            ["GCRS Y", gcrs_position.y],
-            ["GCRS Z", gcrs_position.z],
-            ["GCRS VX", gcrs_velocity.x],
-            ["GCRS VY", gcrs_velocity.y],
-            ["GCRS VZ", gcrs_velocity.z]
+            ["Itrs X", self.position.x],
+            ["Itrs Y", self.position.y],
+            ["Itrs Z", self.position.z],
+            ["Itrs VX", self.velocity.x],
+            ["Itrs VY", self.velocity.y],
+            ["Itrs VZ", self.velocity.z],
+            ["Gcrs X", gcrs_position.x],
+            ["Gcrs Y", gcrs_position.y],
+            ["Gcrs Z", gcrs_position.z],
+            ["Gcrs VX", gcrs_velocity.x],
+            ["Gcrs VY", gcrs_velocity.y],
+            ["Gcrs VZ", gcrs_velocity.z]
         ]
-        _save_data_as_txt(file_name, header, data=data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(data=data)
+        writer.save()
