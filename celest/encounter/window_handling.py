@@ -97,7 +97,6 @@ class ObservationWindow:
 
     def __init__(self, start_time: float, duration: float, deadline: float,
                  location: GroundLocation, attitude: Attitude) -> None:
-
         self._start_time = Quantity(start_time, u.jd2000)
         self._duration = Quantity(duration, u.s)
         self._deadline = Quantity(deadline, u.jd2000)
@@ -172,8 +171,9 @@ class WindowHandler:
         else:
             raise StopIteration
 
-    def __getitem__(self, key) -> Union[VisibleTimeWindow, ObservationWindow]:
-        pass
+    def __getitem__(self, key) -> Union[list, VisibleTimeWindow,
+                                        ObservationWindow]:
+        return self._window_data[key]
 
     def add_window(self, window: Union[VisibleTimeWindow,
                    ObservationWindow]) -> None:
@@ -197,8 +197,14 @@ class WindowHandler:
         else:
             raise TypeError("All windows added must be consistent types.")
 
-    def save_text_file(self, filename: str) -> None:
-        # TODO: Does not save data for OW objects.
+    def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file to save data to.
+        """
 
         if len(self._window_data) == 0:
             raise Exception("No windows to save.")
@@ -210,7 +216,7 @@ class WindowHandler:
         else:
             data = self._get_observation_window_data()
 
-        writer = TextFileWriter(filename, header)
+        writer = TextFileWriter(file_name, header)
         writer.add_layer(data=data)
         writer.save()
 

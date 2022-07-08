@@ -178,14 +178,54 @@ class TestWindowHandler(TestCase):
         self.assertListEqual([window for window in self.window_handler],
                              self.window_handler._window_data)
 
-    def test_indexing_with_exact_start_time(self):
-        pass
+    def test_indexing_with_integers(self):
+        test_ow_1 = ObservationWindow(1, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_2 = ObservationWindow(2, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_3 = ObservationWindow(3, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_4 = ObservationWindow(4, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_5 = ObservationWindow(5, 1, 10, self.ground_location,
+                                      self.ow_attitude)
 
-    def test_indexing_with_inexact_start_time(self):
-        pass
+        self.window_handler.add_window(test_ow_1)
+        self.window_handler.add_window(test_ow_2)
+        self.window_handler.add_window(test_ow_3)
+        self.window_handler.add_window(test_ow_4)
+        self.window_handler.add_window(test_ow_5)
+
+        self.assertEqual(self.window_handler[0], test_ow_1)
+        self.assertEqual(self.window_handler[1], test_ow_2)
+        self.assertEqual(self.window_handler[2], test_ow_3)
+        self.assertEqual(self.window_handler[3], test_ow_4)
+        self.assertEqual(self.window_handler[4], test_ow_5)
 
     def test_indexing_with_range(self):
-        pass
+        test_ow_1 = ObservationWindow(1, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_2 = ObservationWindow(2, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_3 = ObservationWindow(3, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_4 = ObservationWindow(4, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+        test_ow_5 = ObservationWindow(5, 1, 10, self.ground_location,
+                                      self.ow_attitude)
+
+        self.window_handler.add_window(test_ow_1)
+        self.window_handler.add_window(test_ow_2)
+        self.window_handler.add_window(test_ow_3)
+        self.window_handler.add_window(test_ow_4)
+        self.window_handler.add_window(test_ow_5)
+
+        self.assertListEqual(self.window_handler[:2], [test_ow_1, test_ow_2])
+        self.assertListEqual(self.window_handler[1:3], [test_ow_2, test_ow_3])
+        self.assertListEqual(self.window_handler[3:], [test_ow_4, test_ow_5])
+        self.assertListEqual(self.window_handler[:], [test_ow_1, test_ow_2,
+                                                      test_ow_3, test_ow_4,
+                                                      test_ow_5])
 
     def test_save_text_file_raises_error_for_no_windows(self):
         self.assertRaises(Exception, self.window_handler.save_text_file)
