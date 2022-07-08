@@ -1,7 +1,7 @@
 
 
 from celest.coordinates.frames.base_positions import Position3d
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -74,6 +74,14 @@ class WGS84(Position3d):
         return self.z
 
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file to save data to.
+        """
+
         header = "WGS84 Coordinate Data"
         data = [
             ["Time", self.time],
@@ -81,4 +89,6 @@ class WGS84(Position3d):
             ["Longitude", self.y],
             ["Height", self.z]
         ]
-        _save_data_as_txt(file_name, header, data=data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(data=data)
+        writer.save()

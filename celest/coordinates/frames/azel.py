@@ -2,7 +2,7 @@
 
 from celest.coordinates.frames.base_positions import Position2d
 from celest.coordinates.ground_location import GroundLocation
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -78,6 +78,14 @@ class AzEl(Position2d):
         return self._location
 
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file to save data to.
+        """
+
         header = "Azimuth-Elevation Coordinate Data"
         parameters = [
             ["Location", str(self._location)]
@@ -87,4 +95,6 @@ class AzEl(Position2d):
             ["Azimuth", self.x],
             ["Elevation", self.y]
         ]
-        _save_data_as_txt(file_name, header, parameters, data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(parameters=parameters, data=data)
+        writer.save()
