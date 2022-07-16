@@ -7,6 +7,7 @@ from celest.encounter.window_handling import (
     ObservationWindow,
     WindowHandler
 )
+from celest.units.quantity import Quantity
 from celest import units as u
 from unittest import TestCase
 import numpy as np
@@ -57,10 +58,10 @@ class TestVisibleTimeWindow(TestCase):
 class TestObservationWindow(TestCase):
 
     def setUp(self):
-        self.start_time = 0
-        self.duration = 1
+        self.start_time = Quantity(0, u.jd2000)
+        self.duration = Quantity(1, u.s)
         self.location = GroundLocation(0, 0, 0, u.deg, u.km)
-        self.deadline = 2
+        self.deadline = Quantity(2, u.jd2000)
         self.attitude = Attitude(
             np.random.rand(5),
             np.random.rand(5),
@@ -81,11 +82,10 @@ class TestObservationWindow(TestCase):
         self.assertIsInstance(self.obw, ObservationWindow)
 
     def test_str(self):
-        self.assertEqual(f"Start time: {self.start_time} {u.jd2000}, "
-                         f"Duration: {self.duration} {u.s}, Deadline: "
-                         f"{self.deadline} {u.jd2000}, Location: "
-                         f"{self.location}, Attitude: {self.attitude}",
-                         str(self.obw))
+        self.assertEqual(f"Start time: {self.start_time}, Duration: "
+                         f"{self.duration}, Deadline: {self.deadline}, "
+                         f"Location: {self.location}, Attitude: "
+                         f"{self.attitude}", str(self.obw))
 
     def test_repr(self):
         self.assertEqual(f"ObservationWindow({self.start_time}, "
@@ -93,16 +93,16 @@ class TestObservationWindow(TestCase):
                          f"{self.attitude})", repr(self.obw))
 
     def test_start_time_property(self):
-        self.assertEqual(self.start_time, self.obw.start_time.data)
+        self.assertEqual(self.start_time, self.obw.start_time)
 
     def test_duration_property(self):
-        self.assertEqual(self.duration, self.obw.duration.data)
+        self.assertEqual(self.duration, self.obw.duration)
 
     def test_location_property(self):
         self.assertEqual(self.location, self.obw.location)
 
     def test_deadline_property(self):
-        self.assertEqual(self.deadline, self.obw.deadline.data)
+        self.assertEqual(self.deadline, self.obw.deadline)
 
     def test_attitude_property(self):
         self.assertEqual(self.attitude, self.obw.attitude)
@@ -130,7 +130,13 @@ class TestWindowHandler(TestCase):
             self.ground_location
         )
         self.test_vtw = VisibleTimeWindow(0, 1, self.vtw_attitude)
-        self.test_obw = ObservationWindow(0, 1, 2, self.ground_location, self.ow_attitude)
+        self.test_obw = ObservationWindow(
+            Quantity(0, u.jd2000),
+            Quantity(1, u.s),
+            Quantity(2, u.jd2000),
+            self.ground_location,
+            self.ow_attitude
+        )
 
     def test_initialization(self):
         self.assertIsInstance(self.window_handler, WindowHandler)
@@ -179,16 +185,21 @@ class TestWindowHandler(TestCase):
                              self.window_handler._window_data)
 
     def test_indexing_with_integers(self):
-        test_ow_1 = ObservationWindow(1, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_2 = ObservationWindow(2, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_3 = ObservationWindow(3, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_4 = ObservationWindow(4, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_5 = ObservationWindow(5, 1, 10, self.ground_location,
-                                      self.ow_attitude)
+        test_ow_1 = ObservationWindow(Quantity(1, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_2 = ObservationWindow(Quantity(2, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_3 = ObservationWindow(Quantity(3, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_4 = ObservationWindow(Quantity(4, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_5 = ObservationWindow(Quantity(5, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
 
         self.window_handler.add_window(test_ow_1)
         self.window_handler.add_window(test_ow_2)
@@ -203,16 +214,21 @@ class TestWindowHandler(TestCase):
         self.assertEqual(self.window_handler[4], test_ow_5)
 
     def test_indexing_with_range(self):
-        test_ow_1 = ObservationWindow(1, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_2 = ObservationWindow(2, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_3 = ObservationWindow(3, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_4 = ObservationWindow(4, 1, 10, self.ground_location,
-                                      self.ow_attitude)
-        test_ow_5 = ObservationWindow(5, 1, 10, self.ground_location,
-                                      self.ow_attitude)
+        test_ow_1 = ObservationWindow(Quantity(1, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_2 = ObservationWindow(Quantity(2, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_3 = ObservationWindow(Quantity(3, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_4 = ObservationWindow(Quantity(4, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_5 = ObservationWindow(Quantity(5, u.jd2000), Quantity(1, u.s),
+                                      Quantity(10, u.jd2000),
+                                      self.ground_location, self.ow_attitude)
 
         self.window_handler.add_window(test_ow_1)
         self.window_handler.add_window(test_ow_2)

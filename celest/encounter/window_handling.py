@@ -70,12 +70,12 @@ class ObservationWindow:
 
     Parameters
     ----------
-    start_time : float
-        The start time of the encounter in the J2000 frame.
-    duration : float
-        The duration of the encounter in seconds.
-    deadline : float
-        The deadline of the encounter in the J2000 frame.
+    start_time : Quantity
+        The start time of the encounter.
+    duration : Quantity
+        The duration of the encounter.
+    deadline : Quantity
+        The deadline of the encounter.
     location : GroundLocation
         The ground location involved in the encounter.
     attitude : Attitude
@@ -95,11 +95,12 @@ class ObservationWindow:
         The attitude of the satellite during the encounter.
     """
 
-    def __init__(self, start_time: float, duration: float, deadline: float,
-                 location: GroundLocation, attitude: Attitude) -> None:
-        self._start_time = Quantity(start_time, u.jd2000)
-        self._duration = Quantity(duration, u.s)
-        self._deadline = Quantity(deadline, u.jd2000)
+    def __init__(self, start_time: Quantity, duration: Quantity,
+                 deadline: Quantity, location: GroundLocation, attitude:
+                 Attitude) -> None:
+        self._start_time = start_time
+        self._duration = duration
+        self._deadline = deadline
         self._location = location
         self._attitude = attitude
 
@@ -109,9 +110,8 @@ class ObservationWindow:
             f"Attitude: {self._attitude}"
 
     def __repr__(self) -> str:
-        return f"ObservationWindow({self._start_time.data}, "\
-            f"{self._duration.data}, {self._deadline.data}, {self.location}, "\
-            f"{self._attitude})"
+        return f"ObservationWindow({self._start_time}, {self._duration}, "\
+            f"{self._deadline}, {self.location}, {self._attitude})"
 
     @property
     def start_time(self) -> Quantity:
@@ -169,6 +169,7 @@ class WindowHandler:
             self._current_window_index += 1
             return self._window_data[self._current_window_index - 1]
         else:
+            self._current_window_index = 0
             raise StopIteration
 
     def __getitem__(self, key) -> Union[list, VisibleTimeWindow,
