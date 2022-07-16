@@ -55,7 +55,7 @@ class Attitude(Position3d):
     `location` be a `GroundLocation` instance. An `Attitude` object can be
     initialized:
 
-    >>> attitude = Attitude(julian, roll, picth, yaw, u.km, location)
+    >>> attitude = Attitude(julian, roll, picth, yaw, u.deg, location)
 
     Save `Attitude` data to a text file:
 

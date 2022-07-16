@@ -38,6 +38,11 @@ class GroundLocation:
     def __init__(self, latitude: float, longitude: float, height: float,
                  angular_unit: Unit, length_unit: Unit) -> None:
 
+        if latitude < -90 or latitude > 90:
+            raise ValueError("Latitude must be between -90 and 90 degrees.")
+        if longitude < -180 or longitude > 180:
+            raise ValueError("Longitude must be between -180 and 180 degrees.")
+
         self._latitude = Quantity(latitude, angular_unit)
         self._longitude = Quantity(longitude, angular_unit)
         self._height = Quantity(height, length_unit)
