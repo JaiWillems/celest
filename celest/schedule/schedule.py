@@ -1,6 +1,5 @@
-
-
-from celest.satellite.satellite import Satellite
+from celest.coordinates import Attitude
+from celest.satellite import Satellite
 from celest.schedule.alns import ALNS
 from celest.schedule.insertion_operators import _INSERTION_FUNCTIONS
 from celest.schedule.removal_operators import _REMOVAL_FUNCTIONS
@@ -10,9 +9,10 @@ from celest.schedule.scheduling_utils import (
     initialize_solution,
     is_complete
 )
-from celest.encounter.windows import generate_vtw
-from celest.encounter._window_handling import OW, OWHandler
+from celest.encounter.window_generator import generate_vtw, Lighting
+from celest.encounter.window_handling import ObservationWindow, WindowHandler
 import math
+import numpy as np
 
 
 class Schedule(ALNS):
@@ -30,7 +30,9 @@ class Schedule(ALNS):
 
     def add_request(self, location, deadline, duration, priority, quality, look_ang):
 
-        vtws = generate_vtw(self.satellite, location, self.visibility_threshold, 1)
+        # TODO: Make the inputs into Quantity objects.
+        # TODO: Add a lighting parameter.
+        vtws = generate_vtw(self.satellite, location, self.visibility_threshold, Lighting.DAYTIME)
         self.request_handler.add_request(location, deadline, duration, priority, quality, look_ang, vtws)
 
     def generate(self, max_iter, annealing_coeff, react_factor):
@@ -56,18 +58,25 @@ class Schedule(ALNS):
 
     def _generate_OWHandler_from_request_list(self, request_list):
 
-        ow_handler = OWHandler()
+        ow_handler = WindowHandler()
         for request in request_list:
 
+            # TODO: Add in the RequestIndices rather than hard coded values.
             if request[0]:
 
                 idx = request[1]
-                roll = request[10][idx].roll(request[2])
-                pitch = request[10][idx].pitch(request[2])
-                yaw = request[10][idx].yaw(request[2])
+                attitude = request[10][idx].attitude
+                attitude_idx = np.where(attitude.time.data == request[2])[0]
+                time = attitude.time.data[attitude_idx]
+                roll = attitude.roll.data[attitude_idx]
+                pitch = attitude.pitch.data[attitude_idx]
+                yaw = attitude.yaw.data[attitude_idx]
+                unit = attitude.roll.unit
+                location = attitude.location
+                new_attitude = Attitude(time, roll, pitch, yaw, unit, location)
 
-                ow = OW(request[2], request[3],
-                        request[4], request[5], roll, pitch, yaw)
-                ow_handler._add_window(ow)
+                ow = ObservationWindow(request[2], request[3], request[5],
+                                       request[4], new_attitude)
+                ow_handler.add_window(ow)
 
         return ow_handler

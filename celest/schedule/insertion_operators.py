@@ -1,6 +1,9 @@
 
 
+from celest.units.quantity import Quantity
+from celest import units as u
 import math
+import numpy as np
 
 
 def greedy_insertion(request_handler, number_to_insert):
@@ -25,12 +28,18 @@ def insert_first_n_requests(request_handler, number_to_insert):
         look_angle = request_handler.look_angle(request_index)
         request_vtw_list = request_handler.vtw_list(request_index)
 
-        duration_in_days = duration / 86400
+        duration_in_days = Quantity(duration.to(u.s).data / 86400, u.jd2000)
 
         for vtw_index, vtw in enumerate(request_vtw_list):
 
             if look_angle is not None:
-                start = _look_angle_time(vtw.pitch, look_angle, vtw.rise_time, vtw.set_time)
+                start = _look_angle_time(
+                    vtw.attitude.pitch,
+                    look_angle,
+                    vtw.attitude.time,
+                    vtw.rise_time,
+                    vtw.set_time
+                )
                 if start is None:
                     continue
             else:
@@ -42,7 +51,7 @@ def insert_first_n_requests(request_handler, number_to_insert):
                 continue
             if not image_quality_is_met(vtw, start, minimum_image_quality):
                 continue
-            if does_conflict_exists(request_handler, start, duration):
+            if does_conflict_exists(request_handler, start, duration_in_days):
                 continue
 
             request_handler.schedule_request(request_index, vtw_index, start, duration)
@@ -50,30 +59,30 @@ def insert_first_n_requests(request_handler, number_to_insert):
             break
 
 
-def _look_angle_time(look_angle, desired_look_angle, start, end, tol=1e-6):
+def _look_angle_time(look_angle, desired_look_angle, julian, start, end):
 
-    look_angle = look_angle - desired_look_angle
+    julian = julian.to(u.jd2000).data
+    look_angle = look_angle.to(u.deg).data - desired_look_angle.to(u.deg).data
 
-    left_value = start
-    right_value = end
+    left_value_index = np.where(julian == start.to(u.jd2000).data)[0][0]
+    right_value_index = np.where(julian == end.to(u.jd2000).data)[0][0]
 
-    left_look_angle = look_angle(left_value)
-    right_look_angle = look_angle(right_value)
+    left_look_angle = look_angle[left_value_index]
+    right_look_angle = look_angle[right_value_index]
 
     if left_look_angle * right_look_angle > 0:
         return None
 
-    while (right_value - left_value > tol):
-        mid_value = (left_value + right_value) / 2
-        mid_look_angle = look_angle(mid_value)
+    while right_value_index - left_value_index > 1:
+        mid_value_index = (left_value_index + right_value_index) // 2
+        mid_look_angle = look_angle[mid_value_index]
         if left_look_angle * mid_look_angle > 0:
-            left_value = mid_value
+            left_value_index = mid_value_index
             left_look_angle = mid_look_angle
         else:
-            right_value = mid_value
-            right_look_angle = mid_look_angle
+            right_value_index = mid_value_index
 
-    return (left_value + right_value) / 2
+    return Quantity(julian[left_value_index], u.jd2000)
 
 
 def image_quality_is_met(vtw, start, minimum_image_quality):
@@ -84,7 +93,7 @@ def image_quality_is_met(vtw, start, minimum_image_quality):
 def image_quality(vtw, start):
 
     nadir_time = (vtw.rise_time + vtw.set_time) / 2
-    return math.floor(10 - 9 * abs(start - nadir_time) / (nadir_time - vtw.rise_time))
+    return math.floor(10 - 9 * abs(start.to(u.jd2000).data - nadir_time.to(u.jd2000).data) / (nadir_time.to(u.jd2000).data - vtw.rise_time.to(u.jd2000).data))
 
 
 def does_conflict_exists(request_handler, start, duration_in_days):
@@ -93,13 +102,14 @@ def does_conflict_exists(request_handler, start, duration_in_days):
         if not request[0]:
             continue
         scheduled_start = request[2]
-        scheduled_end = scheduled_start + request[3] / 86400
+        scheduled_duration = Quantity(request[3].to(u.s).data / 86400, u.jd2000)
+        scheduled_end = scheduled_start + scheduled_duration
 
-        if start < scheduled_start and scheduled_start < start + duration_in_days:
+        if start <= scheduled_start and scheduled_start < start + duration_in_days:
             return True
-        if start < scheduled_end and scheduled_end < start + duration_in_days:
+        if start < scheduled_end and scheduled_end <= start + duration_in_days:
             return True
-        if scheduled_start < start and start + duration_in_days < scheduled_end:
+        if scheduled_start <= start and start + duration_in_days <= scheduled_end:
             return True
 
     return False

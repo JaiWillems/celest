@@ -1,3 +1,5 @@
+
+
 from enum import IntEnum
 
 
@@ -199,4 +201,4 @@ class RequestHandler:
     def sort_vtws_by_increasing_rise_time(self):
 
         for request in self.requests:
-            request[RequestIndices.vtw_list] = sorted(request[RequestIndices.vtw_list], key=lambda x: x.rise_time)
+            request[RequestIndices.vtw_list] = sorted(request[RequestIndices.vtw_list], key=lambda x: x.rise_time.data)

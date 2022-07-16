@@ -181,9 +181,11 @@ class TestRequestHandler(TestCase):
 
         self.request_handler.sort_vtws_by_increasing_conflict_degree()
         for request in self.request_handler:
-            previous_conflict_degree = 0
+            previous_conflict_degree = None
             for vtw in request[RequestIndices.vtw_list]:
                 current_conflict_degree = self.request_handler._conflict_degree(vtw)
+                if previous_conflict_degree is None:
+                    continue
                 self.assertLessEqual(previous_conflict_degree, current_conflict_degree)
                 previous_conflict_degree = current_conflict_degree
 
@@ -191,7 +193,9 @@ class TestRequestHandler(TestCase):
 
         self.request_handler.sort_vtws_by_increasing_rise_time()
         for request in self.request_handler:
-            previous_rise_time = 0
+            previous_rise_time = None
             for vtw in request[RequestIndices.vtw_list]:
+                if previous_rise_time is None:
+                    continue
                 self.assertLessEqual(previous_rise_time, vtw.rise_time)
                 previous_rise_time = vtw.rise_time

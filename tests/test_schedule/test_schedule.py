@@ -1,13 +1,16 @@
 
 
-from celest.encounter.groundposition import GroundPosition
-from celest.encounter._window_handling import OWHandler
-from celest.satellite.satellite import Satellite
+from celest.coordinates.frames.gcrs import GCRS
+from celest.coordinates.ground_location import GroundLocation
+from celest.encounter.window_handling import WindowHandler
+from celest.satellite import Satellite
 from celest.schedule.insertion_operators import _INSERTION_FUNCTIONS
 from celest.schedule.request_handler import RequestIndices
 from celest.schedule.removal_operators import _REMOVAL_FUNCTIONS
 from celest.schedule.schedule import Schedule
 from celest.schedule.scheduling_utils import cost, is_complete, initialize_solution
+from celest.units.quantity import Quantity
+from celest import units as u
 from unittest import TestCase
 import numpy as np
 
@@ -18,10 +21,13 @@ class TestSchedule(TestCase):
 
         fname = 'Tests/test_data/coordinate_validation_long.txt'
         data = np.loadtxt(fname, usecols=[0, 11, 12, 13, 14, 15, 16], skiprows=1, max_rows=5000)
-        julian, gcrs_pos, gcrs_vel = data[:, 0], data[:, 1:4], data[:, 4:]
+        julian, gcrs_pos, gcrs_vel = data[:, 0] + 2430000, data[:, 1:4], data[:, 4:]
 
-        self.satellite = Satellite(gcrs_pos, gcrs_vel, "gcrs", julian, 2430000)
-        self.toronto = GroundPosition(43.6532, -79.3832, 0.076)
+        gcrs_position = GCRS(julian, gcrs_pos[:, 0], gcrs_pos[:, 1], gcrs_pos[:, 2], u.km)
+        gcrs_velocity = GCRS(julian, gcrs_vel[:, 0], gcrs_vel[:, 1], gcrs_vel[:, 2], u.m / u.s)
+
+        self.satellite = Satellite(gcrs_position, gcrs_velocity)
+        self.toronto = GroundLocation(43.6532, -79.3832, 0.076, u.deg, u.km)
 
     def test_schedule_raises_exception_if_null_satellite_is_passed(self):
 
@@ -54,37 +60,40 @@ class TestSchedule(TestCase):
         schedule = Schedule(self.satellite, 10)
         self.assertRaises(Exception, schedule.generate, 100, 0.8, 0.5)
 
-    def test_generate_returns_OWHandler_when_requests_are_added(self):
+    def test_generate_returns_WindowHandler_when_requests_are_added(self):
 
         schedule = Schedule(self.satellite, 10)
-        schedule.add_request(self.toronto, 2460467, 30, 1, 1, None)
-        self.assertIsInstance(schedule.generate(100, 0.8, 0.5), OWHandler)
+        schedule.add_request(self.toronto, Quantity(2460467, u.jd2000), Quantity(30, u.s), 1, 1, None)
+        self.assertIsInstance(schedule.generate(100, 0.8, 0.5), WindowHandler)
 
     def test_generate_returns_improved_solutions(self):
 
-        toronto = GroundPosition(43.65, -79.38, 0.076)
-        north_bay = GroundPosition(46.31, -79.46, 0.193)
-        sudbury = GroundPosition(46.49, -80.99, 0.348)
-        ottawa = GroundPosition(45.42, -75.70, 0.070)
-        kingston = GroundPosition(44.23, -76.49, 0.093)
-        niagara_falls = GroundPosition(43.09, -79.08, 0.099)
-        london = GroundPosition(42.98, -81.24, 0.251)
-        mississauga = GroundPosition(43.59, -79.64, 0.156)
-        timmins = GroundPosition(48.48, -81.33, 0.295)
-        tobermory = GroundPosition(45.25, -81.66, 0.271)
+        toronto = GroundLocation(43.65, -79.38, 0.076, u.deg, u.km)
+        north_bay = GroundLocation(46.31, -79.46, 0.193, u.deg, u.km)
+        sudbury = GroundLocation(46.49, -80.99, 0.348, u.deg, u.km)
+        ottawa = GroundLocation(45.42, -75.70, 0.070, u.deg, u.km)
+        kingston = GroundLocation(44.23, -76.49, 0.093, u.deg, u.km)
+        niagara_falls = GroundLocation(43.09, -79.08, 0.099, u.deg, u.km)
+        london = GroundLocation(42.98, -81.24, 0.251, u.deg, u.km)
+        mississauga = GroundLocation(43.59, -79.64, 0.156, u.deg, u.km)
+        timmins = GroundLocation(48.48, -81.33, 0.295, u.deg, u.km)
+        tobermory = GroundLocation(45.25, -81.66, 0.271, u.deg, u.km)
 
         schedule = Schedule(self.satellite, 10)
 
-        schedule.add_request(toronto, 2460467, 30, 1, 1, None)
-        schedule.add_request(north_bay, 2460467, 30, 1, 1, None)
-        schedule.add_request(sudbury, 2460467, 30, 4, 1, None)
-        schedule.add_request(ottawa, 2460467, 30, 2, 1, None)
-        schedule.add_request(kingston, 2460467, 30, 7, 1, None)
-        schedule.add_request(niagara_falls, 2460467, 30, 3, 1, None)
-        schedule.add_request(london, 2460467, 30, 4, 1, None)
-        schedule.add_request(mississauga, 2460467, 30, 5, 1, None)
-        schedule.add_request(timmins, 2460467, 30, 1, 1, None)
-        schedule.add_request(tobermory, 2460467, 30, 7, 1, None)
+        deadline = Quantity(2460467, u.jd2000)
+        duration = Quantity(30, u.s)
+
+        schedule.add_request(toronto, deadline, duration, 1, 1, None)
+        schedule.add_request(north_bay, deadline, duration, 1, 1, None)
+        schedule.add_request(sudbury, deadline, duration, 4, 1, None)
+        schedule.add_request(ottawa, deadline, duration, 2, 1, None)
+        schedule.add_request(kingston, deadline, duration, 7, 1, None)
+        schedule.add_request(niagara_falls, deadline, duration, 3, 1, None)
+        schedule.add_request(london, deadline, duration, 4, 1, None)
+        schedule.add_request(mississauga, deadline, duration, 5, 1, None)
+        schedule.add_request(timmins, deadline, duration, 1, 1, None)
+        schedule.add_request(tobermory, deadline, duration, 7, 1, None)
 
         initialize_solution(schedule.request_handler)
         initial_solution_cost = cost(schedule.request_handler)
