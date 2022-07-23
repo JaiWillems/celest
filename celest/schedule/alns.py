@@ -214,7 +214,7 @@ class ALNS:
 
     def _accept(self, temporary_solution: Any, current_solution: Any,
                 T: float) -> bool:
-        """Accpetance criterion.
+        """Acceptance criterion.
 
         This method implements a simulated annealing acceptance criterion.
 

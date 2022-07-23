@@ -1,7 +1,7 @@
 
 
 from celest.coordinates.frames.base_positions import Position3d
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -9,7 +9,9 @@ import numpy as np
 
 
 class WGS84(Position3d):
-    """Coordinates in the WGS84 Earth ellipsoid model.
+    """WGS84(julian, latitude, longitude, height, angular_unit, length_unit)
+
+    Coordinates in the WGS84 Earth ellipsoid model.
 
     Parameters
     ----------
@@ -31,14 +33,13 @@ class WGS84(Position3d):
 
     Methods
     -------
-    convert_to(frame, **kwargs)
-        Convert current frame into a new reference frame.
     save_text_file(file_name)
         Save data as a pretty text file.
 
     See Also
     --------
-    AzEl : Azimuth elevation coordinates.
+    Attitude : Satellite attitude.
+    AzEl : Azimuth-elevation coordinates.
     GCRS : Geocentric Celestial Reference System.
     ITRS : International Terrestrial Reference System.
     LVLH : Local vertical local horizontal coordinates.
@@ -64,22 +65,32 @@ class WGS84(Position3d):
 
     @property
     def latitude(self) -> Quantity:
-        return self.x
+        return self._get_x()
 
     @property
     def longitude(self) -> Quantity:
-        return self.y
+        return self._get_y()
 
     @property
     def height(self) -> Quantity:
-        return self.z
+        return self._get_z()
 
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file for the saved data.
+        """
+
         header = "WGS84 Coordinate Data"
         data = [
             ["Time", self.time],
-            ["Latitude", self.x],
-            ["Longitude", self.y],
-            ["Height", self.z]
+            ["Latitude", self.latitude],
+            ["Longitude", self.longitude],
+            ["Height", self.height]
         ]
-        _save_data_as_txt(file_name, header, data=data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(data=data)
+        writer.save()

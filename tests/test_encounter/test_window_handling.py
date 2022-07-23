@@ -1,177 +1,250 @@
 
 
-from celest.encounter.groundposition import GroundPosition
-from celest.encounter._window_handling import (
-    VTW,
-    OW,
-    WindowHandler,
-    VTWHandler,
-    OWHandler
+from celest.coordinates.frames.attitude import Attitude
+from celest.coordinates.ground_location import GroundLocation
+from celest.encounter.window_handling import (
+    ObservationWindow,
+    VisibleTimeWindow,
+    WindowHandler
 )
+from celest.units.quantity import Quantity
+from celest import units as u
 from unittest import TestCase
 import numpy as np
-import unittest
 import os
 
 
-class TestVTW(TestCase):
+class TestVisibleTimeWindow(TestCase):
 
-    def test_vtw_initialization(self):
+    def setUp(self):
+        self.rise_time = 0
+        self.set_time = 1
+        self.attitude = Attitude(
+            np.random.rand(5),
+            np.random.rand(5),
+            np.random.rand(5),
+            np.random.rand(5),
+            u.deg,
+            GroundLocation(0, 0, 0, u.deg, u.km)
+        )
+        self.vtw = VisibleTimeWindow(
+            self.rise_time,
+            self.set_time,
+            self.attitude
+        )
 
-        rise_time = 21282.4
-        set_time = 21282.5
-        self.window = VTW(rise_time, set_time, None, None, None)
+    def test_initialization(self):
+        self.assertIsInstance(self.vtw, VisibleTimeWindow)
+
+    def test_str(self):
+        self.assertEqual(f"Rise time: {self.rise_time} {u.jd2000}, Set time: "
+                         f"{self.set_time} {u.jd2000}, Attitude: "
+                         f"{self.attitude}", str(self.vtw))
+
+    def test_repr(self):
+        self.assertEqual(f"VisibleTimeWindow({self.rise_time}, "
+                         f"{self.set_time}, {self.attitude})", repr(self.vtw))
+
+    def test_rise_time_property(self):
+        self.assertEqual(self.rise_time, self.vtw.rise_time.data)
+
+    def test_set_time_property(self):
+        self.assertEqual(self.set_time, self.vtw.set_time.data)
+
+    def test_attitude_property(self):
+        self.assertEqual(self.attitude, self.vtw.attitude)
 
 
-class TestOW(TestCase):
+class TestObservationWindow(TestCase):
 
-    def test_ow_initialization(self):
+    def setUp(self):
+        self.start_time = Quantity(0, u.jd2000)
+        self.duration = Quantity(1, u.s)
+        self.location = GroundLocation(0, 0, 0, u.deg, u.km)
+        self.attitude = Attitude(
+            np.random.rand(5),
+            np.random.rand(5),
+            np.random.rand(5),
+            np.random.rand(5),
+            u.deg,
+            self.location
+        )
+        self.obw = ObservationWindow(
+            self.start_time,
+            self.duration,
+            self.location,
+            self.attitude
+        )
 
-        start_time = 21282.4
-        duration = 30
-        location = GroundPosition(43.6532, 79.3832, 0.076)
-        deadline = 21284.3
+    def test_initialization(self):
+        self.assertIsInstance(self.obw, ObservationWindow)
 
-        self.window = OW(start_time, duration, location, deadline, None, None, None)
+    def test_str(self):
+        self.assertEqual(f"Start time: {self.start_time}, Duration: "
+                         f"{self.duration}, Location: {self.location}, "
+                         f"Attitude: {self.attitude}", str(self.obw))
+
+    def test_repr(self):
+        self.assertEqual(f"ObservationWindow({self.start_time}, "
+                         f"{self.duration}, {self.location}, {self.attitude})",
+                         repr(self.obw))
+
+    def test_start_time_property(self):
+        self.assertEqual(self.start_time, self.obw.start_time)
+
+    def test_duration_property(self):
+        self.assertEqual(self.duration, self.obw.duration)
+
+    def test_location_property(self):
+        self.assertEqual(self.location, self.obw.location)
+
+    def test_attitude_property(self):
+        self.assertEqual(self.attitude, self.obw.attitude)
 
 
 class TestWindowHandler(TestCase):
 
     def setUp(self):
+        self.window_handler = WindowHandler()
+        self.ground_location = GroundLocation(0, 0, 0, u.deg, u.km)
+        self.vtw_attitude = Attitude(
+            np.random.rand(5),
+            np.random.rand(5),
+            np.random.rand(5),
+            np.random.rand(5),
+            u.deg,
+            self.ground_location
+        )
+        self.ow_attitude = Attitude(
+            np.random.rand(1),
+            np.random.rand(1),
+            np.random.rand(1),
+            np.random.rand(1),
+            u.deg,
+            self.ground_location
+        )
+        self.test_vtw = VisibleTimeWindow(0, 1, self.vtw_attitude)
+        self.test_obw = ObservationWindow(
+            Quantity(0, u.jd2000),
+            Quantity(1, u.s),
+            self.ground_location,
+            self.ow_attitude
+        )
 
-        self.windows = WindowHandler()
+    def test_initialization(self):
+        self.assertIsInstance(self.window_handler, WindowHandler)
+        self.assertListEqual(self.window_handler._window_data, [])
 
-        self.W1 = VTW(1319, 1319.2, None, None, None)
-        self.W2 = VTW(1322.3, 1322.31, None, None, None)
-        self.W3 = VTW(1324, 1324.2, None, None, None)
-        self.W4 = VTW(1324.3, 1325.3, None, None, None)
-        self.W5 = VTW(1325, 1326.1, None, None, None)
+    def test_add_window_handler_data_raises_error_for_non_window(self):
+        self.assertRaises(TypeError, self.window_handler.add_window,
+                          "not a window")
 
-        self.windows._add_window_to_window_handler(self.W1)
-        self.windows._add_window_to_window_handler(self.W2)
-        self.windows._add_window_to_window_handler(self.W3)
-        self.windows._add_window_to_window_handler(self.W4)
-        self.windows._add_window_to_window_handler(self.W5)
+    def test_add_window_handler_data_alters_window_data_with_vtw(self):
+        self.window_handler.add_window(self.test_vtw)
+        self.assertListEqual(self.window_handler._window_data, [self.test_vtw])
 
-    def test_getitem(self):
+    def test_add_window_handler_data_alters_window_data_with_ow(self):
+        self.window_handler.add_window(self.test_obw)
+        self.assertListEqual(self.window_handler._window_data, [self.test_obw])
 
-        self.assertEqual(self.windows[1310], self.W1)
-        self.assertEqual(self.windows[1319], self.W1)
-        self.assertEqual(self.windows[1323], self.W2)
-        self.assertEqual(self.windows[1324.4], self.W4)
-        self.assertEqual(self.windows[1330], self.W5)
+    def test_add_window_handler_data_enforces_same_window_type(self):
+        self.window_handler.add_window(self.test_vtw)
+        self.assertRaises(TypeError, self.window_handler.add_window,
+                          self.test_obw)
 
-        test_windows = self.windows[1322.5, 1325]
-        true_windows = np.array([self.W2, self.W5], dtype=object)
-        self.assertTrue(np.array_equiv(test_windows, true_windows))
+    def test_str(self):
+        self.window_handler.add_window(self.test_vtw)
+        self.window_handler.add_window(self.test_vtw)
+        self.assertEqual(str([self.test_vtw, self.test_vtw]),
+                         str(self.window_handler))
 
-        self.assertEqual(self.windows[1323.5, 1324.1], self.W3)
+    def test_repr(self):
+        self.window_handler.add_window(self.test_vtw)
+        self.window_handler.add_window(self.test_vtw)
+        self.assertEqual(f"WindowHandler({repr(self.test_vtw)}, {repr(self.test_vtw)})",
+                         repr(self.window_handler))
 
-        test_windows = self.windows[1322.5:1326]
-        true_windows = np.array([self.W3, self.W4, self.W5], dtype=object)
-        self.assertTrue(np.array_equiv(test_windows, true_windows))
+    def test_len_returns_correct_length(self):
+        self.assertEqual(len(self.window_handler), 0)
+        self.window_handler.add_window(self.test_vtw)
+        self.assertEqual(len(self.window_handler), 1)
+        self.window_handler.add_window(self.test_vtw)
+        self.assertEqual(len(self.window_handler), 2)
 
-        test_windows = self.windows[1322.3:1325]
-        true_windows = np.array([self.W2, self.W3, self.W4, self.W5], dtype=object)
-        self.assertTrue(np.array_equiv(test_windows, true_windows))
+    def test_iteration(self):
+        self.window_handler.add_window(self.test_vtw)
+        self.window_handler.add_window(self.test_vtw)
+        self.assertListEqual([window for window in self.window_handler],
+                             self.window_handler._window_data)
 
-    def test_add_window(self):
+    def test_indexing_with_integers(self):
+        test_ow_1 = ObservationWindow(Quantity(1, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_2 = ObservationWindow(Quantity(2, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_3 = ObservationWindow(Quantity(3, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_4 = ObservationWindow(Quantity(4, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_5 = ObservationWindow(Quantity(5, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
 
-        test_val = 0
-        for w in self.windows:
-            window_start = w.rise_time if isinstance(w, VTW) else w.start_time
-            self.assertLessEqual(test_val, window_start)
-            test_val = window_start
+        self.window_handler.add_window(test_ow_1)
+        self.window_handler.add_window(test_ow_2)
+        self.window_handler.add_window(test_ow_3)
+        self.window_handler.add_window(test_ow_4)
+        self.window_handler.add_window(test_ow_5)
 
-    def test_get_window(self):
+        self.assertEqual(self.window_handler[0], test_ow_1)
+        self.assertEqual(self.window_handler[1], test_ow_2)
+        self.assertEqual(self.window_handler[2], test_ow_3)
+        self.assertEqual(self.window_handler[3], test_ow_4)
+        self.assertEqual(self.window_handler[4], test_ow_5)
 
-        self.assertEqual(self.windows.get_window(1320), self.W1)
-        self.assertEqual(self.windows.get_window(1322.5), self.W2)
-        self.assertEqual(self.windows.get_window(1324.5), self.W4)
-        self.assertEqual(self.windows.get_window(1325.5), self.W5)
+    def test_indexing_with_range(self):
+        test_ow_1 = ObservationWindow(Quantity(1, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_2 = ObservationWindow(Quantity(2, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_3 = ObservationWindow(Quantity(3, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_4 = ObservationWindow(Quantity(4, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
+        test_ow_5 = ObservationWindow(Quantity(5, u.jd2000), Quantity(1, u.s),
+                                      self.ground_location, self.ow_attitude)
 
-    def test_get_windows_in_range(self):
+        self.window_handler.add_window(test_ow_1)
+        self.window_handler.add_window(test_ow_2)
+        self.window_handler.add_window(test_ow_3)
+        self.window_handler.add_window(test_ow_4)
+        self.window_handler.add_window(test_ow_5)
 
-        test_windows = self.windows.get_windows_in_range(1320, 1326)
-        true_windows = np.array([self.W2, self.W3, self.W4, self.W5], dtype=object)
-        self.assertTrue(np.array_equiv(test_windows, true_windows))
+        self.assertListEqual(self.window_handler[:2], [test_ow_1, test_ow_2])
+        self.assertListEqual(self.window_handler[1:3], [test_ow_2, test_ow_3])
+        self.assertListEqual(self.window_handler[3:], [test_ow_4, test_ow_5])
+        self.assertListEqual(self.window_handler[:], [test_ow_1, test_ow_2,
+                                                      test_ow_3, test_ow_4,
+                                                      test_ow_5])
 
-    def test_to_numpy(self):
+    def test_save_text_file_raises_error_for_no_windows(self):
+        self.assertRaises(Exception, self.window_handler.save_text_file)
 
-        self.assertIsInstance(self.windows.to_numpy(), np.ndarray)
+    def test_save_text_file_for_vtws(self):
+        self.window_handler.add_window(self.test_vtw)
+        self.window_handler.add_window(self.test_vtw)
 
+        file_name = "vtw_test_file"
+        self.window_handler.save_text_file(file_name)
+        self.assertTrue(os.path.exists(file_name + ".txt"))
+        if os.path.exists(file_name + ".txt"):
+            os.remove(file_name + ".txt")
 
-class TestVTWHandler(TestCase):
+    def test_save_text_file_for_ows(self):
+        self.window_handler.add_window(self.test_obw)
+        self.window_handler.add_window(self.test_obw)
 
-    def setUp(self) -> None:
-
-        self.windows = VTWHandler()
-
-        self.W1 = VTW(1319, 1319.2, None, None, None)
-        self.W2 = VTW(1322.3, 1322.31, None, None, None)
-        self.W3 = VTW(1324, 1324.2, None, None, None)
-        self.W4 = VTW(1324.3, 1325.3, None, None, None)
-        self.W5 = VTW(1325, 1326.1, None, None, None)
-
-        self.windows._add_window(self.W1)
-        self.windows._add_window(self.W2)
-        self.windows._add_window(self.W3)
-        self.windows._add_window(self.W4)
-        self.windows._add_window(self.W5)
-
-    def test_stats(self):
-
-        self.assertIsNotNone(self.windows.stats())
-
-    def test_save(self):
-
-        self.windows.save('test_vtw.csv', ',')
-        self.assertTrue(os.path.isfile('test_vtw.csv'))
-
-        loaded_data = np.loadtxt('test_vtw.csv', delimiter=',', skiprows=1)
-        for i, window in enumerate(self.windows):
-            self.assertEqual(window.rise_time, loaded_data[i, 0])
-            self.assertEqual(window.set_time, loaded_data[i, 1])
-            self.assertEqual(window.duration, loaded_data[i, 2])
-
-        os.remove('test_vtw.csv')
-
-
-class TestOWHandler(TestCase):
-
-    def setUp(self) -> None:
-
-        self.windows = OWHandler()
-        location = GroundPosition(43.6532, 79.3832, 0.076)
-
-        self.W1 = OW(1319, 30, location, 1319.2, None, None, None)
-        self.W2 = OW(1322.3, 20, location, 1322.31, None, None, None)
-        self.W3 = OW(1324, 32, location, 1324.2, None, None, None)
-        self.W4 = OW(1324.3, 28, location, 1325.3, None, None, None)
-        self.W5 = OW(1325, 10, location, 1326.1, None, None, None)
-
-        self.windows._add_window(self.W1)
-        self.windows._add_window(self.W2)
-        self.windows._add_window(self.W3)
-        self.windows._add_window(self.W4)
-        self.windows._add_window(self.W5)
-
-    def test_save(self):
-
-        self.windows.save('test_ow.csv', ',')
-        self.assertTrue(os.path.isfile('test_ow.csv'))
-
-        loaded_data = np.loadtxt('test_ow.csv', delimiter=',', skiprows=1)
-        for i, window in enumerate(self.windows):
-
-            self.assertEqual(window.location.latitude, loaded_data[i, 0])
-            self.assertEqual(window.location.longitude, loaded_data[i, 1])
-            self.assertEqual(window.start_time, loaded_data[i, 2])
-            self.assertEqual(window.duration, loaded_data[i, 3])
-            self.assertEqual(window.deadline, loaded_data[i, 4])
-
-        os.remove('test_ow.csv')
-
-
-if __name__ == "__main__":
-    unittest.main()
+        file_name = "ow_test_file"
+        self.window_handler.save_text_file(file_name)
+        self.assertTrue(os.path.exists(file_name + ".txt"))
+        if os.path.exists(file_name + ".txt"):
+            os.remove(file_name + ".txt")

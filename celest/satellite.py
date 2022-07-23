@@ -1,20 +1,21 @@
 
 
+from celest.coordinates.frames.attitude import Attitude
 from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.frames.itrs import ITRS
 from celest.coordinates.ground_location import GroundLocation
 from celest.coordinates.transforms import (
-    _gcrs_to_itrs,
     _altitude,
-    _get_ang,
-    _itrs_to_gcrs,
+    _gcrs_to_itrs,
     _gcrs_to_lvlh,
-    _gcrs_to_lvlh_matrix
+    _gcrs_to_lvlh_matrix,
+    _get_ang,
+    _itrs_to_gcrs
 )
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.quantity import Quantity
 from celest import units as u
-from typing import Union, Tuple
+from typing import Tuple, Union
 import numpy as np
 
 
@@ -69,8 +70,7 @@ class Satellite:
         else:
             self.velocity = None
 
-    def attitude(self, location: GroundLocation) -> Tuple[Quantity, Quantity,
-                                                          Quantity]:
+    def attitude(self, location: GroundLocation) -> Attitude:
         """Return satellite roll, pitch, and yaw angles.
 
         This method returns the attitude angles required to align the
@@ -115,9 +115,9 @@ class Satellite:
             self.position.time.data,
             np.full((len(lvlh_position.x.data),),
                     location.itrs_x.to(u.km).data),
-            np.full((len(lvlh_position.x.data),),
+            np.full((len(lvlh_position.y.data),),
                     location.itrs_y.to(u.km).data),
-            np.full((len(lvlh_position.x.data),),
+            np.full((len(lvlh_position.z.data),),
                     location.itrs_z.to(u.km).data),
             u.km
         )
@@ -149,11 +149,12 @@ class Satellite:
         a12 = - v[:, 2] + v[:, 0] * v[:, 1] / (1 + c)
         a22 = 1 - (v[:, 0] ** 2 + v[:, 2] ** 2) / (1 + c)
 
-        roll = Quantity(-np.arcsin(a32), u.rad)
-        pitch = Quantity(np.arctan2(a31, a33), u.rad)
-        yaw = Quantity(np.arctan2(a12, a22), u.rad)
+        roll = -np.arcsin(a32)
+        pitch = np.arctan2(a31, a33)
+        yaw = np.arctan2(a12, a22)
 
-        return roll, pitch, yaw
+        return Attitude(self.position.time.data, roll, pitch, yaw, u.rad,
+                        location)
 
     def look_angle(self, location: GroundLocation) -> Quantity:
         """Return look-angles to a ground location.
@@ -233,23 +234,33 @@ class Satellite:
         return Quantity(distance, u.km)
 
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file for the saved data.
+        """
+
         gcrs_position = _itrs_to_gcrs(self.position)
         gcrs_velocity = _itrs_to_gcrs(self.velocity)
 
-        header = "Satellite position and velocity."
+        header = "Satellite Position and Velocity"
         data = [
             ["Time", self.position.time],
-            ["ITRS X", self.position.x],
-            ["ITRS Y", self.position.y],
-            ["ITRS Z", self.position.z],
-            ["ITRS VX", self.velocity.x],
-            ["ITRS VY", self.velocity.y],
-            ["ITRS VZ", self.velocity.z],
-            ["GCRS X", gcrs_position.x],
-            ["GCRS Y", gcrs_position.y],
-            ["GCRS Z", gcrs_position.z],
-            ["GCRS VX", gcrs_velocity.x],
-            ["GCRS VY", gcrs_velocity.y],
-            ["GCRS VZ", gcrs_velocity.z]
+            ["Itrs X", self.position.x],
+            ["Itrs Y", self.position.y],
+            ["Itrs Z", self.position.z],
+            ["Itrs VX", self.velocity.x],
+            ["Itrs VY", self.velocity.y],
+            ["Itrs VZ", self.velocity.z],
+            ["Gcrs X", gcrs_position.x],
+            ["Gcrs Y", gcrs_position.y],
+            ["Gcrs Z", gcrs_position.z],
+            ["Gcrs VX", gcrs_velocity.x],
+            ["Gcrs VY", gcrs_velocity.y],
+            ["Gcrs VZ", gcrs_velocity.z]
         ]
-        _save_data_as_txt(file_name, header, data=data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(data=data)
+        writer.save()

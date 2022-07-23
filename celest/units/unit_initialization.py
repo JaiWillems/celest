@@ -8,7 +8,7 @@ namespace = globals()
 
 # Si length measures.
 setup_unit("m", "meter", namespace)
-setup_unit("mm", "milimeter", namespace, 0.001 * m)
+setup_unit("mm", "millimeter", namespace, 0.001 * m)
 setup_unit("cm", "centimeter", namespace, 0.01 * m)
 setup_unit("km", "kilometer", namespace, 1000 * m)
 

@@ -1,7 +1,10 @@
 
 
-from celest.coordinates import WGS84, ITRS, GroundLocation
+from celest.coordinates.frames.attitude import Attitude
 from celest.coordinates.frames.gcrs import GCRS
+from celest.coordinates.frames.itrs import ITRS
+from celest.coordinates.frames.wgs84 import WGS84
+from celest.coordinates.ground_location import GroundLocation
 from celest.satellite import Satellite
 from celest import units as u
 from unittest import TestCase
@@ -12,25 +15,34 @@ import os
 class TestSatellite(TestCase):
 
     def setUp(self):
-        fname = "tests/test_data/coordinate_validation_long.txt"
-        cols = (0, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19)
-        skiprows = 1
-        max_rows = 5000
-        data = np.loadtxt(fname=fname, usecols=cols, skiprows=skiprows,
-                          max_rows=max_rows)
+        data = np.loadtxt(
+            fname="tests/test_data/coordinate_validation_long.txt",
+            usecols=(0, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+            skiprows=1,
+            max_rows=5000
+        )
 
-        self.times = data[:, 0] + 2430000
+        self.julian = data[:, 0] + 2430000
         self.wgs84 = data[:, 1:3]
         self.altitude = data[:, 3]
         self.gcrs = data[:, 4:7]
         self.gcrs_velocity = data[:, 7:10]
         self.itrs = data[:, 10:]
 
-        self.gcrs_position = GCRS(self.times, self.gcrs[:, 0], self.gcrs[:, 1],
-                                  self.gcrs[:, 2], u.km)
-        self.gcrs_velocity = GCRS(self.times, self.gcrs_velocity[:, 0],
-                                  self.gcrs_velocity[:, 1],
-                                  self.gcrs_velocity[:, 2], u.m / u.s)
+        self.gcrs_position = GCRS(
+            self.julian,
+            self.gcrs[:, 0],
+            self.gcrs[:, 1],
+            self.gcrs[:, 2],
+            u.km
+        )
+        self.gcrs_velocity = GCRS(
+            self.julian,
+            self.gcrs_velocity[:, 0],
+            self.gcrs_velocity[:, 1],
+            self.gcrs_velocity[:, 2],
+            u.m / u.s
+        )
 
         self.satellite = Satellite(self.gcrs_position, self.gcrs_velocity)
 
@@ -40,13 +52,19 @@ class TestSatellite(TestCase):
         self.assertIsInstance(self.satellite, Satellite)
 
     def test_value_error_raised_from_improper_data_frames(self):
-        wgs84_position = WGS84(self.times, self.wgs84[:, 0], self.wgs84[:, 1],
-                               self.altitude, u.deg, u.km)
+        wgs84_position = WGS84(
+            self.julian,
+            self.wgs84[:, 0],
+            self.wgs84[:, 1],
+            self.altitude,
+            u.deg,
+            u.km
+        )
         self.assertRaises(ValueError, Satellite, wgs84_position)
 
     def test_attitude(self):
         self.satellite.attitude(self.location)
-        self.assertIsNotNone(self.satellite.attitude(self.location))
+        self.assertIsInstance(self.satellite.attitude(self.location), Attitude)
 
     def test_look_angle(self):
         """
@@ -59,8 +77,13 @@ class TestSatellite(TestCase):
         generate the test cases.
         """
 
-        gcrs = GCRS(self.times[210:220], self.gcrs[210:220, 0],
-                    self.gcrs[210:220, 1], self.gcrs[210:220, 2], u.km)
+        gcrs = GCRS(
+            self.julian[210:220],
+            self.gcrs[210:220, 0],
+            self.gcrs[210:220, 1],
+            self.gcrs[210:220, 2],
+            u.km
+        )
         satellite = Satellite(gcrs)
 
         expected_look_angle = np.array([66.88, 65.09, 63.90, 63.22, 62.46,

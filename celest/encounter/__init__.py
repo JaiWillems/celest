@@ -1,3 +1,2 @@
 
-from celest.encounter.groundposition import GroundPosition
-from celest.encounter import windows
+from celest.encounter.window_generator import generate_vtw

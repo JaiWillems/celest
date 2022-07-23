@@ -20,6 +20,14 @@ class TestGroundLocation(TestCase):
     def test_initialization(self):
         self.assertIsInstance(self.location, GroundLocation)
 
+    def test_initialization_with_invalid_latitude_raises_value_error(self):
+        self.assertRaises(ValueError, GroundLocation, -91, 0, 0, u.deg, u.km)
+        self.assertRaises(ValueError, GroundLocation, 91, 0, 0, u.deg, u.km)
+
+    def test_initialization_with_invalid_longitude_raises_value_error(self):
+        self.assertRaises(ValueError, GroundLocation, 0, -181, 0, u.deg, u.km)
+        self.assertRaises(ValueError, GroundLocation, 0, 181, 0, u.deg, u.km)
+
     def test_str(self):
         self.assertEqual(str(self.location),
                          "00°05′39.84″S 22°36′05.40″W 493.42km")

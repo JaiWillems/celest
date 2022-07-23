@@ -36,13 +36,13 @@ class TestPosition2d(TestCase):
         self.assertRaises(ValueError, Position2d, x, self.x_unit, y,
                           self.y_unit, time, self.time_unit)
 
-    def test_x(self):
-        self.assertTrue(np.array_equal(self.x, self.position.x.data))
-        self.assertEqual(self.x_unit, self.position.x.unit)
+    def test_get_x(self):
+        self.assertTrue(np.array_equal(self.x, self.position._get_x().data))
+        self.assertEqual(self.x_unit, self.position._get_x().unit)
 
-    def test_y(self):
-        self.assertTrue(np.array_equal(self.y, self.position.y.data))
-        self.assertEqual(self.y_unit, self.position.y.unit)
+    def test_get_y(self):
+        self.assertTrue(np.array_equal(self.y, self.position._get_y().data))
+        self.assertEqual(self.y_unit, self.position._get_y().unit)
 
     def test_time(self):
         self.assertTrue(np.array_equal(self.time, self.position.time.data))
@@ -91,17 +91,17 @@ class TestPosition3d(TestCase):
         self.assertRaises(ValueError, Position3d, x, self.x_unit, y,
                           self.y_unit, z, self.z_unit, time, self.time_unit)
 
-    def test_x(self):
-        self.assertTrue(np.array_equal(self.x, self.position.x.data))
-        self.assertEqual(self.x_unit, self.position.x.unit)
+    def test_get_x(self):
+        self.assertTrue(np.array_equal(self.x, self.position._get_x().data))
+        self.assertEqual(self.x_unit, self.position._get_x().unit)
 
-    def test_y(self):
-        self.assertTrue(np.array_equal(self.y, self.position.y.data))
-        self.assertEqual(self.y_unit, self.position.y.unit)
+    def test_get_y(self):
+        self.assertTrue(np.array_equal(self.y, self.position._get_y().data))
+        self.assertEqual(self.y_unit, self.position._get_y().unit)
 
-    def test_z(self):
-        self.assertTrue(np.array_equal(self.z, self.position.z.data))
-        self.assertEqual(self.z_unit, self.position.z.unit)
+    def test_get_z(self):
+        self.assertTrue(np.array_equal(self.z, self.position._get_z().data))
+        self.assertEqual(self.z_unit, self.position._get_z().unit)
 
     def test_time(self):
         self.assertTrue(np.array_equal(self.time, self.position.time.data))

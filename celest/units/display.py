@@ -3,9 +3,7 @@
 from celest.units import core  # Import core to prevent circular import errors.
 
 
-# TODO: There is a lot of repeated code here, try to refactor.
 def _to_string(unit):
-
     if isinstance(unit, core.CompoundUnit):
         return generate_compound_unit_string(unit)
     elif isinstance(unit, core.NamedUnit):
@@ -15,7 +13,6 @@ def _to_string(unit):
 
 
 def generate_compound_unit_string(unit):
-
     numerator_strings = []
     denominator_strings = []
     for base, power in zip(unit.bases, unit.powers):

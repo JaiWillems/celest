@@ -40,7 +40,8 @@ class Quantity:
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
             if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for Quantity addition.")
+                raise ArithmeticError(
+                    "Units must match for Quantity addition.")
             data = self._data + other._data
             return Quantity(data, self._unit)
         else:
@@ -52,7 +53,8 @@ class Quantity:
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
             if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for Quantity addition.")
+                raise ArithmeticError(
+                    "Units must match for Quantity addition.")
             data = self._data + other._data
             return Quantity(data, self._unit)
         else:
@@ -64,7 +66,8 @@ class Quantity:
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
             if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for Quantity subtraction.")
+                raise ArithmeticError(
+                    "Units must match for Quantity subtraction.")
             data = self._data - other._data
             return Quantity(data, self._unit)
         else:
@@ -76,7 +79,8 @@ class Quantity:
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
             if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for Quantity subtraction.")
+                raise ArithmeticError(
+                    "Units must match for Quantity subtraction.")
             data = other._data - self._data
             return Quantity(data, self._unit)
         else:
@@ -124,6 +128,54 @@ class Quantity:
             data = other._data / self._data
             unit = other._unit / self._unit
             return Quantity(data, unit)
+        else:
+            return NotImplemented
+
+    def __eq__(self, other):
+        if isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for comparison.")
+            return self._data == other._data
+        else:
+            return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for comparison.")
+            return self._data != other._data
+        else:
+            return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for comparison.")
+            return self._data < other._data
+        else:
+            return NotImplemented
+
+    def __le__(self, other):
+        if isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for comparison.")
+            return self._data <= other._data
+        else:
+            return NotImplemented
+
+    def __gt__(self, other):
+        if isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for comparison.")
+            return self._data > other._data
+        else:
+            return NotImplemented
+
+    def __ge__(self, other):
+        if isinstance(other, Quantity):
+            if repr(self._unit) != repr(other._unit):
+                raise ArithmeticError("Units must match for comparison.")
+            return self._data >= other._data
         else:
             return NotImplemented
 
@@ -182,8 +234,8 @@ class Quantity:
         """
 
         if self._unit.dimension != new_unit.dimension:
-            raise ValueError("New unit has a different dimension then the \
-                             current unit.")
+            raise ValueError(
+                "New unit has a different dimension then the current unit.")
 
         def _get_unit_scale(unit):
             if isinstance(unit, CompoundUnit):

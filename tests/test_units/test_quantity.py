@@ -156,6 +156,72 @@ class TestQuantity(TestCase):
         self.assertEqual(repr(self.compound_unit / self.simple_unit),
                          repr(result.unit))
 
+    def test_eq_when_equal_with_same_dimensions(self):
+        self.assertTrue(self.simple_quantity == self.simple_quantity)
+
+    def test_eq_when_not_equal_with_same_dimensions(self):
+        self.assertFalse(self.simple_quantity == (self.simple_quantity + 1))
+
+    def test_eq_with_different_dimensions_raises_arithmetic_error(self):
+        self.assertRaises(ArithmeticError, self.simple_quantity.__eq__,
+                          self.compound_quantity)
+
+    def test_neq_when_not_equal_with_same_dimensions(self):
+        self.assertTrue(self.simple_quantity != (self.simple_quantity + 1))
+
+    def test_neq_when_equal_with_same_dimensions(self):
+        self.assertFalse(self.simple_quantity != self.simple_quantity)
+
+    def test_neq_with_different_dimensions_raises_arithmetic_error(self):
+        self.assertRaises(ArithmeticError, self.simple_quantity.__ne__,
+                          self.compound_quantity)
+
+    def test_lt_when_less_than_with_same_dimensions(self):
+        self.assertTrue(self.simple_quantity < (self.simple_quantity + 1))
+
+    def test_lt_when_greater_than_with_same_dimensions(self):
+        self.assertFalse((self.simple_quantity + 1) < self.simple_quantity)
+
+    def test_lt_with_different_dimensions_raises_arithmetic_error(self):
+        self.assertRaises(ArithmeticError, self.simple_quantity.__lt__,
+                          self.compound_quantity)
+
+    def test_le_when_less_than_with_same_dimensions(self):
+        self.assertTrue(self.simple_quantity <= (self.simple_quantity + 1))
+
+    def test_le_when_equal_with_same_dimensions(self):
+        self.assertTrue(self.simple_quantity <= self.simple_quantity)
+
+    def test_le_when_greater_than_with_same_dimensions(self):
+        self.assertFalse((self.simple_quantity + 1) <= self.simple_quantity)
+
+    def test_le_with_different_dimensions_raises_arithmetic_error(self):
+        self.assertRaises(ArithmeticError, self.simple_quantity.__le__,
+                          self.compound_quantity)
+
+    def test_gt_when_greater_with_same_dimensions(self):
+        self.assertTrue((self.simple_quantity + 1) > self.simple_quantity)
+
+    def test_gt_when_less_with_same_dimensions(self):
+        self.assertFalse(self.simple_quantity > (self.simple_quantity + 1))
+
+    def test_gt_with_different_dimensions_raises_arithmetic_error(self):
+        self.assertRaises(ArithmeticError, self.simple_quantity.__gt__,
+                          self.compound_quantity)
+
+    def test_ge_when_greater_than_with_same_dimensions(self):
+        self.assertTrue((self.simple_quantity + 1) >= self.simple_quantity)
+
+    def test_ge_when_equal_with_same_dimensions(self):
+        self.assertTrue(self.simple_quantity >= self.simple_quantity)
+
+    def test_ge_when_less_than_with_same_dimensions(self):
+        self.assertFalse(self.simple_quantity >= (self.simple_quantity + 1))
+
+    def test_ge_with_different_dimensions_raises_arithmetic_error(self):
+        self.assertRaises(ArithmeticError, self.simple_quantity.__ge__,
+                          self.compound_quantity)
+
     def test_to_with_same_dimension(self):
         simple_quantity_in_km = self.simple_quantity.to(u.km)
         self.assertEqual(0.005, simple_quantity_in_km.data)

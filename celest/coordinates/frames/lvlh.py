@@ -2,7 +2,7 @@
 
 from celest.coordinates.frames.base_positions import Position3d
 from celest.coordinates.ground_location import GroundLocation
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -10,7 +10,9 @@ import numpy as np
 
 
 class LVLH(Position3d):
-    """Coordinates in the level-horizontal-level-vertical or Hill frame.
+    """LVLH(julian, x, y, z, unit)
+
+    Coordinates in the level-horizontal-level-vertical or Hill frame.
 
     The local-vertical local-horizontal frame (also known as the Hill
     frame) is a body frame where the z-axis is algigned with the negative
@@ -42,10 +44,10 @@ class LVLH(Position3d):
 
     See Also
     --------
-    AzEl : Azimuth elevation coordinates.
+    Attitude : Satellite attitude.
+    AzEl : Azimuth-elevation coordinates.
     GCRS : Geocentric Celestial Reference System.
     ITRS : International Terrestrial Reference System.
-    LVLH : Local vertical local horizontal coordinates.
     WGS84 : Geographical coordinates.
 
     Notes
@@ -76,7 +78,27 @@ class LVLH(Position3d):
 
         super().__init__(x, unit, y, unit, z, unit, julian, u.jd2000)
 
+    @property
+    def x(self) -> Quantity:
+        return self._get_x()
+
+    @property
+    def y(self) -> Quantity:
+        return self._get_y()
+
+    @property
+    def z(self) -> Quantity:
+        return self._get_z()
+
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file for the saved data.
+        """
+
         header = "Satellite LVLH Coordinate Data"
         data = [
             ["Time", self.time],
@@ -84,4 +106,6 @@ class LVLH(Position3d):
             ["Y", self.y],
             ["Z", self.z]
         ]
-        _save_data_as_txt(file_name, header, data=data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(data=data)
+        writer.save()

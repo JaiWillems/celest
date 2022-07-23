@@ -1,7 +1,7 @@
 
 
 from celest.coordinates.frames.base_positions import Position3d
-from celest.file_save import _save_data_as_txt
+from celest.file_save import TextFileWriter
 from celest.units.core import Unit
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -9,7 +9,9 @@ import numpy as np
 
 
 class ITRS(Position3d):
-    """Coordinates in the Internation Terrestrial Reference System.
+    """ITRS(julian, x, y, z, unit)
+
+    Coordinates in the Internation Terrestrial Reference System.
 
     Parameters
     ----------
@@ -29,14 +31,13 @@ class ITRS(Position3d):
 
     Methods
     -------
-    convert_to(frame, **kwargs)
-        Convert current frame into a new reference frame.
     save_text_file(file_name)
         Save data as a pretty text file.
 
     See Also
     --------
-    AzEl : Azimuth elevation coordinates.
+    Attitude : Satellite attitude.
+    AzEl : Azimuth-elevation coordinates.
     GCRS : Geocentric Celestial Reference System.
     LVLH : Local vertical local horizontal coordinates.
     WGS84 : Geographical coordinates.
@@ -62,7 +63,27 @@ class ITRS(Position3d):
 
         super().__init__(x, unit, y, unit, z, unit, julian, u.jd2000)
 
+    @property
+    def x(self) -> Quantity:
+        return self._get_x()
+
+    @property
+    def y(self) -> Quantity:
+        return self._get_y()
+
+    @property
+    def z(self) -> Quantity:
+        return self._get_z()
+
     def save_text_file(self, file_name: str) -> None:
+        """Save data as a pretty text file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the text file for the saved data.
+        """
+
         header = "ITRS Coordinate Data"
         data = [
             ["Time", self.time],
@@ -70,4 +91,6 @@ class ITRS(Position3d):
             ["Y", self.y],
             ["Z", self.z]
         ]
-        _save_data_as_txt(file_name, header, data=data)
+        writer = TextFileWriter(file_name, header)
+        writer.add_layer(data=data)
+        writer.save()

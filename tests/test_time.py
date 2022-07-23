@@ -24,7 +24,7 @@ class TestTime(TestCase):
 
         Notes
         -----
-        Test cases are generated from the Global Monitoring Labratory and the
+        Test cases are generated from the Global Monitoring Laboratory and the
         Government of Australia.[1]_[2]_
 
         References
@@ -72,7 +72,7 @@ class TestTime(TestCase):
 
         Notes
         -----
-        Test cases are taken from Global Monitoring Labratory.[1]_
+        Test cases are taken from Global Monitoring Laboratory.[1]_
 
         References
         ----------

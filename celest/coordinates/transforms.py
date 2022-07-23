@@ -74,7 +74,7 @@ def _gcrs_to_itrs(gcrs: GCRS) -> ITRS:
 
 
 def _rotate_by_earth_rotation_angle(data, degree_era):
-    """Rotate vectors about the z-azis by the Earth rotation angle.
+    """Rotate vectors about the z-axis by the Earth rotation angle.
 
     Parameters
     ----------
@@ -375,7 +375,7 @@ def _azimuth(itrs: ITRS, location: GroundLocation) -> np.ndarray:
 
 
 def _get_ang(u, v) -> np.ndarray:
-    """Return the degree angle bewteen two vectors.
+    """Return the degree angle between two vectors.
 
     Parameters
     ----------
