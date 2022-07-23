@@ -1,7 +1,7 @@
 
 
 from celest.file_save import TextFileWriter, _process_file_name
-from unittest import TestCase, skip
+from unittest import TestCase
 import numpy as np
 import os
 

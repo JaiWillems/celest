@@ -21,13 +21,13 @@ class TextFileWriter:
     Parameters
     ----------
     file_name : str
-        File name or path string to the desired save location.
+        File name or path to the desired save location.
     header : str
-        Header string to be placed at the top of the file.
+        Header to be placed at the top of the file.
 
     Methods
     -------
-    add_layer(subheading, parameters, data, data_format)
+    add_layer(subheading, parameters, data, data_format="%.15f")
         Add a data layer to the text file.
     save()
         Save the text file.
@@ -67,7 +67,7 @@ class TextFileWriter:
         Parameters
         ----------
         subheading : str
-            Subheading string to be placed at the top of the layer.
+            Subheading to be placed at the top of the layer.
         parameters : list
             List of lists containing a parameter's label-value string pair.
 

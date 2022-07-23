@@ -14,14 +14,14 @@ class VisibleTimeWindow:
 
     A visible time window is the time at which a satellite is visible from a
     ground location. It is characterized by the time at which the satellite
-    first becomes visible and when it last becomes visible.
+    first becomes visible to when it is last visible.
 
     Parameters
     ----------
     rise_time : float
-        The time at which the satellite is visible in the J2000 frame.
+        The time at which the satellite is first visible in the jd2000 epoch.
     set_time : float
-        The time at which the satellite is no longer visible in the J2000 frame.
+        The time at which the satellite is no longer visible in the jd2000 epoch.
     attitude : Attitude
         The attitude of the satellite.
 
@@ -74,8 +74,6 @@ class ObservationWindow:
         The start time of the encounter.
     duration : Quantity
         The duration of the encounter.
-    deadline : Quantity
-        The deadline of the encounter.
     location : GroundLocation
         The ground location involved in the encounter.
     attitude : Attitude
@@ -87,8 +85,6 @@ class ObservationWindow:
         The start time of the encounter in the J2000 frame.
     duration : Quantity
         The duration of the encounter in seconds.
-    deadline : Quantity
-        The deadline of the encounter in the J2000 frame.
     location : GroundLocation
         The ground location involved in the encounter.
     attitude : Attitude
@@ -96,22 +92,19 @@ class ObservationWindow:
     """
 
     def __init__(self, start_time: Quantity, duration: Quantity,
-                 deadline: Quantity, location: GroundLocation, attitude:
-                 Attitude) -> None:
+                 location: GroundLocation, attitude: Attitude) -> None:
         self._start_time = start_time
         self._duration = duration
-        self._deadline = deadline
         self._location = location
         self._attitude = attitude
 
     def __str__(self) -> str:
         return f"Start time: {self._start_time}, Duration: {self._duration}, "\
-            f"Deadline: {self._deadline}, Location: {self._location}, "\
-            f"Attitude: {self._attitude}"
+            f"Location: {self._location}, Attitude: {self._attitude}"
 
     def __repr__(self) -> str:
         return f"ObservationWindow({self._start_time}, {self._duration}, "\
-            f"{self._deadline}, {self.location}, {self._attitude})"
+            f"{self.location}, {self._attitude})"
 
     @property
     def start_time(self) -> Quantity:
@@ -126,10 +119,6 @@ class ObservationWindow:
         return self._location
 
     @property
-    def deadline(self) -> Quantity:
-        return self._deadline
-
-    @property
     def attitude(self) -> Attitude:
         return self._attitude
 
@@ -139,26 +128,36 @@ class WindowHandler:
 
     Container to hold window data.
 
+    The `WindowHandler` class can only hold one type of window data (i.e.
+    either visible time windows or observation windows) at a time due to there
+    differing attributes and physical significance.
+
     Methods
     -------
     add_window(window)
         Add a window to the container.
     save_text_file(filename)
         Save the window data to a text file.
+
+    Raises
+    ------
+    TypeError
+        If attempting to add both `VisibleTimeWindow` and `ObservationWindow`
+        objects.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._window_data = []
         self._current_window_index = 0
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._window_data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "WindowHandler(" +\
                ", ".join([repr(i) for i in self._window_data]) + ")"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._window_data)
 
     def __iter__(self) -> Union[VisibleTimeWindow, ObservationWindow]:
@@ -237,7 +236,6 @@ class WindowHandler:
     def _get_observation_window_data(self) -> list:
         start_time = []
         duration = []
-        deadline = []
         location = []
         roll = []
         pitch = []
@@ -246,7 +244,6 @@ class WindowHandler:
         for window in self._window_data:
             start_time.append(window.start_time.to(u.jd2000).data)
             duration.append(window.duration.to(u.s).data)
-            deadline.append(window.deadline.to(u.jd2000).data)
             location.append(window.location)
             roll.append(window.attitude.roll.to(u.deg).data[0])
             pitch.append(window.attitude.pitch.to(u.deg).data[0])
@@ -255,7 +252,6 @@ class WindowHandler:
         return [
             ["Start Time", Quantity(np.array(start_time), u.jd2000)],
             ["Duration", Quantity(np.array(duration), u.s)],
-            ["Deadline", Quantity(np.array(deadline), u.jd2000)],
             ["Location", np.array(location)],
             ["Roll", Quantity(np.array(roll), u.deg)],
             ["Pitch", Quantity(np.array(pitch), u.deg)],

@@ -26,11 +26,11 @@ class TestAzEl(TestCase):
         self.assertTrue(np.array_equal(self.julian, self.valid_azel.time.data))
         self.assertEqual(u.jd2000, self.valid_azel.time.unit)
 
-        self.assertTrue(np.array_equal(self.azimuth, self.valid_azel.x.data))
-        self.assertEqual(self.unit, self.valid_azel.x.unit)
+        self.assertTrue(np.array_equal(self.azimuth, self.valid_azel.azimuth.data))
+        self.assertEqual(self.unit, self.valid_azel.azimuth.unit)
 
-        self.assertTrue(np.array_equal(self.elevation, self.valid_azel.y.data))
-        self.assertEqual(self.unit, self.valid_azel.y.unit)
+        self.assertTrue(np.array_equal(self.elevation, self.valid_azel.elevation.data))
+        self.assertEqual(self.unit, self.valid_azel.elevation.unit)
 
         self.assertEqual(self.location, self.valid_azel.location)
 

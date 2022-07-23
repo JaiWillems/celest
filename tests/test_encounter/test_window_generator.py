@@ -9,7 +9,7 @@ from celest.encounter.window_generator import (
     _get_day_constraint_indices,
     _get_night_constraint_indices,
     Lighting,
-    _sun_coordinates
+    _get_sun_gcrs
 )
 from celest.satellite import Satellite
 from celest import units as u
@@ -27,22 +27,22 @@ class TestGenerateVTW(TestCase):
             max_rows=5000
         )
 
-        self.times = data[:, 0] + 2430000
-        self.gcrs = data[:, 1:4]
-        self.gcrs_velocity = data[:, 4:]
+        self.julian = data[:, 0] + 2430000
+        gcrs_position = data[:, 1:4]
+        gcrs_velocity = data[:, 4:]
 
         self.gcrs_position = GCRS(
-            self.times,
-            self.gcrs[:, 0],
-            self.gcrs[:, 1],
-            self.gcrs[:, 2],
+            self.julian,
+            gcrs_position[:, 0],
+            gcrs_position[:, 1],
+            gcrs_position[:, 2],
             u.km
         )
         self.gcrs_velocity = GCRS(
-            self.times,
-            self.gcrs_velocity[:, 0],
-            self.gcrs_velocity[:, 1],
-            self.gcrs_velocity[:, 2],
+            self.julian,
+            gcrs_velocity[:, 0],
+            gcrs_velocity[:, 1],
+            gcrs_velocity[:, 2],
             u.m / u.s
         )
         self.satellite = Satellite(self.gcrs_position, self.gcrs_velocity)
@@ -73,8 +73,8 @@ class TestGenerateVTW(TestCase):
 
         for window in windows:
             rise_time, set_time = window.rise_time.data, window.set_time.data
-            window_indices = np.where((rise_time <= self.times) &
-                                      (self.times <= set_time))[0]
+            window_indices = np.where((rise_time <= self.julian) &
+                                      (self.julian <= set_time))[0]
 
             # The first and last indices are always invalid.
             self.assertTrue(np.alltrue(
@@ -86,7 +86,7 @@ class TestGenerateVTW(TestCase):
         return satellite_coordinates.convert_to(AzEl, self.location).elevation
 
     def _get_sun_elevation(self):
-        sun_gcrs = _sun_coordinates(self.times)
+        sun_gcrs = _get_sun_gcrs(self.julian)
         sun_azel = Coordinate(sun_gcrs).convert_to(AzEl, self.location)
         return sun_azel.elevation
 
@@ -103,8 +103,8 @@ class TestGenerateVTW(TestCase):
 
         for window in windows:
             rise_time, set_time = window.rise_time.data, window.set_time.data
-            window_indices = np.where((rise_time <= self.times) &
-                                      (self.times <= set_time))[0]
+            window_indices = np.where((rise_time <= self.julian) &
+                                      (self.julian <= set_time))[0]
 
             # The first and last indices are always invalid.
             self.assertTrue(np.alltrue(
@@ -112,11 +112,11 @@ class TestGenerateVTW(TestCase):
             self.assertTrue(np.alltrue(sun_elevation[window_indices][1:-1] < 0))
 
     def test_get_night_constraint_indices(self):
-        indices = _get_night_constraint_indices(self.times, self.location)
+        indices = _get_night_constraint_indices(self.julian, self.location)
         sun_elevation = self._get_sun_elevation()
         self.assertTrue(np.alltrue(sun_elevation.to(u.deg).data[indices] < 0))
 
-    def test_sun_coordinates(self):
+    def test_get_sun_gcrs(self):
         from astropy.coordinates import get_body
         from astropy import time, units
 
@@ -127,7 +127,7 @@ class TestGenerateVTW(TestCase):
         sun_position.representation_type = "cartesian"
 
         expected_gcrs = sun_position.gcrs
-        actual_gcrs = _sun_coordinates(julian)
+        actual_gcrs = _get_sun_gcrs(julian)
 
         self.assertTrue(np.allclose(expected_gcrs.x.to(units.km).value,
                                     actual_gcrs.x.to(u.km).data, rtol=0.05))
@@ -138,5 +138,5 @@ class TestGenerateVTW(TestCase):
 
     def test_get_day_constraint_indices(self):
         sun_elevation = self._get_sun_elevation()
-        indices = _get_day_constraint_indices(self.times, self.location)
+        indices = _get_day_constraint_indices(self.julian, self.location)
         self.assertTrue(np.alltrue(sun_elevation.to(u.deg).data[indices] > 0))

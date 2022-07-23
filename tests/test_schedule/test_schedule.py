@@ -5,10 +5,14 @@ from celest.coordinates.ground_location import GroundLocation
 from celest.encounter.window_handling import WindowHandler
 from celest.satellite import Satellite
 from celest.schedule.insertion_operators import _INSERTION_FUNCTIONS
-from celest.schedule.request_handler import RequestIndices
 from celest.schedule.removal_operators import _REMOVAL_FUNCTIONS
+from celest.schedule.request_handler import RequestIndices
 from celest.schedule.schedule import Schedule
-from celest.schedule.scheduling_utils import cost, is_complete, initialize_solution
+from celest.schedule.scheduling_utils import (
+    cost,
+    initialize_solution,
+    is_complete
+)
 from celest.units.quantity import Quantity
 from celest import units as u
 from unittest import TestCase

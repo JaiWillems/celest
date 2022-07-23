@@ -10,10 +10,12 @@ import numpy as np
 
 
 class Attitude(Position3d):
-    """Satellite attitude.
+    """Attitude(julian, roll, pitch, yaw, unit, location)
+
+    Satellite attitude.
 
     The attitude of a satellite is defined by the roll, pitch, and yaw angles
-    that take the satellite from the lvlh frame to a ground target pointing
+    that take the satellite from the lvlh frame to a ground-target-pointing
     orientation.
 
     Parameters
@@ -23,16 +25,16 @@ class Attitude(Position3d):
     roll, pitch, yaw : np.ndarray
         1-D array containing the coordinate data.
     unit : Unit
-        The unit of the spatial data.
+        The unit of the angular data.
     location : GroundLocation
-        The ground location for the satellite to point to.
+        The ground location associated with the attitude data.
 
     Attributes
     ----------
     roll, pitch, yaw : Quantity
         Coordinate data.
     location : GroundLocation
-        The ground location for the satellite to point to.
+        The ground location associated with the attitude data.
     time : Quantity
         Times associated with coordinate dimensions.
 
@@ -43,7 +45,7 @@ class Attitude(Position3d):
 
     See Also
     --------
-    AzEl : Azimuth elevation coordinates.
+    AzEl : Azimuth-elevation coordinates.
     GCRS : Geocentric Celestial Reference System.
     ITRS : International Terrestrial Reference System.
     LVLH : Local vertical local horizontal coordinates.
@@ -71,15 +73,15 @@ class Attitude(Position3d):
 
     @property
     def roll(self) -> Quantity:
-        return self.x
+        return self._get_x()
 
     @property
     def pitch(self) -> Quantity:
-        return self.y
+        return self._get_y()
 
     @property
     def yaw(self) -> Quantity:
-        return self.z
+        return self._get_z()
 
     @property
     def location(self) -> GroundLocation:
@@ -91,7 +93,7 @@ class Attitude(Position3d):
         Parameters
         ----------
         file_name : str
-            Name of the text file to save data to.
+            Name of the text file for the saved data.
         """
 
         header = "Attitude Coordinate Data"

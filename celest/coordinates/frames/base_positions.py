@@ -30,12 +30,10 @@ class Position2d:
         self._y = Quantity(y, y_unit)
         self._time = Quantity(time, time_unit)
 
-    @property
-    def x(self) -> Quantity:
+    def _get_x(self) -> Quantity:
         return self._x
 
-    @property
-    def y(self) -> Quantity:
+    def _get_y(self) -> Quantity:
         return self._y
 
     @property
@@ -56,8 +54,8 @@ class Position2d:
             The coordinate data in the specified unit.
         """
         return np.array([
-            self.x.to(unit).data,
-            self.y.to(unit).data
+            self._x.to(unit).data,
+            self._y.to(unit).data
         ]).T
 
 
@@ -88,16 +86,13 @@ class Position3d:
         self._z = Quantity(z, z_unit)
         self._time = Quantity(time, time_unit)
 
-    @property
-    def x(self) -> Quantity:
+    def _get_x(self) -> Quantity:
         return self._x
 
-    @property
-    def y(self) -> Quantity:
+    def _get_y(self) -> Quantity:
         return self._y
 
-    @property
-    def z(self) -> Quantity:
+    def _get_z(self) -> Quantity:
         return self._z
 
     @property
@@ -118,7 +113,7 @@ class Position3d:
             The coordinate data in the specified unit.
         """
         return np.array([
-            self.x.to(unit).data,
-            self.y.to(unit).data,
-            self.z.to(unit).data
+            self._x.to(unit).data,
+            self._y.to(unit).data,
+            self._z.to(unit).data
         ]).T

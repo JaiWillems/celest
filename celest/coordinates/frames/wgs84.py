@@ -9,7 +9,9 @@ import numpy as np
 
 
 class WGS84(Position3d):
-    """Coordinates in the WGS84 Earth ellipsoid model.
+    """WGS84(julian, latitude, longitude, height, angular_unit, length_unit)
+
+    Coordinates in the WGS84 Earth ellipsoid model.
 
     Parameters
     ----------
@@ -37,7 +39,7 @@ class WGS84(Position3d):
     See Also
     --------
     Attitude : Satellite attitude.
-    AzEl : Azimuth elevation coordinates.
+    AzEl : Azimuth-elevation coordinates.
     GCRS : Geocentric Celestial Reference System.
     ITRS : International Terrestrial Reference System.
     LVLH : Local vertical local horizontal coordinates.
@@ -63,15 +65,15 @@ class WGS84(Position3d):
 
     @property
     def latitude(self) -> Quantity:
-        return self.x
+        return self._get_x()
 
     @property
     def longitude(self) -> Quantity:
-        return self.y
+        return self._get_y()
 
     @property
     def height(self) -> Quantity:
-        return self.z
+        return self._get_z()
 
     def save_text_file(self, file_name: str) -> None:
         """Save data as a pretty text file.
@@ -79,15 +81,15 @@ class WGS84(Position3d):
         Parameters
         ----------
         file_name : str
-            Name of the text file to save data to.
+            Name of the text file for the saved data.
         """
 
         header = "WGS84 Coordinate Data"
         data = [
             ["Time", self.time],
-            ["Latitude", self.x],
-            ["Longitude", self.y],
-            ["Height", self.z]
+            ["Latitude", self.latitude],
+            ["Longitude", self.longitude],
+            ["Height", self.height]
         ]
         writer = TextFileWriter(file_name, header)
         writer.add_layer(data=data)

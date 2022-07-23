@@ -10,7 +10,14 @@ import numpy as np
 
 
 class AzEl(Position2d):
-    """Coordinates in the horizontal system.
+    """AzEl(julian, azimuth, elevation, unit, location)
+
+    Coordinates in the horizontal system.
+
+    The horizontal system has its origin located at a ground location and has
+    measures of azimith and elevation. Azimuth is defined as the angle of the
+    satellite in the horizontal plane clockwise from north. Elevation is defined
+    as the angle of the satellite above the horzontal plane.
 
     Parameters
     ----------
@@ -67,11 +74,11 @@ class AzEl(Position2d):
 
     @property
     def azimuth(self) -> Quantity:
-        return self.x
+        return self._get_x()
 
     @property
     def elevation(self) -> Quantity:
-        return self.y
+        return self._get_y()
 
     @property
     def location(self) -> GroundLocation:
@@ -83,7 +90,7 @@ class AzEl(Position2d):
         Parameters
         ----------
         file_name : str
-            Name of the text file to save data to.
+            Name of the text file for the saved data.
         """
 
         header = "Azimuth-Elevation Coordinate Data"
@@ -92,8 +99,8 @@ class AzEl(Position2d):
         ]
         data = [
             ["Time", self.time],
-            ["Azimuth", self.x],
-            ["Elevation", self.y]
+            ["Azimuth", self.azimuth],
+            ["Elevation", self.elevation]
         ]
         writer = TextFileWriter(file_name, header)
         writer.add_layer(parameters=parameters, data=data)

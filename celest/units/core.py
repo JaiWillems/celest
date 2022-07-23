@@ -117,7 +117,6 @@ class NamedUnit(BaseUnit):
             namespace[self._short_name] = self
 
 
-# TODO: Is there ever a need to not pass in a namespace?
 class Unit(NamedUnit, BaseUnit):
     """Unit(short_name, long_name, namespace=None, base_units=None)
 

@@ -3,8 +3,8 @@
 from celest.coordinates.frames.attitude import Attitude
 from celest.coordinates.ground_location import GroundLocation
 from celest.encounter.window_handling import (
-    VisibleTimeWindow,
     ObservationWindow,
+    VisibleTimeWindow,
     WindowHandler
 )
 from celest.units.quantity import Quantity
@@ -61,7 +61,6 @@ class TestObservationWindow(TestCase):
         self.start_time = Quantity(0, u.jd2000)
         self.duration = Quantity(1, u.s)
         self.location = GroundLocation(0, 0, 0, u.deg, u.km)
-        self.deadline = Quantity(2, u.jd2000)
         self.attitude = Attitude(
             np.random.rand(5),
             np.random.rand(5),
@@ -73,7 +72,6 @@ class TestObservationWindow(TestCase):
         self.obw = ObservationWindow(
             self.start_time,
             self.duration,
-            self.deadline,
             self.location,
             self.attitude
         )
@@ -83,14 +81,13 @@ class TestObservationWindow(TestCase):
 
     def test_str(self):
         self.assertEqual(f"Start time: {self.start_time}, Duration: "
-                         f"{self.duration}, Deadline: {self.deadline}, "
-                         f"Location: {self.location}, Attitude: "
-                         f"{self.attitude}", str(self.obw))
+                         f"{self.duration}, Location: {self.location}, "
+                         f"Attitude: {self.attitude}", str(self.obw))
 
     def test_repr(self):
         self.assertEqual(f"ObservationWindow({self.start_time}, "
-                         f"{self.duration}, {self.deadline}, {self.location}, "
-                         f"{self.attitude})", repr(self.obw))
+                         f"{self.duration}, {self.location}, {self.attitude})",
+                         repr(self.obw))
 
     def test_start_time_property(self):
         self.assertEqual(self.start_time, self.obw.start_time)
@@ -100,9 +97,6 @@ class TestObservationWindow(TestCase):
 
     def test_location_property(self):
         self.assertEqual(self.location, self.obw.location)
-
-    def test_deadline_property(self):
-        self.assertEqual(self.deadline, self.obw.deadline)
 
     def test_attitude_property(self):
         self.assertEqual(self.attitude, self.obw.attitude)
@@ -133,7 +127,6 @@ class TestWindowHandler(TestCase):
         self.test_obw = ObservationWindow(
             Quantity(0, u.jd2000),
             Quantity(1, u.s),
-            Quantity(2, u.jd2000),
             self.ground_location,
             self.ow_attitude
         )
@@ -142,19 +135,19 @@ class TestWindowHandler(TestCase):
         self.assertIsInstance(self.window_handler, WindowHandler)
         self.assertListEqual(self.window_handler._window_data, [])
 
-    def test_add_window_raises_error_for_non_window(self):
+    def test_add_window_handler_data_raises_error_for_non_window(self):
         self.assertRaises(TypeError, self.window_handler.add_window,
                           "not a window")
 
-    def test_add_window_alters_window_data_with_vtw(self):
+    def test_add_window_handler_data_alters_window_data_with_vtw(self):
         self.window_handler.add_window(self.test_vtw)
         self.assertListEqual(self.window_handler._window_data, [self.test_vtw])
 
-    def test_add_window_alters_window_data_with_ow(self):
+    def test_add_window_handler_data_alters_window_data_with_ow(self):
         self.window_handler.add_window(self.test_obw)
         self.assertListEqual(self.window_handler._window_data, [self.test_obw])
 
-    def test_add_window_enforces_same_window_type(self):
+    def test_add_window_handler_data_enforces_same_window_type(self):
         self.window_handler.add_window(self.test_vtw)
         self.assertRaises(TypeError, self.window_handler.add_window,
                           self.test_obw)
@@ -186,19 +179,14 @@ class TestWindowHandler(TestCase):
 
     def test_indexing_with_integers(self):
         test_ow_1 = ObservationWindow(Quantity(1, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_2 = ObservationWindow(Quantity(2, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_3 = ObservationWindow(Quantity(3, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_4 = ObservationWindow(Quantity(4, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_5 = ObservationWindow(Quantity(5, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
 
         self.window_handler.add_window(test_ow_1)
@@ -215,19 +203,14 @@ class TestWindowHandler(TestCase):
 
     def test_indexing_with_range(self):
         test_ow_1 = ObservationWindow(Quantity(1, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_2 = ObservationWindow(Quantity(2, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_3 = ObservationWindow(Quantity(3, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_4 = ObservationWindow(Quantity(4, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
         test_ow_5 = ObservationWindow(Quantity(5, u.jd2000), Quantity(1, u.s),
-                                      Quantity(10, u.jd2000),
                                       self.ground_location, self.ow_attitude)
 
         self.window_handler.add_window(test_ow_1)

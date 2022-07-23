@@ -1,7 +1,7 @@
 
 
-from celest.coordinates.ground_location import GroundLocation
 from celest.coordinates.frames.attitude import Attitude
+from celest.coordinates.ground_location import GroundLocation
 from celest.encounter.window_handling import VisibleTimeWindow
 from celest.units.quantity import Quantity
 from celest import units as u

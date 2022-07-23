@@ -7,13 +7,11 @@ import numpy as np
 
 
 def greedy_insertion(request_handler, number_to_insert):
-
     request_handler.sort_by_decreasing_priority()
     insert_first_n_requests(request_handler, number_to_insert)
 
 
 def insert_first_n_requests(request_handler, number_to_insert):
-
     for request_index in range(request_handler.number_of_requests):
 
         if not number_to_insert:
@@ -60,7 +58,6 @@ def insert_first_n_requests(request_handler, number_to_insert):
 
 
 def _look_angle_time(look_angle, desired_look_angle, julian, start, end):
-
     julian = julian.to(u.jd2000).data
     look_angle = look_angle.to(u.deg).data - desired_look_angle.to(u.deg).data
 
@@ -86,18 +83,17 @@ def _look_angle_time(look_angle, desired_look_angle, julian, start, end):
 
 
 def image_quality_is_met(vtw, start, minimum_image_quality):
-
     return image_quality(vtw, start) >= minimum_image_quality
 
 
 def image_quality(vtw, start):
-
-    nadir_time = (vtw.rise_time + vtw.set_time) / 2
-    return math.floor(10 - 9 * abs(start.to(u.jd2000).data - nadir_time.to(u.jd2000).data) / (nadir_time.to(u.jd2000).data - vtw.rise_time.to(u.jd2000).data))
+    nadir_time = ((vtw.rise_time + vtw.set_time) / 2).to(u.jd2000).data
+    start_time = start.to(u.jd2000).data
+    ride_time = vtw.rise_time.to(u.jd2000).data
+    return math.floor(10 - 9 * abs(start_time - nadir_time) / (nadir_time - ride_time))
 
 
 def does_conflict_exists(request_handler, start, duration_in_days):
-
     for request in request_handler:
         if not request[0]:
             continue
@@ -105,9 +101,9 @@ def does_conflict_exists(request_handler, start, duration_in_days):
         scheduled_duration = Quantity(request[3].to(u.s).data / 86400, u.jd2000)
         scheduled_end = scheduled_start + scheduled_duration
 
-        if start <= scheduled_start and scheduled_start < start + duration_in_days:
+        if start <= scheduled_start < start + duration_in_days:
             return True
-        if start < scheduled_end and scheduled_end <= start + duration_in_days:
+        if start < scheduled_end <= start + duration_in_days:
             return True
         if scheduled_start <= start and start + duration_in_days <= scheduled_end:
             return True
@@ -116,13 +112,11 @@ def does_conflict_exists(request_handler, start, duration_in_days):
 
 
 def minimum_opportunity_insertion(request_handler, number_to_insert):
-
     request_handler.sort_by_decreasing_opportunity()
     insert_first_n_requests(request_handler, number_to_insert)
 
 
 def minimum_conflict_insertion(request_handler, number_to_insert):
-
     request_handler.sort_vtws_by_increasing_conflict_degree()
     insert_first_n_requests(request_handler, number_to_insert)
 

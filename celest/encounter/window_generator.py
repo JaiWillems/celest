@@ -6,6 +6,7 @@ from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.ground_location import GroundLocation
 from celest.encounter.window_handling import VisibleTimeWindow, WindowHandler
 from celest.satellite import Satellite
+from celest.units.quantity import Quantity
 from celest import units as u
 from enum import Enum
 from jplephem.spk import SPK
@@ -22,20 +23,23 @@ class Lighting(Enum):
 def generate_vtw(satellite: Satellite, location: GroundLocation,
                  vis_threshold: float, lighting:
                  Lighting=Lighting.ANYTIME) -> WindowHandler:
-    """Return visible window times for a satellite-ground set.
+    """Return visible time windows for a satellite-ground encounter.
 
-    This function generates the visible time windows where the satellite has
+    This function determines the time windows where the satellite has
     an elevation angle greater than `vis_threshold` and where lighting
     conditions are met.
 
     Parameters
     ----------
     satellite : Satellite
-        Satellite object.
     location : GroundLocation
         Location of ground station.
     vis_threshold : float
         Visibility threshold in degrees.
+        
+        The visibility threshold is the minimum elevation angle of the satellite
+        as seen from `location` where the satellite will be in visual range of
+        `location`.
     lighting : float, optional
         Lighting condition specifier, defaults to anytime lighting conditions.
 
@@ -57,7 +61,7 @@ def generate_vtw(satellite: Satellite, location: GroundLocation,
 
     satellite_azel = Coordinate(satellite.position).convert_to(AzEl, location)
     satellite_elevation = satellite_azel.elevation.to(u.deg).data
-    julian = satellite.position.time.data
+    julian = satellite.position.time.to(u.jd2000).data
 
     window_indices = np.where(satellite_elevation > vis_threshold)[0]
 
@@ -79,26 +83,30 @@ def generate_vtw(satellite: Satellite, location: GroundLocation,
     return windows
 
 
-def _lighting_constraint_indices(julian, location, lighting):
+def _lighting_constraint_indices(julian: np.ndarray, location: GroundLocation,
+                                 lighting: Lighting) -> np.ndarray:
     if lighting == Lighting.NIGHTTIME:
         return _get_night_constraint_indices(julian, location)
     elif lighting == Lighting.ANYTIME:
         return np.indices(julian.shape)
     elif lighting == Lighting.DAYTIME:
         return _get_day_constraint_indices(julian, location)
+    else:
+        raise ValueError("Invalid lighting constraint.")
 
 
-def _get_night_constraint_indices(julian, location):
+def _get_night_constraint_indices(julian: np.ndarray, location:
+                                  GroundLocation) -> np.ndarray:
     sun_elevation = _get_sun_elevation(julian, location)
     return np.where(sun_elevation.to(u.deg).data < 0)[0]
 
 
-def _get_sun_elevation(julian, location):
-    sun_coordinates = Coordinate(_sun_coordinates(julian))
+def _get_sun_elevation(julian: np.ndarray, location: GroundLocation) -> Quantity:
+    sun_coordinates = Coordinate(_get_sun_gcrs(julian))
     return sun_coordinates.convert_to(AzEl, location).elevation
 
 
-def _sun_coordinates(julian) -> GCRS:
+def _get_sun_gcrs(julian: np.ndarray) -> GCRS:
     ephem = pkg_resources.resource_filename(__name__, '../data/de421.bsp')
     kernal = SPK.open(ephem)
 
@@ -112,6 +120,7 @@ def _sun_coordinates(julian) -> GCRS:
     return GCRS(julian, e2sun_pos[:, 0], e2sun_pos[:, 1], e2sun_pos[:, 2], u.km)
 
 
-def _get_day_constraint_indices(julian, location):
+def _get_day_constraint_indices(julian: np.ndarray, location:
+                                GroundLocation) -> np.ndarray:
     sun_elevation = _get_sun_elevation(julian, location)
     return np.where(sun_elevation.to(u.deg).data > 0)[0]

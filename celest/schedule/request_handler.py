@@ -21,22 +21,18 @@ class RequestIndices(IntEnum):
 class RequestHandler:
 
     def __init__(self):
-
         self.requests = []
         self.number_of_requests = 0
         self.number_of_scheduled_requests = 0
 
     def __getitem__(self, index):
-
         return self.requests[index]
 
     def __iter__(self):
-
         self.iteration_index = 0
         return self
 
     def __next__(self):
-
         current_index = self.iteration_index
         self.iteration_index += 1
         if self.iteration_index < self.number_of_requests:
@@ -44,13 +40,11 @@ class RequestHandler:
         raise StopIteration
 
     def add_request(self, location, deadline, duration, priority, quality, look_ang, vtws):
-
         self.number_of_requests += 1
         self.requests.append([False, None, None, None, location, deadline,
                               duration, priority, quality, look_ang, vtws])
 
     def schedule_request(self, request_index, vtw_index, start, duration):
-
         self.requests[request_index][RequestIndices.is_scheduled] = True
         self.requests[request_index][RequestIndices.vtw_index] = vtw_index
         self.requests[request_index][RequestIndices.scheduled_start_time] = start
@@ -58,14 +52,12 @@ class RequestHandler:
         self.number_of_scheduled_requests += 1
 
     def unschedule_all_requests(self):
-
         for index in range(self.number_of_requests):
             self.unschedule_request(index)
 
         self.number_of_scheduled_requests = 0
 
     def unschedule_request(self, request_index):
-
         self.requests[request_index][RequestIndices.is_scheduled] = False
         self.requests[request_index][RequestIndices.vtw_index] = None
         self.requests[request_index][RequestIndices.scheduled_start_time] = None
@@ -74,57 +66,44 @@ class RequestHandler:
         self.number_of_scheduled_requests -= 1
 
     def is_request_scheduled(self, request_index):
-
         return self.requests[request_index][RequestIndices.is_scheduled]
 
     def vtw_index(self, request_index):
-
         return self.requests[request_index][RequestIndices.vtw_index]
 
     def start_time(self, request_index):
-
         return self.requests[request_index][RequestIndices.scheduled_start_time]
 
     def scheduled_duration(self, request_index):
-
         return self.requests[request_index][RequestIndices.scheduled_duration]
 
     def deadline(self, request_index):
-
         return self.requests[request_index][RequestIndices.deadline]
 
     def duration(self, request_index):
-
         return self.requests[request_index][RequestIndices.duration]
 
     def priority(self, request_index):
-
         return self.requests[request_index][RequestIndices.priority]
 
     def image_quality(self, request_index):
-
         return self.requests[request_index][RequestIndices.quality]
 
     def look_angle(self, request_index):
-
         return self.requests[request_index][RequestIndices.look_angle]
 
     def vtw_list(self, request_index):
-
         return self.requests[request_index][RequestIndices.vtw_list]
 
     def sort_by_decreasing_priority(self):
-
         key = lambda x: x[RequestIndices.priority]
         self.requests = sorted(self.requests, key=key, reverse=True)
 
     def sort_by_decreasing_opportunity(self):
-
         key = lambda x: len(x[RequestIndices.vtw_list])
         self.requests = sorted(self.requests, key=key, reverse=True)
 
     def sort_by_decreasing_conflict_degree(self):
-
         conflict_degree = []
         conflict_degree_index = []
         for request_index, request in enumerate(self.requests):
@@ -137,23 +116,23 @@ class RequestHandler:
 
             conflict_degree_index.append(request_index)
 
-        indices = [index for _, index in sorted(zip(conflict_degree, conflict_degree_index))]
+        indices = [index for _, index in
+                   sorted(zip(conflict_degree, conflict_degree_index))]
         indices.reverse()
 
         self.requests = [self.requests[index] for index in indices]
 
     def _conflict_degree(self, vtw) -> float:
-
         over_lapping_vtws = self._set_of_overlapping_vtws(vtw)
         total_overlapping_time = 0
 
         for other_vtw in over_lapping_vtws:
-            total_overlapping_time += self._julian_day_overlap_between_vtws(vtw, other_vtw)
+            total_overlapping_time +=\
+                self._julian_day_overlap_between_vtws(vtw, other_vtw)
 
         return total_overlapping_time / len(over_lapping_vtws)
 
     def _set_of_overlapping_vtws(self, current_vtw) -> list:
-
         overlap_vtws = []
 
         for request in self.requests:
@@ -165,14 +144,9 @@ class RequestHandler:
         return overlap_vtws
 
     def _are_vtws_overlaping(self, vtw1, vtw2) -> bool:
-
-        if (vtw1.set_time < vtw2.rise_time) | (vtw2.set_time < vtw1.rise_time):
-            return False
-        else:
-            return True
+        return not (vtw1.set_time < vtw2.rise_time) | (vtw2.set_time < vtw1.rise_time)
 
     def _julian_day_overlap_between_vtws(self, vtw1, vtw2) -> float:
-
         s1, s2 = vtw1.rise_time, vtw2.rise_time
         e1, e2 = vtw1.set_time, vtw2.set_time
 
@@ -188,17 +162,17 @@ class RequestHandler:
             return e2 - s1
 
     def sort_vtws_by_increasing_conflict_degree(self):
-
         for request_index in range(self.number_of_requests):
             conflict_degree = []
             vtw_indices = []
-            for vtw_index, vtw in enumerate(self.requests[request_index][RequestIndices.vtw_list]):
+            vtw_list = self.requests[request_index][RequestIndices.vtw_list]
+            for vtw_index, vtw in enumerate(vtw_list):
                 conflict_degree.append(self._conflict_degree(vtw))
                 vtw_indices.append(vtw_index)
 
-            self.requests[request_index][RequestIndices.vtw_list] = [vtw for _, vtw in sorted(zip(conflict_degree, self.requests[request_index][RequestIndices.vtw_list]))]
+            self.requests[request_index][RequestIndices.vtw_list] = \
+                [vtw for _, vtw in sorted(zip(conflict_degree, vtw_list))]
 
     def sort_vtws_by_increasing_rise_time(self):
-
         for request in self.requests:
             request[RequestIndices.vtw_list] = sorted(request[RequestIndices.vtw_list], key=lambda x: x.rise_time.data)

@@ -9,7 +9,9 @@ import numpy as np
 
 
 class GCRS(Position3d):
-    """Coordinates in the Geocentric Celestial Reference System.
+    """GCRS(julian, x, y, z, unit)
+
+    Coordinates in the Geocentric Celestial Reference System.
 
     Parameters
     ----------
@@ -35,7 +37,7 @@ class GCRS(Position3d):
     See Also
     --------
     Attitude : Satellite attitude.
-    AzEl : Azimuth elevation coordinates.
+    AzEl : Azimuth-elevation coordinates.
     ITRS : International Terrestrial Reference System.
     LVLH : Local vertical local horizontal coordinates.
     WGS84 : Geographical coordinates.
@@ -61,13 +63,25 @@ class GCRS(Position3d):
 
         super().__init__(x, unit, y, unit, z, unit, julian, u.jd2000)
 
+    @property
+    def x(self) -> Quantity:
+        return self._get_x()
+
+    @property
+    def y(self) -> Quantity:
+        return self._get_y()
+
+    @property
+    def z(self) -> Quantity:
+        return self._get_z()
+
     def save_text_file(self, file_name: str) -> None:
         """Save data as a pretty text file.
 
         Parameters
         ----------
         file_name : str
-            Name of the text file to save data to.
+            Name of the text file for the saved data.
         """
 
         header = "GCRS Coordinate Data"

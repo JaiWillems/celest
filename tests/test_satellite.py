@@ -22,7 +22,7 @@ class TestSatellite(TestCase):
             max_rows=5000
         )
 
-        self.times = data[:, 0] + 2430000
+        self.julian = data[:, 0] + 2430000
         self.wgs84 = data[:, 1:3]
         self.altitude = data[:, 3]
         self.gcrs = data[:, 4:7]
@@ -30,14 +30,14 @@ class TestSatellite(TestCase):
         self.itrs = data[:, 10:]
 
         self.gcrs_position = GCRS(
-            self.times,
+            self.julian,
             self.gcrs[:, 0],
             self.gcrs[:, 1],
             self.gcrs[:, 2],
             u.km
         )
         self.gcrs_velocity = GCRS(
-            self.times,
+            self.julian,
             self.gcrs_velocity[:, 0],
             self.gcrs_velocity[:, 1],
             self.gcrs_velocity[:, 2],
@@ -53,7 +53,7 @@ class TestSatellite(TestCase):
 
     def test_value_error_raised_from_improper_data_frames(self):
         wgs84_position = WGS84(
-            self.times,
+            self.julian,
             self.wgs84[:, 0],
             self.wgs84[:, 1],
             self.altitude,
@@ -78,7 +78,7 @@ class TestSatellite(TestCase):
         """
 
         gcrs = GCRS(
-            self.times[210:220],
+            self.julian[210:220],
             self.gcrs[210:220, 0],
             self.gcrs[210:220, 1],
             self.gcrs[210:220, 2],

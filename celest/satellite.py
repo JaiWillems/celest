@@ -5,17 +5,17 @@ from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.frames.itrs import ITRS
 from celest.coordinates.ground_location import GroundLocation
 from celest.coordinates.transforms import (
-    _gcrs_to_itrs,
     _altitude,
-    _get_ang,
-    _itrs_to_gcrs,
+    _gcrs_to_itrs,
     _gcrs_to_lvlh,
-    _gcrs_to_lvlh_matrix
+    _gcrs_to_lvlh_matrix,
+    _get_ang,
+    _itrs_to_gcrs
 )
 from celest.file_save import TextFileWriter
 from celest.units.quantity import Quantity
 from celest import units as u
-from typing import Union, Tuple
+from typing import Tuple, Union
 import numpy as np
 
 
@@ -239,7 +239,7 @@ class Satellite:
         Parameters
         ----------
         file_name : str
-            Name of the text file to save data to.
+            Name of the text file for the saved data.
         """
 
         gcrs_position = _itrs_to_gcrs(self.position)
