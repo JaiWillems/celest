@@ -22,6 +22,17 @@ class ALNS:
     Parameters
     ----------
     initial_solution : Any
+
+    Notes
+    -----
+    The adaptive large neighborhood search metaheuristic for agile satellite
+    scheduling is taken from the work of Xiaolu Liu, et al. (2017). [Liu+17]_
+
+    .. [Liu+17] Xiaolu Liu et al. “An adaptive large neighborhood search
+       metaheuristic for agile satellite scheduling with time-dependent
+       transition time”. en. In: Computers Operations Research 86 (Oct. 2017),
+       pp. 41–53. issn: 03050548. doi: 10.1016/j.cor.2017.04.006.
+       url: https://linkinghub.elsevier.com/retrieve/pii/S0305054817300977.
     """
 
     def __init__(self, initial_solution: Any) -> None:

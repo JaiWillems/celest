@@ -75,6 +75,22 @@ class LVLH(Position3d):
 
     def __init__(self, julian: np.ndarray, x: np.ndarray, y: np.ndarray,
                  z: np.ndarray, unit: Unit) -> None:
+        """Coordinates in the level-horizontal-level-vertical or Hill frame.
+
+        The local-vertical local-horizontal frame (also known as the Hill
+        frame) is a body frame where the z-axis is algigned with the negative
+        of the geocentric position vector, the y-axis is aligned with the
+        negative orbit normal, and the x-axis completes the right handed triad.
+
+        Parameters
+        ----------
+        julian : np.ndarray
+            1-D array containing time in the J2000 epoch.
+        x, y, z : np.ndarray
+            1-D array containing the coordinate data.
+        unit : Unit
+            The unit of the spatial data.
+        """
 
         super().__init__(x, unit, y, unit, z, unit, julian, u.jd2000)
 

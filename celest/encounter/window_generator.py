@@ -4,7 +4,7 @@ from celest.coordinates.coordinate import Coordinate
 from celest.coordinates.frames.azel import AzEl
 from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.ground_location import GroundLocation
-from celest.encounter.window_handling import VisibleTimeWindow, WindowHandler
+from celest.encounter.window_handling import VisibleTimeWindow, WindowCollection
 from celest.satellite import Satellite
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -15,14 +15,25 @@ import pkg_resources
 
 
 class Lighting(Enum):
+    """Enum for different lighting conditions.
+
+    Attributes
+    ----------
+    NIGHTTIME : int
+        Night time lighting condition.
+    ANYTTIME : int
+        No lighting condition.
+    DAYTIME : int
+        Day time lighting condition.
+    """
     NIGHTTIME = -1
     ANYTIME = 0
     DAYTIME = 1
 
 
-def generate_vtw(satellite: Satellite, location: GroundLocation,
-                 vis_threshold: float, lighting:
-                 Lighting=Lighting.ANYTIME) -> WindowHandler:
+def generate_vtws(satellite: Satellite, location: GroundLocation,
+                  vis_threshold: float, lighting:
+                  Lighting=Lighting.ANYTIME) -> WindowCollection:
     """Return visible time windows for a satellite-ground encounter.
 
     This function determines the time windows where the satellite has
@@ -40,7 +51,7 @@ def generate_vtw(satellite: Satellite, location: GroundLocation,
         The visibility threshold is the minimum elevation angle of the satellite
         as seen from `location` where the satellite will be in visual range of
         `location`.
-    lighting : float, optional
+    lighting : Lighting, optional
         Lighting condition specifier, defaults to anytime lighting conditions.
 
         Lighting conditions can be specified using the `Lighting` enum. The
@@ -49,7 +60,7 @@ def generate_vtw(satellite: Satellite, location: GroundLocation,
 
     Returns
     -------
-    WindowHandler
+    WindowCollection
         The visible time windows.
     """
 
@@ -74,7 +85,7 @@ def generate_vtw(satellite: Satellite, location: GroundLocation,
 
     attitude = satellite.attitude(location)
 
-    windows = WindowHandler()
+    windows = WindowCollection()
     for window_index_set in window_indices:
         rise_time = julian[window_index_set[0] - 1]
         set_time = julian[window_index_set[-1]]

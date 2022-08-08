@@ -5,7 +5,7 @@ from celest.coordinates.ground_location import GroundLocation
 from celest.encounter.window_handling import (
     ObservationWindow,
     VisibleTimeWindow,
-    WindowHandler
+    WindowCollection
 )
 from celest.units.quantity import Quantity
 from celest import units as u
@@ -105,7 +105,7 @@ class TestObservationWindow(TestCase):
 class TestWindowHandler(TestCase):
 
     def setUp(self):
-        self.window_handler = WindowHandler()
+        self.window_handler = WindowCollection()
         self.ground_location = GroundLocation(0, 0, 0, u.deg, u.km)
         self.vtw_attitude = Attitude(
             np.random.rand(5),
@@ -132,7 +132,7 @@ class TestWindowHandler(TestCase):
         )
 
     def test_initialization(self):
-        self.assertIsInstance(self.window_handler, WindowHandler)
+        self.assertIsInstance(self.window_handler, WindowCollection)
         self.assertListEqual(self.window_handler._window_data, [])
 
     def test_add_window_handler_data_raises_error_for_non_window(self):
@@ -161,7 +161,7 @@ class TestWindowHandler(TestCase):
     def test_repr(self):
         self.window_handler.add_window(self.test_vtw)
         self.window_handler.add_window(self.test_vtw)
-        self.assertEqual(f"WindowHandler({repr(self.test_vtw)}, {repr(self.test_vtw)})",
+        self.assertEqual(f"WindowCollection({repr(self.test_vtw)}, {repr(self.test_vtw)})",
                          repr(self.window_handler))
 
     def test_len_returns_correct_length(self):

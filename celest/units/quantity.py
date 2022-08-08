@@ -9,11 +9,33 @@ class Quantity:
 
     Data with a unit.
 
+    The Quantity class holds both data and a unit together to allow for easy
+    unit conversions.
+
     Parameters
     ----------
     data : Any
+        The data to be stored in the Quantity object.
+
+        To allow for unit conversions, the data object must have the
+        multiplication operations defined.
     unit : Unit, CompoundUnit
         The unit associated with the data.
+
+    Attributes
+    ----------
+    data : Any
+        The data stored in the Quantity.
+    unit : Unit, CompoundUnit
+        The unit associated with the data.
+
+    Methods
+    -------
+    to(new_unit)
+        Return a new Quantity object with the new unit.
+    convert_to(new_unit)
+        Convert Quantity data to a different unit.
+
 
     Examples
     --------
@@ -188,15 +210,17 @@ class Quantity:
         return self._unit
 
     def to(self, new_unit):
-        """Return Quantity with the new unit.
+        """Return a new Quantity object with the new unit.
 
         Parameters
         ----------
         new_unit : Unit, CompoundUnit
+            New unit with the same dimension as the current unit.
 
         Returns
         -------
         Quantity
+            A new Quantity object with the new unit.
 
         Examples
         --------
@@ -208,10 +232,12 @@ class Quantity:
         return quantity_in_new_unit
 
     def get_unit(self):
+        # TODO: Remove this method (not being used).
         return self._unit
 
+    # TODO: Remove this method, it is not useful when we include the to method that returns data.
     def convert_to(self, new_unit):
-        """Convert data to different units.
+        """Convert Quantity data to a different unit.
 
         Parameters
         ----------

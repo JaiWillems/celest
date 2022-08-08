@@ -15,7 +15,7 @@ from celest.coordinates.transforms import (
 from celest.file_save import TextFileWriter
 from celest.units.quantity import Quantity
 from celest import units as u
-from typing import Tuple, Union
+from typing import Union
 import numpy as np
 
 
@@ -35,21 +35,30 @@ class Satellite:
 
     Methods
     -------
-    attitude(location)
-        Return the satellite's attitude to a ground location.
-    look_angle(location)
-        Return the satellite's look angle to a ground location.
     altitude()
         Return the satellite's geodetic altitude.
+    attitude(location)
+        Return the satellite's attitude to a ground location.
     distance(location)
         Return the satellite's distance to a ground location.
+    look_angle(location)
+        Return the satellite's look angle to a ground location.
     save_text_file(file_name)
         Save the satellite's position and velocity to a text file.
     """
 
-    # TODO: Make type that represents the different coordinate frames.
     def __init__(self, position: Union[GCRS, ITRS], velocity:
                  Union[GCRS, ITRS]=None) -> None:
+        """Representation of an Earth orbiting satellite.
+
+        Parameters
+        ----------
+        position : {GCRS, ITRS}
+            Satellite position in the GCRS or ITRS frame.
+        velocity : {GCRS, ITRS}, optional
+            Satellite velocity in the GCRS or ITRS frame. Attitude calculations
+            require the velocity parameter.
+        """
 
         if isinstance(position, ITRS):
             self.position = position
@@ -70,11 +79,39 @@ class Satellite:
         else:
             self.velocity = None
 
+    def altitude(self) -> Quantity:
+        """Return the satellite's geodetic altitude.
+
+        This method uses the WGS84 reference ellipsoid and an iterative method
+        to calculate the satellite's geodetic altitude above the Earth's
+        surface.
+
+        Returns
+        -------
+        Quantity
+            The satellite's geodetic altitude.
+
+        Notes
+        -----
+        This method uses an ellipsoid based model of the Earth to calculate
+        the ellipsoid height in an iterative manner described in "Coordinate
+        Systems in Geodesy" by E. J. Krakiwsky and D.E. Wells. [KW98b]_
+
+        References
+        ----------
+        .. [KW98b] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
+           Geodesy. Jan. 1998, pp. 31–33.
+        """
+
+        return Quantity(_altitude(self.position), u.km)
+
     def attitude(self, location: GroundLocation) -> Attitude:
         """Return satellite roll, pitch, and yaw angles.
 
-        This method returns the attitude angles required to align the
-        satellite's nadir with a ground location for ground imaging.
+        This method returns the roll, pitch, and yaw angles required to rotate
+        the satellite from the lvlh frame to a ground-target-pointing
+        orientation. This method assumes a downward-pointing camera fixed to the
+        satellite's nadir.
 
         Parameters
         ----------
@@ -83,8 +120,8 @@ class Satellite:
 
         Returns
         -------
-        Tuple[Quantity, Quantity, Quantity]
-            Tuple containing roll, pitch, and yaw angles.
+        Attitude
+            Satellite attitude for target pointing.
 
         Notes
         -----
@@ -156,11 +193,34 @@ class Satellite:
         return Attitude(self.position.time.data, roll, pitch, yaw, u.rad,
                         location)
 
+    def distance(self, location: GroundLocation) -> Quantity:
+        """Return the satellite's distance to a ground location.
+
+        Parameters
+        ----------
+        location : GroundLocation
+            Location for satellite distance calculation.
+
+        Returns
+        -------
+        Quantity
+            The satellite's distance to `location`.
+        """
+
+        distance = np.linalg.norm(np.array([
+            self.position.x.to(u.km).data - location.itrs_x.to(u.km).data,
+            self.position.y.to(u.km).data - location.itrs_y.to(u.km).data,
+            self.position.z.to(u.km).data - location.itrs_z.to(u.km).data
+        ]), axis=0)
+
+        return Quantity(distance, u.km)
+
     def look_angle(self, location: GroundLocation) -> Quantity:
         """Return look-angles to a ground location.
 
-        The look angle is the angular distance of a ground location from
-        the satellites nadir.
+        The look-angle (or off-nadir angle) is the angle between the
+        ground location and the satellite's nadir. A zero look-angle indicates
+        the satellite is directly overhead the ground location.
 
         Parameters
         ----------
@@ -170,7 +230,7 @@ class Satellite:
         Returns
         -------
         Quantity
-            Satellite's look angle to `location`.
+            Satellite's look-angle to `location`.
         """
 
         satellite_itrs = np.array([
@@ -186,52 +246,6 @@ class Satellite:
         angles = _get_ang(ground_to_satellite_itrs, satellite_itrs)
 
         return Quantity(angles, u.deg)
-
-    def altitude(self) -> Quantity:
-        """Return geodetic altitude.
-
-        This method uses the WGS84 reference ellipsoid to calculate the
-        geodetic altitude above the Earth's surface.
-
-        Returns
-        -------
-        Quantity
-            The satellite_old's geodetic altitude.
-
-        Notes
-        -----
-        This method uses an ellipsoid based model of the Earth to calculate
-        the ellipsoid height in an iterative manner described in "Coordinate
-        Systems in Geodesy" by E. J. Krakiwsky and D.E. Wells. [KW98b]_
-
-        References
-        ----------
-        .. [KW98b] E. J. Krakiwsky and D. E. Wells. Coordinate Systems in
-           Geodesy. Jan. 1998, pp. 31–33.
-        """
-
-        return Quantity(_altitude(self.position), u.km)
-
-    def distance(self, location: GroundLocation) -> Quantity:
-        """Return distance to a ground location.
-
-        Parameters
-        ----------
-        location : GroundLocation
-
-        Returns
-        -------
-        Quantity
-            The satellite_old's distance to `location`.
-        """
-
-        distance = np.linalg.norm(np.array([
-            self.position.x.to(u.km).data - location.itrs_x.to(u.km).data,
-            self.position.y.to(u.km).data - location.itrs_y.to(u.km).data,
-            self.position.z.to(u.km).data - location.itrs_z.to(u.km).data
-        ]), axis=0)
-
-        return Quantity(distance, u.km)
 
     def save_text_file(self, file_name: str) -> None:
         """Save data as a pretty text file.

@@ -5,7 +5,7 @@ from celest.coordinates.frames.azel import AzEl
 from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.ground_location import GroundLocation
 from celest.encounter.window_generator import (
-    generate_vtw,
+    generate_vtws,
     _get_day_constraint_indices,
     _get_night_constraint_indices,
     Lighting,
@@ -49,20 +49,20 @@ class TestGenerateVTW(TestCase):
         self.location = GroundLocation(52.1579, -106.6702, 0.482, u.deg, u.km)
 
     def test_generate_vtw_raises_warning_when_satellite_has_no_velocity(self):
-        self.assertRaises(Warning, generate_vtw, Satellite(self.gcrs_position),
+        self.assertRaises(Warning, generate_vtws, Satellite(self.gcrs_position),
                           self.location, 10)
 
     def test_generate_vtw_raises_value_error_for_negative_threshold(self):
-        self.assertRaises(ValueError, generate_vtw, self.satellite,
+        self.assertRaises(ValueError, generate_vtws, self.satellite,
                           self.location, -10)
 
     def test_generate_vtw_raises_value_error_for_large_threshold(self):
-        self.assertRaises(ValueError, generate_vtw, self.satellite,
+        self.assertRaises(ValueError, generate_vtws, self.satellite,
                           self.location, 100)
 
     def test_window_constraints_valid_at_day(self):
         vis_threshold = 10
-        windows = generate_vtw(
+        windows = generate_vtws(
             self.satellite,
             self.location,
             vis_threshold,
@@ -92,7 +92,7 @@ class TestGenerateVTW(TestCase):
 
     def test_window_constraints_valid_at_night(self):
         vis_threshold = 10
-        windows = generate_vtw(
+        windows = generate_vtws(
             self.satellite,
             self.location,
             vis_threshold,
