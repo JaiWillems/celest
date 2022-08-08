@@ -153,8 +153,7 @@ class GroundLocation:
         """
 
         m = self._meridional_radius_of_curvature()
-        itrs_y = (m + self._height.to(u.km)) * \
-            cos(self._latitude.to(u.rad)) * \
+        itrs_y = (m + self._height.to(u.km)) * cos(self._latitude.to(u.rad)) * \
             sin(self._longitude.to(u.rad))
 
         return Quantity(itrs_y, u.km)

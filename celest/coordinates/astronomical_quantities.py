@@ -45,7 +45,7 @@ def earth_rotation_angle(julian: Quantity) -> Quantity:
     >>> julian = Quantity(30462.50000, u.jd2000)
     >>> era = earth_rotation_angle(julian)
     """
-    days_since_jd2000 = julian.data - JD2000_DATE
+    days_since_jd2000 = julian.to(u.jd2000) - JD2000_DATE
     earth_rotation_angles = (EARTH_ROTATION_RATE_DEG_PER_DAY *
                              days_since_jd2000 + ERA_AT_JD2000_DEG) % 360
     return Quantity(earth_rotation_angles, u.deg)
@@ -253,8 +253,8 @@ def conventional_precession_angles(julian: Quantity) -> Tuple:
 
 def _get_zeta_precession_angle(julian: Quantity) -> Quantity:
     t1, t2, t3, t4, t5 = _calculate_raw_elapsed_jd_century_powers(julian, 5)
-    result = 2.59796176 + 2306.0809506 * t1 + 0.3019015 * t2 + 0.0179663 * t3 - \
-        0.0000327 * t4 - 0.0000002 * t5
+    result = 2.59796176 + 2306.0809506 * t1 + 0.3019015 * t2 + \
+        0.0179663 * t3 - 0.0000327 * t4 - 0.0000002 * t5
     return Quantity(result, u.arcsec)
 
 
@@ -267,8 +267,8 @@ def _get_theta_precession_angle(julian: Quantity) -> Quantity:
 
 def _get_z_precession_angle(julian: Quantity) -> Quantity:
     t1, t2, t3, t4, t5 = _calculate_raw_elapsed_jd_century_powers(julian, 5)
-    result = - 2.5976176 + 2306.0803226 * t1 + 1.0947790 * t2 + 0.0182273 * t3 + \
-        0.0000470 * t4 - 0.0000003 * t5
+    result = - 2.5976176 + 2306.0803226 * t1 + 1.0947790 * t2 + \
+        0.0182273 * t3 + 0.0000470 * t4 - 0.0000003 * t5
     return Quantity(result, u.arcsec)
 
 
@@ -352,10 +352,10 @@ def apparent_obliquity(julian: Quantity) -> Quantity:
     >>> julian = Quantity(2446895.5, u.jd2000)
     >>> epsilon = apparent_obliquity(julian=julian)
     """
-    average_obliquity = mean_obliquity(julian).to(u.deg)
+    average_obliquity = mean_obliquity(julian)
     _, nutation_in_obliquity = nutation_components(julian)
 
-    return Quantity(average_obliquity + nutation_in_obliquity.to(u.deg), u.deg)
+    return average_obliquity + nutation_in_obliquity
 
 
 def from_julian(julian: Quantity) -> Tuple:
@@ -389,10 +389,10 @@ def from_julian(julian: Quantity) -> Tuple:
     (1957, 10, 4.81)
     """
 
-    if isinstance(julian.data, (float, int)):
-        jd = np.array([julian.data]) + 0.5
+    if isinstance(julian.to(u.jd2000), (float, int)):
+        jd = np.array([julian.to(u.jd2000)]) + 0.5
     else:
-        jd = np.array(julian.data) + 0.5
+        jd = np.array(julian.to(u.jd2000)) + 0.5
     a, f = jd.astype(int), jd % 1
 
     ind = np.where(a >= 2291161)[0]

@@ -71,10 +71,9 @@ def generate_vtws(satellite: Satellite, location: GroundLocation,
         raise ValueError("vis_threshold must be between 0 and 90 degrees.")
 
     satellite_azel = Coordinate(satellite.position).convert_to(AzEl, location)
-    satellite_elevation = satellite_azel.elevation.to(u.deg)
     julian = satellite.position.time.to(u.jd2000)
 
-    window_indices = np.where(satellite_elevation > vis_threshold)[0]
+    window_indices = np.where(satellite_azel.elevation.to(u.deg) > vis_threshold)[0]
 
     lighting_indices = _lighting_constraint_indices(julian, location, lighting)
     window_indices = np.intersect1d(window_indices, lighting_indices)

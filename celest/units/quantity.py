@@ -63,50 +63,20 @@ class Quantity:
         elif isinstance(other, Quantity):
             if self._unit.dimension != other._unit.dimension:
                 raise ArithmeticError(
-                    "Unit dimensions must match for Quantity addition.")
+                    "Unit dimensions must match for addition/subtraction.")
             data = self._data + other.to(self._unit)
             return Quantity(data, self._unit)
         else:
             return NotImplemented
 
     def __radd__(self, other):
-        if isinstance(other, (float, int)):
-            data = self._data + other
-            return Quantity(data, self._unit)
-        elif isinstance(other, Quantity):
-            if self._unit.dimension != other._unit.dimension:
-                raise ArithmeticError(
-                    "Unit dimensions must match for Quantity addition.")
-            data = self._data + other.to(self._unit)
-            return Quantity(data, self._unit)
-        else:
-            return NotImplemented
+        return self.__add__(other)
 
     def __sub__(self, other):
-        if isinstance(other, (float, int)):
-            data = self._data - other
-            return Quantity(data, self._unit)
-        elif isinstance(other, Quantity):
-            if self._unit.dimension != other._unit.dimension:
-                raise ArithmeticError(
-                    "Unit dimensions must match for Quantity subtraction.")
-            data = self._data - other.to(self._unit)
-            return Quantity(data, self._unit)
-        else:
-            return NotImplemented
+        return self.__add__(-other)
 
     def __rsub__(self, other):
-        if isinstance(other, (float, int)):
-            data = other - self._data
-            return Quantity(data, self._unit)
-        elif isinstance(other, Quantity):
-            if self._unit.dimension != other._unit.dimension:
-                raise ArithmeticError(
-                    "Unit dimensions must match for Quantity subtraction.")
-            data = other.to(self._unit) - self._data
-            return Quantity(data, self._unit)
-        else:
-            return NotImplemented
+        return -self.__sub__(other)
 
     def __mul__(self, other):
         if isinstance(other, (float, int)):
@@ -124,19 +94,7 @@ class Quantity:
             return NotImplemented
 
     def __rmul__(self, other):
-        if isinstance(other, (float, int)):
-            data = self._data * other
-            return Quantity(data, self._unit)
-        elif isinstance(other, Quantity):
-            if self._unit.dimension == other._unit.dimension:
-                data = self._data * other.to(self._unit)
-                unit = self._unit ** 2
-            else:
-                data = self._data * other._data
-                unit = self._unit * other._unit
-            return Quantity(data, unit)
-        else:
-            return NotImplemented
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         if isinstance(other, (float, int)):
@@ -179,13 +137,7 @@ class Quantity:
             return NotImplemented
 
     def __ne__(self, other):
-        if isinstance(other, Quantity):
-            if self._unit.dimension != other._unit.dimension:
-                raise ArithmeticError(
-                    "Unit dimensions must match for comparison.")
-            return self._data != other.to(self._unit)
-        else:
-            return NotImplemented
+        return not self.__eq__(other)
 
     def __lt__(self, other):
         if isinstance(other, Quantity):
@@ -197,13 +149,7 @@ class Quantity:
             return NotImplemented
 
     def __le__(self, other):
-        if isinstance(other, Quantity):
-            if self._unit.dimension != other._unit.dimension:
-                raise ArithmeticError(
-                    "Unit dimensions must match for comparison.")
-            return self._data <= other.to(self._unit)
-        else:
-            return NotImplemented
+        return self.__eq__(other) or self.__lt__(other)
 
     def __gt__(self, other):
         if isinstance(other, Quantity):
@@ -215,13 +161,7 @@ class Quantity:
             return NotImplemented
 
     def __ge__(self, other):
-        if isinstance(other, Quantity):
-            if self._unit.dimension != other._unit.dimension:
-                raise ArithmeticError(
-                    "Unit dimensions must match for comparison.")
-            return self._data >= other.to(self._unit)
-        else:
-            return NotImplemented
+        return self.__eq__(other) or self.__gt__(other)
 
     @property
     def data(self):
@@ -230,6 +170,10 @@ class Quantity:
     @property
     def unit(self):
         return self._unit
+
+    @property
+    def dimension(self):
+        return self._unit.dimension
 
     def to(self, new_unit):
         """Return the Quantity data in the new unit.

@@ -338,6 +338,16 @@ class TestQuantity(TestCase):
         similar_quantity = Quantity(self.data / 1000 + self.comparison_offset, u.km)
         self.assertFalse(self.simple_quantity >= similar_quantity)
 
+    def test_data_property(self):
+        self.assertEqual(self.simple_quantity.data, self.data)
+
+    def test_unit_property(self):
+        self.assertEqual(self.simple_quantity.unit, self.simple_unit)
+
+    def test_dimension_property(self):
+        self.assertEqual(self.simple_quantity.dimension,
+                         self.simple_unit.dimension)
+
     def test_to_with_same_dimension(self):
         self.assertEqual(0.005, self.simple_quantity.to(u.km))
 

@@ -30,7 +30,7 @@ class Time:
     julian : array_like
         1-D array containing time data in Julian days.
 
-        If time data is not in the J2000 epoch, an offset must be pased in to
+        If time data is not in the J2000 epoch, an offset must be passed in to
         be added to the julian times.
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default to zero.
@@ -89,10 +89,11 @@ class Time:
         julian : array_like
             1-D array containing time data in Julian days.
 
-            If time data is not in the J2000 epoch, an offset must be pased in to
-            be added to the julian times.
+            If time data is not in the J2000 epoch, an offset must be passed in
+            to be added to the julian times.
         offset : float, optional
-            Offset to convert input time data to the J2000 epoch, default to zero.
+            Offset to convert input time data to the J2000 epoch, default to
+            zero.
         """
 
         time = np.array(julian)
@@ -364,7 +365,7 @@ class Time:
                   datetime.datetime(2013, 1, 1, 0, 59, 59, 999987)])
         """
 
-        year, month, day = from_julian(self._julian)
+        year, month, day = from_julian(Quantity(self._julian, u.jd2000))
         full_days, fractional_day = day.astype(int), day % 1
 
         datetime_list = []
@@ -517,9 +518,9 @@ class Time:
 
         ut1 = self.ut1().to(u.hourangle)
         right_ascension_of_sun = sun_right_ascension(self.julian).to(u.hourangle)
-        eqn_of_equinoxes = equation_of_equinoxes(self.julian).to(u.deg)
+        eqn_of_equinoxes = equation_of_equinoxes(self.julian)
 
-        last = ut1 - 12 + right_ascension_of_sun + eqn_of_equinoxes +\
-               np.array(longitude) / 15
+        last = ut1 - 12 + right_ascension_of_sun + eqn_of_equinoxes.to(u.deg) +\
+            np.array(longitude) / 15
 
         return Quantity(last % 24, u.hourangle)
