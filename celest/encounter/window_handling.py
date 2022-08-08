@@ -123,12 +123,12 @@ class ObservationWindow:
         return self._attitude
 
 
-class WindowHandler:
-    """WindowHandler()
+class WindowCollection:
+    """WindowCollection()
 
     Container to hold window data.
 
-    The `WindowHandler` class can only hold one type of window data (i.e.
+    The `WindowCollection` class can only hold one type of window data (i.e.
     either visible time windows or observation windows) at a time due to there
     differing attributes and physical significance.
 
@@ -154,7 +154,7 @@ class WindowHandler:
         return str(self._window_data)
 
     def __repr__(self) -> str:
-        return "WindowHandler(" +\
+        return "WindowCollection(" +\
                ", ".join([repr(i) for i in self._window_data]) + ")"
 
     def __len__(self) -> int:

@@ -2,7 +2,7 @@
 
 from celest.coordinates.frames.gcrs import GCRS
 from celest.coordinates.ground_location import GroundLocation
-from celest.encounter.window_handling import WindowHandler
+from celest.encounter.window_handling import WindowCollection
 from celest.satellite import Satellite
 from celest.schedule.insertion_operators import _INSERTION_FUNCTIONS
 from celest.schedule.removal_operators import _REMOVAL_FUNCTIONS
@@ -68,7 +68,7 @@ class TestSchedule(TestCase):
 
         schedule = Scheduler(self.satellite, 10)
         schedule.add_request(self.toronto, Quantity(2460467, u.jd2000), Quantity(30, u.s), 1, 1, None)
-        self.assertIsInstance(schedule.generate(100, 0.8, 0.5), WindowHandler)
+        self.assertIsInstance(schedule.generate(100, 0.8, 0.5), WindowCollection)
 
     def test_generate_returns_improved_solutions(self):
 

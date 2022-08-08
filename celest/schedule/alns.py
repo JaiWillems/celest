@@ -26,8 +26,7 @@ class ALNS:
     Notes
     -----
     The adaptive large neighborhood search metaheuristic for agile satellite
-    scheduling is taken from the work of Xiaolu Liu, et al. (2017) in their
-    work on satellite scheduling. [Liu+17]_
+    scheduling is taken from the work of Xiaolu Liu, et al. (2017). [Liu+17]_
 
     .. [Liu+17] Xiaolu Liu et al. “An adaptive large neighborhood search
        metaheuristic for agile satellite scheduling with time-dependent

@@ -21,7 +21,7 @@ Initialized units are accessed from the units module which can be imported by th
 
    from celest import units as u
 
-The primary units can then be accessed using a dot notation.
+Primary units can then be accessed using a dot notation.
 
 .. code-block:: python
 
@@ -29,7 +29,7 @@ The primary units can then be accessed using a dot notation.
    u.s  # Second measure.
    u.deg # Degree measure.
 
-The following table lists the primary units, their code use label, and their measure type.
+The following table lists all primary units, their code call sign, and their measure type.
 
 .. list-table:: Available Units
    :widths: 30, 30, 30
@@ -100,9 +100,9 @@ Primary units can be combined with others through multiplication or division to 
    velocity_unit = u.m / u.s  # Meter per second.
    acceleration_unit = u.m / u.s ^ 2  # Meter per second squared.
 
-Units are typically passed into Celest's class constructors, methods, and functions as a unit parameter to specify the
-data measure. Internally, the data and units get stored together in a :class:`Quantity` object that may be returned from
-a class property, method, or function. The :class:`Quantity` object deals with the conversions between units and is
+Units are typically passed into Celest's class constructors, methods, and functions as a parameter to specify the data
+measure. Internally, the data and units get stored together in a :class:`Quantity` object that may be returned from a
+class property, method, or function. The :class:`Quantity` object deals with the conversions between units and is
 discussed the :ref:`Measures with Units` section.
 
 Measures with Units

@@ -8,11 +8,10 @@ Encounter
 Encounter Overview
 ------------------
 
-One of the primary goals of Celest is mission planning for encounter based tasks such as ground imaging or data
-transfer. This goal requires determining when the satellite will be in a position allowing fore successful encounters.
-Windows are the first step in defining the time windows for an encounter. The following sections will look more into
-the concept of windows, demonstrate how to determine them using Celest, and then show the structures to interface with
-the generated windows.
+One of the primary goals of Celest is mission planning of encounter based tasks such as ground imaging or data transfer;
+this requires knowledge of when the satellite is in a line of sight of the ground location. Windows are the definition
+of viable encounter times and can take different forms. The following sections will look more into the concept of
+windows, demonstrate how to determine them using Celest, and then show the structures to handle and interface with them.
 
 More About Windows
 ------------------
@@ -35,9 +34,11 @@ possible.
 Observation Windows
 ^^^^^^^^^^^^^^^^^^^
 
-Visible time windows can be imagined as unprocessed windows that are general to any satellite-ground encounter.
-On the other hand, an observation window is catered for an imaging encounter and defines the actual encounter start time
-and duration. For the observation window to be valid, it must be a subset of a visible time window.
+Visible time windows can be imagined as generalized to any satellite-ground encounter and define the period of time
+where a line of sight exists. However, the entire visible time window is more than sufficient for imaging encounters;
+additionally, imaging encounters will provide other constraints such as image quality (influencing the maximum
+look-angle) or a fixed look-angle. An observation window is catered to imaging tasks and is a subset of a visible time
+window which meets the addition constraints of image quality and a fixed look-angle.
 
 Observation windows are generated using the :class:`Scheduler` class.
 
@@ -73,7 +74,7 @@ Window Data Structures
 
 Celest contains various data structures to hold individual windows and collections of windows. The
 :class:`VisibleTimeWindow` class holds information regarding a single visible time window. Similarly, the
-:class:`ObservationWindow` class holds information regarding a single observation window. The :class:`WindowHandler`
+:class:`ObservationWindow` class holds information regarding a single observation window. The :class:`WindowCollection`
 class is used to hold collections of either visible time windows or observation windows.
 
 .. autoclass:: celest.encounter.window_handling.VisibleTimeWindow
@@ -82,5 +83,5 @@ class is used to hold collections of either visible time windows or observation 
 .. autoclass:: celest.encounter.window_handling.ObservationWindow
    :noindex:
 
-.. autoclass:: celest.encounter.window_handling.WindowHandler
+.. autoclass:: celest.encounter.window_handling.WindowCollection
    :noindex:

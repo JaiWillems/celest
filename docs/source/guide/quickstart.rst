@@ -56,7 +56,7 @@ Coordinate objects can then be initialized to be used in the rest of the library
    )
 
 Coordinates can then be converted into other frames using the
-:class:`celest.coordinates.Coordinate` class.
+:class:`Coordinate` class.
 
 .. code-block:: python
 
@@ -81,7 +81,7 @@ Coordinates can then be converted into other frames using the
       location=toronto
    )
 
-The satellite coordinate representations can be used to create a :class:`celest.satellite.Satellite`
+The satellite coordinate representations can be used to create a :class:`Satellite`
 object and perform satellite specific calculations such as determining the satellite's attitude towards a ground
 location.
 
@@ -95,7 +95,7 @@ location.
    # Get the satellite's attitude towards Toronto.
    to_toronto_attitude = satellite.attitude(location=toronto)
 
-Using a :class:`celest.satellite.Satellite` instantiation, possible encounter
+Using a :class:`Satellite` instantiation, possible encounter
 times for a satellite-ground-position pair can be generated.
 
 

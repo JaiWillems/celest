@@ -44,11 +44,10 @@ Celest provides the ability to deal with different coordinate frames and their c
 Roll-Pitch-Yaw Attitude Frame
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Roll-Pitch-Yaw attitude frame is a 3-dimensional frame that defines the satellite orientation. The roll, pitch, and
-yaw angles are the angles required to rotate the satellite from the
-:ref:`lvlh frame<Local-Vertical-Local-Horizontal (LVLH)>` to an orientation where the satellite's nadir intersects the
-ground location. The roll of the attitude frame is to define satellite orientation for ground target tracking during
-ground imaging encounters (for a nadir facing camera).
+The Roll-Pitch-Yaw attitude frame is a 3-dimensional frame that defines satellite orientation. The roll, pitch, and yaw
+angles are the angles required to rotate the satellite from the :ref:`lvlh frame<Local-Vertical-Local-Horizontal (LVLH)>`
+to an orientation where the satellite's nadir intersects the ground location. The role of the attitude frame is to
+define satellite orientation for ground target tracking during ground imaging encounters (for a nadir facing camera).
 
 The attitude frame is calculated from the :meth:`Satellite.attitude` method and requires both the satellite position and
 velocity.
@@ -67,9 +66,9 @@ Azimuth-Elevation (Horizontal Frame)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Azimuth-Elevation frame (also known as the Horizontal or Altitude-Azimuth frame) is an observer centric frame that
-uses the observers local horizon to define to angular measures: azimuth and elevation. Azimuth is the angle in the plane
-of the observer's local horizon between the desired target and North. Azimuth is measured as clockwise positive and
-lies in the range :math:`[0, 360)`. Elevation is the angle of the desired target above and perpendicular to the
+uses the observers local horizon to define two angular measures: azimuth and elevation. Azimuth is the angle in the
+plane of the observer's local horizon between the desired target and North. Azimuth is measured as clockwise positive
+and lies in the range :math:`[0, 360)`. Elevation is the angle of the desired target above and perpendicular to the
 observer's local horizon. Elevation is measured as positive above the horizontal plane and lies in the range
 :math:`[-90, 90]`. This frame is used extensively in the window generation workflow.
 
@@ -140,8 +139,8 @@ World Geodetic System 84 (WGS84)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The World Geodetic System 84 (WGS84) is a reference ellipsoid used to model the Earth as an ellipsoid rather than a
-sphere. It is defined by three measures: latitude, longitude, and height above the reference ellipsoid. The WGS84 frame
-is used primarily in defining ground locations such as those used in satellite-to-ground encounters.
+sphere. It is defined by three measures: latitude, longitude, and the location's height above the reference ellipsoid.
+The WGS84 frame is used primarily in defining ground locations such as those used in satellite-to-ground encounters.
 
 The :class:`WGS84` class can be imported via the following:
 
@@ -161,7 +160,6 @@ exist constraints on various conversions.
 
 #. Since the :ref:`Azimuth-Elevation frame<Azimuth-Elevation (Horizontal Frame)>` is observer centric, conversions to this frane require a :ref:`defined ground location<Specifying Ground Locations>` to be passed in as a parameter to the conversion method.
 #. Conversions from the :ref:`Azimuth-Elevation frame<Azimuth-Elevation (Horizontal Frame)>` are not supported.
-#. Conversions of velocity data to the :ref:`WGS84 frame<World Geodetic System 84 (WGS84)>` should be avoided to to poor physical significance.
 
 For more information on using the coordinate conversions, refer to the tutorial on converting between frames found
 :ref:`here <Position Conversions>`.

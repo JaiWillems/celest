@@ -15,7 +15,7 @@ class Quantity:
     Parameters
     ----------
     data : Any
-        The data to be stored in the Quantity.
+        The data to be stored in the Quantity object.
 
         To allow for unit conversions, the data object must have the
         multiplication operations defined.

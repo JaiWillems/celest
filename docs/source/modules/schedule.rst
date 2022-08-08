@@ -8,9 +8,9 @@ Schedule
 Schedule Overview
 -----------------
 
-The primary usage of Celest is for mission planning of Earth observation satellites. A key part of this problem is the
+Celest is designed for mission planning of Earth observation satellites. A key part of this problem is the
 scheduling of observations. The following sections describe the concept of a scheduling request, the scheduling
-framework apart of celest, and a discussion on the scheduling algorithm.
+framework, and the scheduling algorithm.
 
 Concept of Requests
 -------------------
@@ -18,12 +18,12 @@ Concept of Requests
 A scheduling request is a formal description of a desired observation that outlines the constraints that must be met
 for the observation to be viable. The parameters that govern a request include the following:
 
-#. The ground location of the satellite-ground encounter.
-#. The deadline for the request to be fulfilled by.
-#. The duration required for the observation.
-#. The priority of the request compared to other requests.
-#. The minimum quality of the imaging data.
-#. A specific look-angle for the observation.
+#. The ground location of the satellite-ground encounter,
+#. The deadline for the request to be fulfilled by,
+#. The duration required for the observation,
+#. The priority of the request compared to other requests,
+#. The minimum quality of the imaging data,
+#. A specific look-angle for the observation, and
 #. The lighting condition for the request.
 
 Schedule Class
@@ -59,11 +59,12 @@ Liu et al. [Liu+17]_
 Initial Solution
 ^^^^^^^^^^^^^^^^
 
-The scheduling algorithm uses the sum of scheduled requires priorities as a measure of the quality of the solution.
-That is, the goal of the algorithm is to determine the highest sum of priorities of all scheduled observations. As a
-result, a good initial solution is greedy one. The :class:`Scheduler`'s ALNS algorithm sorts all requests in decreasing
-order of their priorities and then in increasing order of start time; the scheduler then attempts to schedule all tasks
-in order whilst adhering to the request constraints and takes the resulting solution to be the initial solution.
+The scheduling algorithm measures the quality of a solution by the sum of scheduled request priorities (i.e. the
+objective function). That is, the goal of the algorithm is to determine the highest sum of priorities of all scheduled
+observations. As a result, a good initial solution is greedy one. The :class:`Scheduler`'s ALNS algorithm sorts all
+requests in decreasing order by priority and then in increasing order of start time; the scheduler then attempts to
+schedule all tasks in order whilst adhering to the request constraints. The resulting solution is taken to be the
+initial solution.
 
 Note that if all requests are scheduled in the initial solution, the algorithm stops and returns the initial solution.
 
@@ -72,7 +73,7 @@ Scheduler Iteration
 
 The general methodology of a neighborhood search algorithm is to create a new solution in the neighborhood of the
 current solution by making small modifications through the use of destroy and repair operations. In each iteration,
-the scheduler will apply destroy and repair operation to the current solution to change it slightly. The cost of the
+the scheduler will apply a destroy and repair operation to the current solution to change it slightly. The cost of the
 resulting solution (the sum of the priorities of scheduled requests) is determined and compared to the cost of the
 current solution. The new solution is accepted by the :ref:`simulated annealing acceptance criterion<Acceptance Criterion>`.
 If the new solution is better than the best solution to date, the best solution is updated.
@@ -80,9 +81,9 @@ If the new solution is better than the best solution to date, the best solution 
 Acceptance Criterion
 ^^^^^^^^^^^^^^^^^^^^
 
-A new solution is accepted by the simulated annealing acceptance criterion. If the cost of the new solution is better
-than the cost of the current solution, the new solution is accepted. If the cost of the new solution is worse than the
-cost of the current solution, the new solution is accepted with the following probability:
+A new solution is accepted or rejected based on the simulated annealing acceptance criterion. If the cost of the new
+solution is better than the cost of the current solution, the new solution is accepted. Otherwise, the new solution is
+accepted with the following probability:
 
 .. math:: \rho = \exp\left(\frac{100}{T}\frac{f(s)' - f(s)}{f(s)}\right)
 
@@ -104,11 +105,11 @@ on their impact in improving the cost of the solution. The weight for the :math:
 where :math:`\lambda` is the reactivity number and :math:`\pi_i` is the weight of the :math:`i^{th}` destroy operator.
 
 The reactivity number governs the effect that previous iterations have on the current wight and can be passed into the
-scheduler as a parameter. A reactivity number of 1 will cause the algorithm is disregard the success of the operator on
-previous iterations. A zero reactivity factor will prevent the wights from being updated and will retain the initial
+scheduler as a parameter. A reactivity number of one will cause the algorithm to disregard the success of the operator
+on previous iterations. A zero reactivity factor will prevent the wights from being updated and will retain the initial
 and equal weights.
 
-The both the destroy and repair operators are chosen using a probability distribution based on the weights where the
+Both the destroy and repair operators are chosen using a probability distribution based on the weights where the
 probability of each operator is defined as:
 
 .. math:: p_i = w_i/\sum_{j=1}^Hw_j
