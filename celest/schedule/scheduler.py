@@ -12,15 +12,15 @@ from celest.schedule.scheduling_utils import (
     initialize_solution,
     is_complete
 )
-from celest.encounter.window_generator import generate_vtw, Lighting
+from celest.encounter.window_generator import generate_vtws, Lighting
 from celest.encounter.window_handling import ObservationWindow, WindowHandler
 from celest import units as u
 import math
 import numpy as np
 
 
-class Schedule(ALNS):
-    """Schedule(satellite, visibility_threshold)
+class Scheduler(ALNS):
+    """Scheduler(satellite, vis_threshold)
 
     Creates a scheduling object for the given satellite and visibility threshold.
 
@@ -47,6 +47,23 @@ class Schedule(ALNS):
     """
 
     def __init__(self, satellite: Satellite, vis_threshold: float) -> None:
+        """Creates a scheduling object for the given satellite and visibility threshold.
+
+        This class implements an adaptive large neighborhood search metaheuristic
+        for scheduling satellite observations.
+
+        Parameters
+        ----------
+        satellite : Satellite
+            The satellite executing the scheduled observations.
+        vis_threshold : float
+            Visibility threshold in degrees.
+
+            The visibility threshold is the minimum elevation angle of the satellite
+            as seen from `location` where the satellite will be in visual range of
+            `location`.
+        """
+
         if not isinstance(satellite, Satellite):
             raise TypeError("satellite must be of type Satellite.")
         if not isinstance(vis_threshold, (float, int)):
@@ -82,10 +99,10 @@ class Schedule(ALNS):
             The lighting condition of the encounter, default is DAYTIME.
         """
 
-        vtws = generate_vtw(self.satellite, location, self.visibility_threshold, lighting)
+        vtws = generate_vtws(self.satellite, location, self.visibility_threshold, lighting)
         self.request_handler.add_request(location, deadline, duration, priority, quality, look_ang, vtws)
 
-    def generate(self, max_iter: int, annealing_coeff: float, react_factor: float) -> None:
+    def generate(self, max_iter: int, annealing_coeff: float, react_factor: float) -> WindowHandler:
         """Generate the schedule for the given satellite and requests.
 
         Parameters
@@ -126,10 +143,10 @@ class Schedule(ALNS):
         best_solution = self.solve(max_iter, annealing_coeff, react_factor,
                                    remove_per_iteration, insert_per_iteration)
 
-        return self._generate_OWHandler_from_request_list(best_solution)
+        return self._generate_window_handler_from_request_list(best_solution)
 
-    def _generate_OWHandler_from_request_list(self, request_list):
-        ow_handler = WindowHandler()
+    def _generate_window_handler_from_request_list(self, request_list: RequestHandler) -> WindowHandler:
+        window_handler = WindowHandler()
         for request in request_list:
 
             if request[RequestIndices.is_scheduled]:
@@ -154,6 +171,6 @@ class Schedule(ALNS):
                     request[RequestIndices.location],
                     new_attitude
                 )
-                ow_handler.add_window(ow)
+                window_handler.add_window(ow)
 
-        return ow_handler
+        return window_handler

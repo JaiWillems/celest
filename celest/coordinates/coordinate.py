@@ -20,8 +20,6 @@ class Coordinate:
 
     Coordinate frame manipulations and transformations.
 
-    The current f
-
     Parameters
     ----------
     position : {ITRS, GCRS, WGS84}
@@ -31,6 +29,11 @@ class Coordinate:
     -------
     convert_to(frame, location=None)
         Convert the current frame to `frame`.
+
+    Notes
+    -----
+    Conversions between the AzEl, GCRS, ITRS, and WGS84 frames are supported
+    except for conversions from the AzEl frame.
 
     Examples
     --------

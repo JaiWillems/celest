@@ -7,7 +7,7 @@ from celest.satellite import Satellite
 from celest.schedule.insertion_operators import _INSERTION_FUNCTIONS
 from celest.schedule.removal_operators import _REMOVAL_FUNCTIONS
 from celest.schedule.request_handler import RequestIndices
-from celest.schedule.schedule import Schedule
+from celest.schedule.scheduler import Scheduler
 from celest.schedule.scheduling_utils import (
     cost,
     initialize_solution,
@@ -35,11 +35,11 @@ class TestSchedule(TestCase):
 
     def test_schedule_raises_exception_if_null_satellite_is_passed(self):
 
-        self.assertRaises(TypeError, Schedule, None, 0)
+        self.assertRaises(TypeError, Scheduler, None, 0)
 
     def test_schedule_raises_exception_if_null_time_is_passed(self):
 
-        self.assertRaises(TypeError, Schedule, self.satellite, None)
+        self.assertRaises(TypeError, Scheduler, self.satellite, None)
 
     def test_add_request(self):
 
@@ -49,7 +49,7 @@ class TestSchedule(TestCase):
         quality = 1
         look_ang = None
 
-        schedule = Schedule(self.satellite, 10)
+        schedule = Scheduler(self.satellite, 10)
         schedule.add_request(self.toronto, deadline, duration, priority, quality, look_ang)
 
         self.assertEqual(len(schedule.request_handler.requests), 1)
@@ -61,12 +61,12 @@ class TestSchedule(TestCase):
 
     def test_generate_raises_exception_when_no_requests_are_added(self):
 
-        schedule = Schedule(self.satellite, 10)
+        schedule = Scheduler(self.satellite, 10)
         self.assertRaises(Exception, schedule.generate, 100, 0.8, 0.5)
 
     def test_generate_returns_WindowHandler_when_requests_are_added(self):
 
-        schedule = Schedule(self.satellite, 10)
+        schedule = Scheduler(self.satellite, 10)
         schedule.add_request(self.toronto, Quantity(2460467, u.jd2000), Quantity(30, u.s), 1, 1, None)
         self.assertIsInstance(schedule.generate(100, 0.8, 0.5), WindowHandler)
 
@@ -83,7 +83,7 @@ class TestSchedule(TestCase):
         timmins = GroundLocation(48.48, -81.33, 0.295, u.deg, u.km)
         tobermory = GroundLocation(45.25, -81.66, 0.271, u.deg, u.km)
 
-        schedule = Schedule(self.satellite, 10)
+        schedule = Scheduler(self.satellite, 10)
 
         deadline = Quantity(2460467, u.jd2000)
         duration = Quantity(30, u.s)

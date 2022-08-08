@@ -15,14 +15,25 @@ import pkg_resources
 
 
 class Lighting(Enum):
+    """Enum for different lighting conditions.
+
+    Attributes
+    ----------
+    NIGHTTIME : int
+        Nighttime lighting condition.
+    ANYTTIME : int
+        Anytime lighting condition.
+    DAYTIME : int
+        Daytime lighting condition.
+    """
     NIGHTTIME = -1
     ANYTIME = 0
     DAYTIME = 1
 
 
-def generate_vtw(satellite: Satellite, location: GroundLocation,
-                 vis_threshold: float, lighting:
-                 Lighting=Lighting.ANYTIME) -> WindowHandler:
+def generate_vtws(satellite: Satellite, location: GroundLocation,
+                  vis_threshold: float, lighting:
+                  Lighting=Lighting.ANYTIME) -> WindowHandler:
     """Return visible time windows for a satellite-ground encounter.
 
     This function determines the time windows where the satellite has
@@ -40,7 +51,7 @@ def generate_vtw(satellite: Satellite, location: GroundLocation,
         The visibility threshold is the minimum elevation angle of the satellite
         as seen from `location` where the satellite will be in visual range of
         `location`.
-    lighting : float, optional
+    lighting : Lighting, optional
         Lighting condition specifier, defaults to anytime lighting conditions.
 
         Lighting conditions can be specified using the `Lighting` enum. The

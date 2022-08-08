@@ -66,6 +66,23 @@ class Attitude(Position3d):
 
     def __init__(self, julian: np.ndarray, roll: np.ndarray, pitch: np.ndarray,
                  yaw: np.ndarray, unit: Unit, location: GroundLocation) -> None:
+        """Satellite attitude.
+
+        The attitude of a satellite is defined by the roll, pitch, and yaw
+        angles that take the satellite from the lvlh frame to a
+        ground-target-pointing orientation.
+
+        Parameters
+        ----------
+        julian : np.ndarray
+            1-D array containing time in the J2000 epoch.
+        roll, pitch, yaw : np.ndarray
+            1-D array containing the coordinate data.
+        unit : Unit
+            The unit of the angular data.
+        location : GroundLocation
+            The ground location associated with the attitude data.
+        """
 
         super().__init__(roll, unit, pitch, unit, yaw, unit, julian, u.jd2000)
 

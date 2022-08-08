@@ -1,2 +1,2 @@
 
-from celest.schedule.schedule import Schedule
+from celest.schedule.scheduler import Scheduler

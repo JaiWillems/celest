@@ -67,6 +67,24 @@ class AzEl(Position2d):
 
     def __init__(self, julian: np.ndarray, azimuth: np.ndarray, elevation:
                  np.ndarray, unit: Unit, location: GroundLocation) -> None:
+        """Coordinates in the horizontal system.
+
+        The horizontal system has its origin located at a ground location and
+        has measures of azimith and elevation. Azimuth is defined as the angle
+        of the satellite in the horizontal plane clockwise from north. Elevation
+        is defined as the angle of the satellite above the horzontal plane.
+    
+        Parameters
+        ----------
+        julian : np.ndarray
+            1-D array containing time in the J2000 epoch.
+        azimuth, elevation : np.ndarray
+            1-D array containing the coordinate data.
+        unit : Unit
+            The unit of the spatial data.
+        location : GroundLocation
+            Origin of the azel coordinate frame.
+        """
 
         super().__init__(azimuth, unit, elevation, unit, julian, u.jd2000)
 

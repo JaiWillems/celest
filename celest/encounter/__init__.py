@@ -1,2 +1,2 @@
 
-from celest.encounter.window_generator import generate_vtw
+from celest.encounter.window_generator import Lighting, generate_vtws

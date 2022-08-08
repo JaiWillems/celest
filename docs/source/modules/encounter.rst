@@ -1,143 +1,86 @@
-Encounter Module
-================
+Encounter
+=========
 
-GroundPosition Class
---------------------
+.. contents:: Contents
+   :depth: 1
+   :local:
 
-The :class:`GroundPosition` class is used to represent a ground location that
-can be passed into window generation functionality to produce viable
-ground-satellite encounter opportunities. Currently, the :class:`GroundPosition`
-class is somewhat preliminary but will be expanded in the future to accommodate
-more complicated ellipsoid models based on the input geographical coordinates.
+Encounter Overview
+------------------
 
-.. autoclass:: celest.encounter.GroundPosition
-   :members:
-   :show-inheritance:
+One of the primary goals of Celest is mission planning for encounter based tasks such as ground imaging or data
+transfer. This goal requires determining when the satellite will be in a position allowing fore successful encounters.
+Windows are the first step in defining the time windows for an encounter. The following sections will look more into
+the concept of windows, demonstrate how to determine them using Celest, and then show the structures to interface with
+the generated windows.
+
+More About Windows
+------------------
+
+An encounter is any position dependent interaction between a satellite and some ground location. One type of encounter
+may be an imaging encounter where a satellite wishes to image a ground location. Another instance may be downlinking
+said imaging data to a ground station. In either case, a line of sight between the satellite and ground location is
+required. Windows are the way of defining when this line of sight is viable.
+
+Windows in Celest come in two flavours: visible time windows and observation windows.
+
+Visible Time Windows
+^^^^^^^^^^^^^^^^^^^^
+
+A visible time window defines the period of time when the satellite is in direct line of sight with the ground location
+and is characterized by two values: the satellite rise and set times as seen from the ground location. Between these
+times, the satellite is in view of the ground location and data transmission or ground imaging is theoretically
+possible.
+
+Observation Windows
+^^^^^^^^^^^^^^^^^^^
+
+Visible time windows can be imagined as unprocessed windows that are general to any satellite-ground encounter.
+On the other hand, an observation window is catered for an imaging encounter and defines the actual encounter start time
+and duration. For the observation window to be valid, it must be a subset of a visible time window.
+
+Observation windows are generated using the :class:`Scheduler` class.
+
+
+Generating Visible Time Windows
+-------------------------------
+
+All possible visible time windows for a satellite-ground encounter can be determined using the :py:func:`generate_vtws`
+function. For more information on generating visible time windows, see the
+:ref:`window generation tutorial<Window Generation Workflow>`.
+
+The :py:func:`generate_vtws` function can be imported via the following:
+
+.. code-block:: python
+
+   from celest.encounter import generate_vtws
+
+.. autofunction:: celest.encounter.window_generator.generate_vtws
    :noindex:
 
-Window Generation
------------------
+The :class:`Lighting` enumeration is used to specify the lighting conditions for the visible time windows and can be
+imported via the following:
 
-The window generation function determines all visible time windows for a
-satellite and ground-location pair where the satellites elevation is
-greater than the visibility threshold.
+.. code-block:: python
 
-.. autofunction:: celest.encounter.windows.generate_vtw
+   from celest.encounter import Lighting
+
+.. autoclass:: celest.encounter.window_generator.Lighting
    :noindex:
 
-Window Handling
----------------
+Window Data Structures
+----------------------
 
-The :class:`VTWHandler` class is the data structure returned from the
-:py:func:`windows.generate_vtw` function which holds all visible time windows
-as :class:`VTW` objects and provides an interface to access the data.
-Similarly, the :class:`OWHandler` class is the data structure returned from
-the scheduling workflow which hols all observation windows as :class:`OW`
-objects. The following detail these various classes.
+Celest contains various data structures to hold individual windows and collections of windows. The
+:class:`VisibleTimeWindow` class holds information regarding a single visible time window. Similarly, the
+:class:`ObservationWindow` class holds information regarding a single observation window. The :class:`WindowHandler`
+class is used to hold collections of either visible time windows or observation windows.
 
-VTWHandler
-~~~~~~~~~~
-
-The window data held within the :class:`VTWHandler` class can be interfaced in
-three ways: indexing, using access methods, and iterating.
-
-To provide meaningful interactions with the window data, the
-:class:`VTWHandler` is indexed by Julian start times in the J2000 epoch.
-Although, the start times are typically unknown to the user. As a result, a
-unique indexing scheme was adopted by the class to provide data access that
-might be convenient in context. The window associated with the closest start
-time is returned when indexing using an integer or float value. Similarly,
-when indexing with a tuple of values, the unique windows related to the closest
-start time are returned. When two indices are both closest to the start time of
-a window, the window is only returned once. All windows with start times
-falling within the slice (inclusive) are returned if the index is a slice.
-
-This indexing scheme allows users to easily access the data in the
-:class:`VTWHandler` class without prior knowledge of start times. It also
-allows the user to determine the encounter closest to the desired time for
-scheduling purposes.
-
-The window data can also be interfaced with using the :py:func:`get_window` and
-:py:func:`get_windows_in_range` methods. The first returns the window with the
-closes start time. The latter returns all windows with start times falling
-within the input range.
-
-Lastly, window data can be accessed by iterating over the class.
-
-Examples of object interactions are seen in the following example.
-
-.. code-block::
-
-   # Assuming we have a Windows object with three windows with start times
-   # 2405795.5, 2405796.5, and 2405797.5.
-
-   # Window accessed by indexing by the start time 2405796.5.
-   window_object = windows_object[2405796.5]
-   # window_object now contains the window starting at 2405796.5.
-
-   # Window accessed by indexing with a tuple.
-   window_object = windows_object[2405796.5, 2405796.7]
-   # window_object is a list containing windows with the 2405795.5, 2405796.5 start times.
-
-   # Window accessed by indexing with a slice.
-   window_object = windows_object[2405796.5:2405796.7]
-   # window_object is a list containing windows with the 2405795.5, 2405796.5 start times.
-
-   # Window accessed through the get_window method by the start time 2405796.5.
-   window_object = windows_object.get_window(2405796.5)
-   # window_object now contains the window starting at 2405796.5.
-
-   # Window accessed through the get_windows_in_range method using a start and end time.
-   window_object = windows_object.get_windows_in_range(2405796.5, 2405796.7)
-   # window_object is a list containing windows with the 2405795.5, 2405796.5 start times.
-
-   # Window accessed by iterating over the class.
-   for window_object in windows_object:
-
-      # window_object window data can be accessed using attributes.
-      lat, lon = window_object.coor
-      start = window_object.start
-      end = window_object.start
-   
-
-.. autoclass:: celest.encounter._window_handling.VTWHandler
-   :members:
-   :show-inheritance:
+.. autoclass:: celest.encounter.window_handling.VisibleTimeWindow
    :noindex:
 
-VTW
-~~~
-
-The :class:`VTW` class is the data structure that holds all the information
-regarding a specific encounter opportunity. The important information is held
-in a series of attributes.
-
-.. autoclass:: celest.encounter._window_handling.VTW
-   :members:
-   :show-inheritance:
+.. autoclass:: celest.encounter.window_handling.ObservationWindow
    :noindex:
 
-OWHandler
-~~~~~~~~~
-
-The :class:`OWHandler` is retuned from the :class:`Schedule` when the
-:py:func:`generate` method is called. It holds the :class:`OW` objects which
-represent the scheduled requests. The :class:`OWHandler` class can be
-interfaced in a similar way to the :class:`VTWHandler` class.
-
-.. autoclass:: celest.encounter._window_handling.OWHandler
-   :members:
-   :show-inheritance:
-   :noindex:
-
-OW
-~~
-
-The :class:`OW` class is the data structure that holds all the information
-regarding a scheduled request. The important information is held
-in a series of attributes.
-
-.. autoclass:: celest.encounter._window_handling.OW
-   :members:
-   :show-inheritance:
+.. autoclass:: celest.encounter.window_handling.WindowHandler
    :noindex:

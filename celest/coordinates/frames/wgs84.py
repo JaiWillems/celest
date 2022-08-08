@@ -13,6 +13,12 @@ class WGS84(Position3d):
 
     Coordinates in the WGS84 Earth ellipsoid model.
 
+    The World Geodetic System 84 (WGS84) is the Earth ellipsoid model with its
+    origin located at the Earth's center of mass. The WGS84 meridian of zero
+    longitude is located at the IERS reference meridian with the parallel of
+    zero latitude located at the WGS84 reference meridian plane. WGS84 is the
+    standard model used by the Global Positioning System (GPS).
+
     Parameters
     ----------
     julian : np.ndarray
@@ -59,6 +65,25 @@ class WGS84(Position3d):
     def __init__(self, julian: np.ndarray, latitude: np.ndarray, longitude:
                  np.ndarray, height: np.ndarray, angular_unit: Unit,
                  length_unit: Unit) -> None:
+        """Coordinates in the WGS84 Earth ellipsoid model.
+        
+        The World Geodetic System 84 (WGS84) is the Earth ellipsoid model with
+        its origin located at the Earth's center of mass. The WGS84 meridian of
+        zero longitude is located at the IERS reference meridian with the
+        parallel of zero latitude located at the WGS84 reference meridian plane.
+        WGS84 is the standard model used by the Global Positioning System (GPS).
+
+        Parameters
+        ----------
+        julian : np.ndarray
+            1-D array containing time in the J2000 epoch.
+        latitude, longitude, height : np.ndarray
+            1-D array containing the coordinate data.
+        angular_unit : Unit
+            The unit of the latitude and longitude data.
+        length_unit : Unit
+            The unit of the height data.
+        """
 
         super().__init__(latitude, angular_unit, longitude, angular_unit,
                          height, length_unit, julian, u.jd2000)

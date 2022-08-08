@@ -35,6 +35,29 @@ class Time:
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default to zero.
 
+    Methods
+    -------
+    true_solar_time(longitude)
+        Return true solar time.
+    mean_solar_time(longitude)
+        Return mean solar time.
+    true_hour_angle(longitude)
+        Return true hour angle.
+    mean_hour_angle(longitude)
+        Return mean hour angle.
+    ut1()
+        Return the universal time (same as GMT).
+    datetime()
+        Return `datetime.datetime` object array.
+    gmst()
+        Return Greenwhich Mean Sidereal Time.
+    lmst(longitude)
+        Return Local Mean Sidereal Time.
+    gast()
+        Return Greenwich Apparent Sidereal Time.
+    last(longitude)
+        Return Local Apparent Sidereal Time.
+
     Examples
     --------
     Construct a `Time` object using J2000 input times:
@@ -55,6 +78,22 @@ class Time:
     """
 
     def __init__(self, julian: np.ndarray, offset: float=0) -> None:
+        """Time transformations.
+
+        `julian + offset` is the Julian time in J2000 epoch which can be
+        converted into different time representations useful for astronomical
+        calculations.
+
+        Parameters
+        ----------
+        julian : array_like
+            1-D array containing time data in Julian days.
+
+            If time data is not in the J2000 epoch, an offset must be pased in to
+            be added to the julian times.
+        offset : float, optional
+            Offset to convert input time data to the J2000 epoch, default to zero.
+        """
 
         time = np.array(julian)
 
