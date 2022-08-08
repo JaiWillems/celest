@@ -71,8 +71,8 @@ def generate_vtws(satellite: Satellite, location: GroundLocation,
         raise ValueError("vis_threshold must be between 0 and 90 degrees.")
 
     satellite_azel = Coordinate(satellite.position).convert_to(AzEl, location)
-    satellite_elevation = satellite_azel.elevation.to(u.deg).data
-    julian = satellite.position.time.to(u.jd2000).data
+    satellite_elevation = satellite_azel.elevation.to(u.deg)
+    julian = satellite.position.time.to(u.jd2000)
 
     window_indices = np.where(satellite_elevation > vis_threshold)[0]
 
@@ -109,7 +109,7 @@ def _lighting_constraint_indices(julian: np.ndarray, location: GroundLocation,
 def _get_night_constraint_indices(julian: np.ndarray, location:
                                   GroundLocation) -> np.ndarray:
     sun_elevation = _get_sun_elevation(julian, location)
-    return np.where(sun_elevation.to(u.deg).data < 0)[0]
+    return np.where(sun_elevation.to(u.deg) < 0)[0]
 
 
 def _get_sun_elevation(julian: np.ndarray, location: GroundLocation) -> Quantity:
@@ -134,4 +134,4 @@ def _get_sun_gcrs(julian: np.ndarray) -> GCRS:
 def _get_day_constraint_indices(julian: np.ndarray, location:
                                 GroundLocation) -> np.ndarray:
     sun_elevation = _get_sun_elevation(julian, location)
-    return np.where(sun_elevation.to(u.deg).data > 0)[0]
+    return np.where(sun_elevation.to(u.deg) > 0)[0]

@@ -68,11 +68,12 @@ class TestGenerateVTW(TestCase):
             vis_threshold,
             Lighting.DAYTIME
         )
-        satellite_elevation = self._get_satellite_elevation().to(u.deg).data
-        sun_elevation = self._get_sun_elevation().to(u.deg).data
+        satellite_elevation = self._get_satellite_elevation().to(u.deg)
+        sun_elevation = self._get_sun_elevation().to(u.deg)
 
         for window in windows:
-            rise_time, set_time = window.rise_time.data, window.set_time.data
+            rise_time = window.rise_time.to(u.jd2000)
+            set_time = window.set_time.to(u.jd2000)
             window_indices = np.where((rise_time <= self.julian) &
                                       (self.julian <= set_time))[0]
 
@@ -98,11 +99,12 @@ class TestGenerateVTW(TestCase):
             vis_threshold,
             Lighting.NIGHTTIME
         )
-        satellite_elevation = self._get_satellite_elevation().to(u.deg).data
-        sun_elevation = self._get_sun_elevation().to(u.deg).data
+        satellite_elevation = self._get_satellite_elevation().to(u.deg)
+        sun_elevation = self._get_sun_elevation().to(u.deg)
 
         for window in windows:
-            rise_time, set_time = window.rise_time.data, window.set_time.data
+            rise_time = window.rise_time.to(u.jd2000)
+            set_time = window.set_time.to(u.jd2000)
             window_indices = np.where((rise_time <= self.julian) &
                                       (self.julian <= set_time))[0]
 
@@ -114,7 +116,7 @@ class TestGenerateVTW(TestCase):
     def test_get_night_constraint_indices(self):
         indices = _get_night_constraint_indices(self.julian, self.location)
         sun_elevation = self._get_sun_elevation()
-        self.assertTrue(np.alltrue(sun_elevation.to(u.deg).data[indices] < 0))
+        self.assertTrue(np.alltrue(sun_elevation.to(u.deg)[indices] < 0))
 
     def test_get_sun_gcrs(self):
         from astropy.coordinates import get_body
@@ -139,4 +141,4 @@ class TestGenerateVTW(TestCase):
     def test_get_day_constraint_indices(self):
         sun_elevation = self._get_sun_elevation()
         indices = _get_day_constraint_indices(self.julian, self.location)
-        self.assertTrue(np.alltrue(sun_elevation.to(u.deg).data[indices] > 0))
+        self.assertTrue(np.alltrue(sun_elevation.to(u.deg)[indices] > 0))

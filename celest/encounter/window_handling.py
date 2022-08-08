@@ -242,12 +242,12 @@ class WindowCollection:
         yaw = []
 
         for window in self._window_data:
-            start_time.append(window.start_time.to(u.jd2000).data)
-            duration.append(window.duration.to(u.s).data)
+            start_time.append(window.start_time.to(u.jd2000))
+            duration.append(window.duration.to(u.s))
             location.append(window.location)
-            roll.append(window.attitude.roll.to(u.deg).data[0])
-            pitch.append(window.attitude.pitch.to(u.deg).data[0])
-            yaw.append(window.attitude.yaw.to(u.deg).data[0])
+            roll.append(window.attitude.roll.to(u.deg)[0])
+            pitch.append(window.attitude.pitch.to(u.deg)[0])
+            yaw.append(window.attitude.yaw.to(u.deg)[0])
 
         return [
             ["Start Time", Quantity(np.array(start_time), u.jd2000)],

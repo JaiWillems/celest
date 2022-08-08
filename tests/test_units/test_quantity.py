@@ -223,29 +223,24 @@ class TestQuantity(TestCase):
                           self.compound_quantity)
 
     def test_to_with_same_dimension(self):
-        simple_quantity_in_km = self.simple_quantity.to(u.km)
-        self.assertEqual(0.005, simple_quantity_in_km.data)
-        self.assertEqual(u.km, simple_quantity_in_km.unit)
+        self.assertEqual(0.005, self.simple_quantity.to(u.km))
 
     def test_to_with_different_dimension_raises_value_error(self):
         self.assertRaises(ValueError, self.simple_quantity.to, u.s)
 
-    def test_get_unit(self):
-        self.assertEqual(self.simple_unit, self.simple_quantity.get_unit())
-
     def test_convert_to_same_dimension(self):
-        self.simple_quantity.convert_to(u.km)
-        self.assertEqual(0.005, self.simple_quantity.data)
-        self.assertEqual(u.km, self.simple_quantity.unit)
+        new_quantity = self.simple_quantity._convert_to(u.km)
+        self.assertEqual(0.005, new_quantity.data)
+        self.assertEqual(u.km, new_quantity.unit)
 
     def test_convert_to_with_compound_unit(self):
         new_compound_unit = u.km / u.hr
-        self.compound_quantity.convert_to(new_compound_unit)
-        self.assertEqual(18, self.compound_quantity.data)
-        self.assertEqual(new_compound_unit, self.compound_quantity.unit)
+        new_quantity = self.compound_quantity._convert_to(new_compound_unit)
+        self.assertEqual(18, new_quantity.data)
+        self.assertEqual(new_compound_unit, new_quantity.unit)
 
     def test_convert_to_different_dimension_raises_ValueError(self):
-        self.assertRaises(ValueError, self.simple_quantity.convert_to, u.s)
+        self.assertRaises(ValueError, self.simple_quantity._convert_to, u.s)
 
     def test_convert_to_with_compound_unit_with_different_dimensions(self):
-        self.assertRaises(ValueError, self.compound_quantity.convert_to, u.s)
+        self.assertRaises(ValueError, self.compound_quantity._convert_to, u.s)

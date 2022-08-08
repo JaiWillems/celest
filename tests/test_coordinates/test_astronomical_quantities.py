@@ -162,7 +162,7 @@ class TestAstronomicalQuantities(TestCase):
         julian = Quantity(2455368.75, u.jd2000)
 
         expected_equation_of_time = -0.42658
-        actual_equation_of_time = equation_of_time(julian).to(u.deg).data
+        actual_equation_of_time = equation_of_time(julian).to(u.deg)
 
         self.assertAlmostEqual(expected_equation_of_time,
                                actual_equation_of_time, delta=0.04)

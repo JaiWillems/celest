@@ -175,11 +175,11 @@ def _itrs_to_wgs84(itrs: ITRS) -> WGS84:
         raise ValueError(f"Input data is in the {itrs.__class__} frame and not"
                          " the ITRS frame.")
 
-    julian = itrs.time.data
+    julian = itrs.time.to(u.jd2000)
 
-    itrs_x = itrs.x.to(u.km).data
-    itrs_y = itrs.y.to(u.km).data
-    itrs_z = itrs.z.to(u.km).data
+    itrs_x = itrs.x.to(u.km)
+    itrs_y = itrs.y.to(u.km)
+    itrs_z = itrs.z.to(u.km)
 
     latitude = np.arctan(itrs_z / np.sqrt(itrs_x ** 2 + itrs_y ** 2))
     longitude = np.arctan2(itrs_y, itrs_x)
@@ -224,9 +224,9 @@ def _altitude(itrs: ITRS) -> np.ndarray:
 
     tol = 10e-10
 
-    itrs_x = itrs.x.to(u.km).data
-    itrs_y = itrs.y.to(u.km).data
-    itrs_z = itrs.z.to(u.km).data
+    itrs_x = itrs.x.to(u.km)
+    itrs_y = itrs.y.to(u.km)
+    itrs_z = itrs.z.to(u.km)
 
     e = np.sqrt(1 - b ** 2 / a ** 2)
     p = np.sqrt(itrs_x ** 2 + itrs_y ** 2)
@@ -285,11 +285,11 @@ def _wgs84_to_itrs(wgs84: WGS84) -> ITRS:
         raise ValueError(f"Input data is in the {wgs84.__class__} frame and not"
                          " the WGS84 frame.")
 
-    julian = wgs84.time.data
+    julian = wgs84.time.to(u.jd2000)
 
-    latitude = wgs84.latitude.to(u.rad).data
-    longitude = wgs84.longitude.to(u.rad).data
-    height = wgs84.height.to(u.km).data
+    latitude = wgs84.latitude.to(u.rad)
+    longitude = wgs84.longitude.to(u.rad)
+    height = wgs84.height.to(u.km)
 
     e = np.sqrt(1 - WGS84_MINOR_AXIS_KM ** 2 / WGS84_MAJOR_AXIS_KM ** 2)
     n = WGS84_MAJOR_AXIS_KM / np.sqrt(1 - e ** 2 * np.sin(latitude) ** 2)
@@ -347,14 +347,13 @@ def _azimuth(itrs: ITRS, location: GroundLocation) -> np.ndarray:
         1-D array containing azimuth angles in degrees.
     """
 
-    sat_itrs = np.array([itrs.x.to(u.km).data, itrs.y.to(u.km).data,
-                         itrs.z.to(u.km).data]).T
-    ground_itrs = np.array([location.itrs_x.to(u.km).data,
-                            location.itrs_y.to(u.km).data,
-                            location.itrs_z.to(u.km).data])
+    sat_itrs = np.array([itrs.x.to(u.km), itrs.y.to(u.km), itrs.z.to(u.km)]).T
+    ground_itrs = np.array([location.itrs_x.to(u.km),
+                            location.itrs_y.to(u.km),
+                            location.itrs_z.to(u.km)])
 
-    latitude = location.latitude.to(u.rad).data
-    radius = location.radius.to(u.km).data
+    latitude = location.latitude.to(u.rad)
+    radius = location.radius.to(u.km)
 
     ground_to_satellite = sat_itrs - ground_itrs
 
@@ -417,11 +416,10 @@ def _elevation(itrs: ITRS, location: GroundLocation) -> np.ndarray:
         1-D array containing elevation angles in degrees.
     """
 
-    sat_itrs = np.array([itrs.x.to(u.km).data, itrs.y.to(u.km).data,
-                         itrs.z.to(u.km).data]).T
-    ground_itrs = np.array([location.itrs_x.to(u.km).data,
-                            location.itrs_y.to(u.km).data,
-                            location.itrs_z.to(u.km).data])
+    sat_itrs = np.array([itrs.x.to(u.km), itrs.y.to(u.km), itrs.z.to(u.km)]).T
+    ground_itrs = np.array([location.itrs_x.to(u.km),
+                            location.itrs_y.to(u.km),
+                            location.itrs_z.to(u.km)])
 
     return 90 - _get_ang(sat_itrs - ground_itrs, ground_itrs)
 
@@ -461,7 +459,7 @@ def _gcrs_to_lvlh(gcrs_position: GCRS, gcrs_velocity: GCRS) -> Tuple[LVLH, LVLH]
     velocity_dimension = gcrs_velocity.x.unit
 
     gcrs_position = deepcopy(gcrs_position)
-    julian = gcrs_position.time.data
+    julian = gcrs_position.time.to(u.jd2000)
 
     gcrs_x = gcrs_position.x.data.reshape((-1, 1))
     gcrs_y = gcrs_position.y.data.reshape((-1, 1))

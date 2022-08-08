@@ -36,7 +36,7 @@ def _ISO6709_representation(latitude: Quantity, longitude: Quantity, height:
 
 
 def _get_latitude_string(latitude: Quantity) -> str:
-    sexigesimal_latitude = _get_sexagesimal_string(abs(latitude.to(u.deg).data))
+    sexigesimal_latitude = _get_sexagesimal_string(abs(latitude.to(u.deg)))
     direction = "N" if latitude.data >= 0 else "S"
 
     return sexigesimal_latitude + direction
@@ -52,7 +52,7 @@ def _get_sexagesimal_string(absolute_deg_angle: float) -> str:
 
 
 def _get_longitude_string(longitude: Quantity) -> str:
-    sexigesimal_longitude = _get_sexagesimal_string(abs(longitude.to(u.deg).data))
+    sexigesimal_longitude = _get_sexagesimal_string(abs(longitude.to(u.deg)))
     direction = "E" if longitude.data >= 0 else "W"
 
     return sexigesimal_longitude + direction

@@ -33,7 +33,7 @@ class Quantity:
     -------
     to(new_unit)
         Return a new Quantity object with the new unit.
-    convert_to(new_unit)
+    _convert_to(new_unit)
         Convert Quantity data to a different unit.
 
 
@@ -210,6 +210,28 @@ class Quantity:
         return self._unit
 
     def to(self, new_unit):
+        """Return the Quantity data in the new unit.
+
+        Parameters
+        ----------
+        new_unit : Unit, CompoundUnit
+            New unit with the same dimension as the current unit.
+
+        Returns
+        -------
+        Any
+            The Quantity data in the new unit.
+
+        Examples
+        --------
+        >>> quantity_in_meters = Quantity(5, u.m)
+        >>> quantity_in_meters.to(u.km)
+        0.005
+        """
+
+        return self._convert_to(new_unit).data
+
+    def _convert_to(self, new_unit):
         """Return a new Quantity object with the new unit.
 
         Parameters
@@ -224,39 +246,13 @@ class Quantity:
 
         Examples
         --------
-        >>> quantity_in_kilometers = quantity_in_meters.to(u.km)
-        """
-
-        quantity_in_new_unit = deepcopy(self)
-        quantity_in_new_unit.convert_to(new_unit)
-        return quantity_in_new_unit
-
-    def get_unit(self):
-        # TODO: Remove this method (not being used).
-        return self._unit
-
-    # TODO: Remove this method, it is not useful when we include the to method that returns data.
-    def convert_to(self, new_unit):
-        """Convert Quantity data to a different unit.
-
-        Parameters
-        ----------
-        new_unit : Unit, CompoundUnit
-            New unit with the same dimension as the current unit.
-
-        Examples
-        --------
         Initialize the `Quantity` object:
 
-        >>> q = Quantity(5, u.m)
-        >>> q.data
-        5
+        >>> quantity_in_meters = Quantity(5, u.m)
 
         Convert to kilometers:
 
-        >>> q.convert_to(u.km)
-        >>> q.data
-        0.005
+        >>> quantity_in_kilometers = quantity_in_meters._convert_to(u.km)
         """
 
         if self._unit.dimension != new_unit.dimension:
@@ -272,8 +268,11 @@ class Quantity:
             else:
                 return unit.scale
 
-        if repr(self._unit) == repr(new_unit):
-            return self
-        else:
-            self._data *= _get_unit_scale(self.unit) / _get_unit_scale(new_unit)
-            self._unit = new_unit
+        quantity_copy = deepcopy(self)
+
+        if repr(quantity_copy._unit) != repr(new_unit):
+            quantity_copy._data *= _get_unit_scale(
+                quantity_copy.unit) / _get_unit_scale(new_unit)
+            quantity_copy._unit = new_unit
+
+        return quantity_copy

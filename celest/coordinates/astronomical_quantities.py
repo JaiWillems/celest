@@ -117,7 +117,7 @@ def get_mean_elongation_moon_from_sun_deg(julian: Quantity) -> Quantity:
 
 
 def _calculate_raw_elapsed_jd_century_powers(julian: Quantity, highest_power):
-    centuries_since_jd2000 = (julian.data - JD2000_DATE) / DAYS_IN_JULIAN_CENTURY
+    centuries_since_jd2000 = (julian.to(u.jd2000) - JD2000_DATE) / DAYS_IN_JULIAN_CENTURY
     return [centuries_since_jd2000 ** p for p in range(1, highest_power + 1)]
 
 
@@ -202,10 +202,10 @@ def get_mean_longitude_of_moon(julian: Quantity) -> Quantity:
 def get_nutation_in_longitude(ascending_node_longitude: Quantity,
                               sun_mean_longitude: Quantity,
                               moon_mean_longitude: Quantity) -> Quantity:
-    p1 = -17.20 * np.sin(ascending_node_longitude.to(u.rad).data)
-    p2 = -1.32 * np.sin(2 * sun_mean_longitude.to(u.rad).data)
-    p3 = -0.23 * np.sin(2 * moon_mean_longitude.to(u.rad).data)
-    p4 = 0.21 * np.sin(2 * ascending_node_longitude.to(u.rad).data)
+    p1 = -17.20 * np.sin(ascending_node_longitude.to(u.rad))
+    p2 = -1.32 * np.sin(2 * sun_mean_longitude.to(u.rad))
+    p3 = -0.23 * np.sin(2 * moon_mean_longitude.to(u.rad))
+    p4 = 0.21 * np.sin(2 * ascending_node_longitude.to(u.rad))
 
     return Quantity(p1 + p2 + p3 + p4, u.arcsec)
 
@@ -213,10 +213,10 @@ def get_nutation_in_longitude(ascending_node_longitude: Quantity,
 def get_nutation_in_obliquity(ascending_node_longitude: Quantity,
                               sun_mean_longitude: Quantity,
                               moon_mean_longitude: Quantity) -> Quantity:
-    e1 = 9.20 * np.cos(ascending_node_longitude.to(u.rad).data)
-    e2 = 0.57 * np.cos(2 * sun_mean_longitude.to(u.rad).data)
-    e3 = 0.10 * np.cos(2 * moon_mean_longitude.to(u.rad).data)
-    e4 = -0.09 * np.cos(2 * ascending_node_longitude.to(u.rad).data)
+    e1 = 9.20 * np.cos(ascending_node_longitude.to(u.rad))
+    e2 = 0.57 * np.cos(2 * sun_mean_longitude.to(u.rad))
+    e3 = 0.10 * np.cos(2 * moon_mean_longitude.to(u.rad))
+    e4 = -0.09 * np.cos(2 * ascending_node_longitude.to(u.rad))
 
     return Quantity(e1 + e2 + e3 + e4, u.arcsec)
 
@@ -352,10 +352,10 @@ def apparent_obliquity(julian: Quantity) -> Quantity:
     >>> julian = Quantity(2446895.5, u.jd2000)
     >>> epsilon = apparent_obliquity(julian=julian)
     """
-    average_obliquity = mean_obliquity(julian)
+    average_obliquity = mean_obliquity(julian).to(u.deg)
     _, nutation_in_obliquity = nutation_components(julian)
 
-    return average_obliquity + nutation_in_obliquity.to(u.deg)
+    return Quantity(average_obliquity + nutation_in_obliquity.to(u.deg), u.deg)
 
 
 def from_julian(julian: Quantity) -> Tuple:
@@ -492,17 +492,17 @@ def equation_of_time(julian: Quantity) -> Quantity:
     """
     sun_mean_longitude = get_mean_longitude_of_sun(julian).to(u.rad)
     sun_mean_anomaly = get_mean_anomaly_of_sun(julian).to(u.rad)
-    earth_eccentricity = get_earth_eccentricity(julian)
+    earth_eccentricity = get_earth_eccentricity(julian).to(u.rad)
 
     sun_apparent_obliquity = apparent_obliquity(julian).to(u.rad)
-    y = np.tan(sun_apparent_obliquity.data / 2) ** 2
+    y = np.tan(sun_apparent_obliquity / 2) ** 2
 
-    time_equation = y * np.sin(2 * sun_mean_longitude.data) - \
-        2 * earth_eccentricity.data * np.sin(sun_mean_anomaly.data) \
-        + 4 * earth_eccentricity.data * y * np.sin(sun_mean_anomaly.data) * \
-        np.cos(2 * sun_mean_longitude.data) - 0.5 * y ** 2 * \
-        np.sin(4 * sun_mean_longitude.data) - 1.25 * earth_eccentricity.data \
-        ** 2 * np.sin(2 * sun_mean_anomaly.data)
+    time_equation = y * np.sin(2 * sun_mean_longitude) - \
+        2 * earth_eccentricity * np.sin(sun_mean_anomaly) \
+        + 4 * earth_eccentricity * y * np.sin(sun_mean_anomaly) * \
+        np.cos(2 * sun_mean_longitude) - 0.5 * y ** 2 * \
+        np.sin(4 * sun_mean_longitude) - 1.25 * earth_eccentricity \
+        ** 2 * np.sin(2 * sun_mean_anomaly)
 
     return Quantity(time_equation, u.rad)
 
@@ -547,7 +547,7 @@ def equation_of_equinoxes(julian: Quantity) -> Quantity:
     """
     nutation_in_longitude, _ = nutation_components(julian)
     obliquity = apparent_obliquity(julian).to(u.rad)
-    result = nutation_in_longitude.data * np.cos(obliquity.data) / 15
+    result = nutation_in_longitude.data * np.cos(obliquity) / 15
 
     return Quantity(result, u.arcsec)
 
@@ -585,8 +585,8 @@ def sun_right_ascension(julian: Quantity) -> Quantity:
     >>> sun_right_ascension(julian=julian)
     np.array([198.38166])
     """
-    mean_sun_longitude = get_mean_longitude_of_sun(julian).data
-    mean_sun_anomaly = get_mean_anomaly_of_sun(julian).to(u.rad).data
+    mean_sun_longitude = get_mean_longitude_of_sun(julian).to(u.deg)
+    mean_sun_anomaly = get_mean_anomaly_of_sun(julian).to(u.rad)
 
     t1, t2 = _calculate_raw_elapsed_jd_century_powers(julian, 2)
     sun_center = (1.914602 - 0.004817 * t1 - 0.000014 * t2) * \
@@ -594,7 +594,7 @@ def sun_right_ascension(julian: Quantity) -> Quantity:
         np.sin(2 * mean_sun_anomaly) + 0.000289 * np.sin(3 * mean_sun_anomaly)
 
     sun_true_longitude = np.radians(mean_sun_longitude + sun_center)
-    obliquity = mean_obliquity(julian).to(u.rad).data
+    obliquity = mean_obliquity(julian).to(u.rad)
 
     alpha = np.arctan2(np.cos(obliquity) * np.sin(sun_true_longitude),
                        np.cos(sun_true_longitude))

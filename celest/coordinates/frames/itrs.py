@@ -51,7 +51,7 @@ class ITRS(Position3d):
 
     Convert to the `GCRS` frame:
 
-    >>> gcrs = itrs.convert_to(GCRS)
+    >>> gcrs = itrs._convert_to(GCRS)
 
     Save `ITRS` data to a text file:
 
