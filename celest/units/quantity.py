@@ -1,6 +1,6 @@
+from typing import Union, Any
 
-
-from celest.units.core import CompoundUnit
+from celest.units.core import CompoundUnit, Unit
 from copy import deepcopy
 
 
@@ -32,17 +32,29 @@ class Quantity:
     Methods
     -------
     to(new_unit)
-        Return a new Quantity object with the new unit.
-    _convert_to(new_unit)
-        Convert Quantity data to a different unit.
-
+        Return the Quantity data in the new unit.
 
     Examples
     --------
     >>> q = Quantity(5, u.m)
     """
 
-    def __init__(self, data, unit):
+    def __init__(self, data: Any, unit: Union[Unit, CompoundUnit]) -> None:
+        """Data with a unit.
+
+        The Quantity class holds both data and a unit together to allow for easy
+        unit conversions.
+
+        Parameters
+        ----------
+        data : Any
+            The data to be stored in the Quantity object.
+
+            To allow for unit conversions, the data object must have the
+            multiplication operations defined.
+        unit : Unit, CompoundUnit
+            The unit associated with the data.
+        """
 
         self._data = data
         self._unit = unit
@@ -164,18 +176,27 @@ class Quantity:
         return self.__eq__(other) or self.__gt__(other)
 
     @property
-    def data(self):
+    def data(self) -> Any:
+        """
+        Return the data of the quantity.
+        """
         return self._data
 
     @property
-    def unit(self):
+    def unit(self) -> Union[Unit, CompoundUnit]:
+        """
+        Return the unit of the quantity.
+        """
         return self._unit
 
     @property
-    def dimension(self):
+    def dimension(self) -> str:
+        """
+        Return the dimension string of the quantity.
+        """
         return self._unit.dimension
 
-    def to(self, new_unit):
+    def to(self, new_unit: Union[Unit, CompoundUnit]) -> Any:
         """Return the Quantity data in the new unit.
 
         Parameters
@@ -197,7 +218,7 @@ class Quantity:
 
         return self._convert_to(new_unit).data
 
-    def _convert_to(self, new_unit):
+    def _convert_to(self, new_unit: Union[Unit, CompoundUnit]) -> "Quantity":
         """Return a new Quantity object with the new unit.
 
         Parameters
