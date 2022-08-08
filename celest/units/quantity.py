@@ -61,10 +61,10 @@ class Quantity:
             data = self._data + other
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
+            if self._unit.dimension != other._unit.dimension:
                 raise ArithmeticError(
-                    "Units must match for Quantity addition.")
-            data = self._data + other._data
+                    "Unit dimensions must match for Quantity addition.")
+            data = self._data + other.to(self._unit)
             return Quantity(data, self._unit)
         else:
             return NotImplemented
@@ -74,10 +74,10 @@ class Quantity:
             data = self._data + other
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
+            if self._unit.dimension != other._unit.dimension:
                 raise ArithmeticError(
-                    "Units must match for Quantity addition.")
-            data = self._data + other._data
+                    "Unit dimensions must match for Quantity addition.")
+            data = self._data + other.to(self._unit)
             return Quantity(data, self._unit)
         else:
             return NotImplemented
@@ -87,10 +87,10 @@ class Quantity:
             data = self._data - other
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
+            if self._unit.dimension != other._unit.dimension:
                 raise ArithmeticError(
-                    "Units must match for Quantity subtraction.")
-            data = self._data - other._data
+                    "Unit dimensions must match for Quantity subtraction.")
+            data = self._data - other.to(self._unit)
             return Quantity(data, self._unit)
         else:
             return NotImplemented
@@ -100,10 +100,10 @@ class Quantity:
             data = other - self._data
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
+            if self._unit.dimension != other._unit.dimension:
                 raise ArithmeticError(
-                    "Units must match for Quantity subtraction.")
-            data = other._data - self._data
+                    "Unit dimensions must match for Quantity subtraction.")
+            data = other.to(self._unit) - self._data
             return Quantity(data, self._unit)
         else:
             return NotImplemented
@@ -113,8 +113,12 @@ class Quantity:
             data = self.data * other
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
-            data = self._data * other._data
-            unit = self._unit * other._unit
+            if self._unit.dimension == other._unit.dimension:
+                data = self._data * other.to(self._unit)
+                unit = self._unit ** 2
+            else:
+                data = self._data * other._data
+                unit = self._unit * other._unit
             return Quantity(data, unit)
         else:
             return NotImplemented
@@ -124,8 +128,12 @@ class Quantity:
             data = self._data * other
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
-            data = self._data * other._data
-            unit = self._unit * other._unit
+            if self._unit.dimension == other._unit.dimension:
+                data = self._data * other.to(self._unit)
+                unit = self._unit ** 2
+            else:
+                data = self._data * other._data
+                unit = self._unit * other._unit
             return Quantity(data, unit)
         else:
             return NotImplemented
@@ -135,8 +143,12 @@ class Quantity:
             data = self._data / other
             return Quantity(data, self._unit)
         elif isinstance(other, Quantity):
-            data = self._data / other._data
-            unit = self._unit / other._unit
+            if self._unit.dimension == other._unit.dimension:
+                data = self._data / other.to(self._unit)
+                unit = self._unit / self._unit
+            else:
+                data = self._data / other._data
+                unit = self._unit / other._unit
             return Quantity(data, unit)
         else:
             return NotImplemented
@@ -147,57 +159,67 @@ class Quantity:
             unit = 1 / self._unit
             return Quantity(data, unit)
         elif isinstance(other, Quantity):
-            data = other._data / self._data
-            unit = other._unit / self._unit
+            if self._unit.dimension == other._unit.dimension:
+                data = other.to(self._unit) / self._data
+                unit = self._unit / self._unit
+            else:
+                data = other._data / self._data
+                unit = other._unit / self._unit
             return Quantity(data, unit)
         else:
             return NotImplemented
 
     def __eq__(self, other):
         if isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for comparison.")
-            return self._data == other._data
+            if self._unit.dimension != other._unit.dimension:
+                raise ArithmeticError(
+                    "Unit dimensions must match for comparison.")
+            return self._data == other.to(self._unit)
         else:
             return NotImplemented
 
     def __ne__(self, other):
         if isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for comparison.")
-            return self._data != other._data
+            if self._unit.dimension != other._unit.dimension:
+                raise ArithmeticError(
+                    "Unit dimensions must match for comparison.")
+            return self._data != other.to(self._unit)
         else:
             return NotImplemented
 
     def __lt__(self, other):
         if isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for comparison.")
-            return self._data < other._data
+            if self._unit.dimension != other._unit.dimension:
+                raise ArithmeticError(
+                    "Unit dimensions must match for comparison.")
+            return self._data < other.to(self._unit)
         else:
             return NotImplemented
 
     def __le__(self, other):
         if isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for comparison.")
-            return self._data <= other._data
+            if self._unit.dimension != other._unit.dimension:
+                raise ArithmeticError(
+                    "Unit dimensions must match for comparison.")
+            return self._data <= other.to(self._unit)
         else:
             return NotImplemented
 
     def __gt__(self, other):
         if isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for comparison.")
-            return self._data > other._data
+            if self._unit.dimension != other._unit.dimension:
+                raise ArithmeticError(
+                    "Unit dimensions must match for comparison.")
+            return self._data > other.to(self._unit)
         else:
             return NotImplemented
 
     def __ge__(self, other):
         if isinstance(other, Quantity):
-            if repr(self._unit) != repr(other._unit):
-                raise ArithmeticError("Units must match for comparison.")
-            return self._data >= other._data
+            if self._unit.dimension != other._unit.dimension:
+                raise ArithmeticError(
+                    "Unit dimensions must match for comparison.")
+            return self._data >= other.to(self._unit)
         else:
             return NotImplemented
 
