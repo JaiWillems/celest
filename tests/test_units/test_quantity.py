@@ -277,7 +277,7 @@ class TestQuantity(TestCase):
         self.assertTrue(self.simple_quantity <= self.simple_quantity)
 
     def test_le_when_greater_with_same_dimensions(self):
-        self.assertFalse((self.simple_quantity + 1) <= self.simple_quantity)
+        self.assertFalse((self.simple_quantity + self.comparison_offset) <= self.simple_quantity)
 
     def test_le_with_different_dimensions_raises_arithmetic_error(self):
         self.assertRaises(ArithmeticError, self.simple_quantity.__le__,
@@ -296,7 +296,7 @@ class TestQuantity(TestCase):
         self.assertFalse(self.simple_quantity <= similar_quantity)
 
     def test_gt_when_greater_with_same_dimensions(self):
-        self.assertTrue((self.simple_quantity + 1) > self.simple_quantity)
+        self.assertTrue((self.simple_quantity + self.comparison_offset) > self.simple_quantity)
 
     def test_gt_when_less_with_same_dimensions(self):
         self.assertFalse(self.simple_quantity > (self.simple_quantity + 1))
@@ -314,7 +314,7 @@ class TestQuantity(TestCase):
         self.assertFalse(self.simple_quantity > similar_quantity)
 
     def test_ge_when_greater_with_same_dimensions(self):
-        self.assertTrue((self.simple_quantity + 1) >= self.simple_quantity)
+        self.assertTrue((self.simple_quantity + self.comparison_offset) >= self.simple_quantity)
 
     def test_ge_when_equal_with_same_dimensions(self):
         self.assertTrue(self.simple_quantity >= self.simple_quantity)

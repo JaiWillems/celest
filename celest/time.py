@@ -518,9 +518,9 @@ class Time:
 
         ut1 = self.ut1().to(u.hourangle)
         right_ascension_of_sun = sun_right_ascension(self.julian).to(u.hourangle)
-        eqn_of_equinoxes = equation_of_equinoxes(self.julian)
+        eqn_of_equinoxes = equation_of_equinoxes(self.julian).to(u.deg)
 
-        last = ut1 - 12 + right_ascension_of_sun + eqn_of_equinoxes.to(u.deg) +\
+        last = ut1 - 12 + right_ascension_of_sun + eqn_of_equinoxes +\
             np.array(longitude) / 15
 
         return Quantity(last % 24, u.hourangle)

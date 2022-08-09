@@ -1,7 +1,6 @@
 
 
 from celest.units.display import _to_string, get_dimension_string
-from typing import Union
 
 
 class BaseUnit:
@@ -102,11 +101,11 @@ class NamedUnit(BaseUnit):
         The short name of the unit is used as its namespace identifier.
     long_name : str
         The long name of the unit.
-    namespace : dict
+    namespace : dict, optional
         The namespace to insert the unit into.
     """
 
-    def __init__(self, short_name: str, long_name: str, namespace: dict) -> None:
+    def __init__(self, short_name: str, long_name: str, namespace: dict=None) -> None:
 
         super().__init__()
 
@@ -152,14 +151,16 @@ class Unit(NamedUnit, BaseUnit):
         The short name of the unit is used as its namespace identifier.
     long_name : str
         The long name of the unit.
-    namespace : dict
+    namespace : dict, optional
         The namespace to insert the unit into.
     base_units : BaseUnit, optional
         The base units of the unit. That is, how the new unit relates to a base
         SI unit.
+
+        For example, a kilometer unit has the base units of `1000 * u.m`.
     """
 
-    def __init__(self, short_name: str, long_name: str, namespace: dict,
+    def __init__(self, short_name: str, long_name: str, namespace: dict=None,
                  base_units: BaseUnit=None) -> None:
 
         super().__init__(short_name, long_name, namespace)
@@ -214,7 +215,7 @@ class CompoundUnit(BaseUnit):
         The list of powers of the unit.
     """
 
-    def __init__(self, scale: Union[int, float], bases: list, powers: list) -> None:
+    def __init__(self, scale: float, bases: list, powers: list) -> None:
 
         self._is_unity = False
 

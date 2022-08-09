@@ -1,10 +1,10 @@
 
 
+from celest.angle_strings import _ISO6709_representation
+from celest.constants import WGS84_MINOR_AXIS_KM, WGS84_MAJOR_AXIS_KM
 from celest.units.quantity import Quantity
 from celest.units.core import Unit
 from celest import units as u
-from celest.constants import WGS84_MINOR_AXIS_KM, WGS84_MAJOR_AXIS_KM
-from celest.angle_strings import _ISO6709_representation
 from math import cos, sin, sqrt
 
 
@@ -133,8 +133,7 @@ class GroundLocation:
         """
 
         m = self._meridional_radius_of_curvature()
-        itrs_x = (m + self._height.to(u.km)) * \
-            cos(self._latitude.to(u.rad)) * \
+        itrs_x = (m + self._height.to(u.km)) * cos(self._latitude.to(u.rad)) * \
             cos(self._longitude.to(u.rad))
 
         return Quantity(itrs_x, u.km)

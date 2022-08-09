@@ -41,12 +41,12 @@ class Coordinate:
     frame:
 
     >>> c = Coordinate(gcrs)
-    >>> itrs = c._convert_to(ITRS)
+    >>> itrs = c.convert_to(ITRS)
 
     By specifying a ground location, we can convert to the `AzEl` frame:
 
     >>> location = GroundLocation(43.6532, -79.3832, 76, u.deg, u.m)
-    >>> azel = c._convert_to(AzEl, location)
+    >>> azel = c.convert_to(AzEl, location)
     """
 
     def __init__(self, position: Literal[ITRS, GCRS, WGS84]):

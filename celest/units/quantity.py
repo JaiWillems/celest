@@ -1,7 +1,8 @@
-from typing import Union, Any
+
 
 from celest.units.core import CompoundUnit, Unit
 from copy import deepcopy
+from typing import Any, Union
 
 
 class Quantity:
@@ -37,6 +38,37 @@ class Quantity:
     Examples
     --------
     >>> q = Quantity(5, u.m)
+
+    The data data, unit, and dimension string are available as attributes.
+
+    >>> q1.data
+    5
+    >>> q1.unit
+    Unit("m")
+    >>> q1.dimension
+    'L'
+
+    Quantities of the same dimension can be added or subtracted.
+
+    >>> q2 = Quantity(0.1, u.km)
+    >>> q3 = q1 + q2
+    >>> print(q3)
+    105.0 m
+
+    >>> q4 = q1 - q2
+    >>> print(q4)
+    -95.0 m
+
+    Quantities can be multiplied or divided.
+
+    >>> q5 = Quantity(2, u.s)
+    >>> q6 = q1 * q5
+    >>> print(q6)
+    10 m s
+
+    >>> q7 = q1 / q5
+    >>> print(q7)
+    2.5 m / s
     """
 
     def __init__(self, data: Any, unit: Union[Unit, CompoundUnit]) -> None:
