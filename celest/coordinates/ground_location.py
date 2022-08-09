@@ -1,10 +1,10 @@
 
 
+from celest.angle_strings import _ISO6709_representation
+from celest.constants import WGS84_MINOR_AXIS_KM, WGS84_MAJOR_AXIS_KM
 from celest.units.quantity import Quantity
 from celest.units.core import Unit
 from celest import units as u
-from celest.constants import WGS84_MINOR_AXIS_KM, WGS84_MAJOR_AXIS_KM
-from celest.angle_strings import _ISO6709_representation
 from math import cos, sin, sqrt
 
 
@@ -115,14 +115,14 @@ class GroundLocation:
            https://planetcalc.com/7721/.
         """
 
-        cos_latitude = cos(self._latitude.to(u.rad).data)
-        sin_latitude = sin(self._latitude.to(u.rad).data)
+        cos_latitude = cos(self._latitude.to(u.rad))
+        sin_latitude = sin(self._latitude.to(u.rad))
 
         numerator = (WGS84_MAJOR_AXIS_KM ** 2 * cos_latitude) ** 2 + \
                     (WGS84_MINOR_AXIS_KM ** 2 * sin_latitude) ** 2
         denominator = (WGS84_MAJOR_AXIS_KM * cos_latitude) ** 2 + \
                       (WGS84_MINOR_AXIS_KM * sin_latitude) ** 2
-        radius_km = sqrt(numerator / denominator) + self._height.to(u.km).data
+        radius_km = sqrt(numerator / denominator) + self._height.to(u.km)
 
         return Quantity(radius_km, u.km)
 
@@ -133,9 +133,8 @@ class GroundLocation:
         """
 
         m = self._meridional_radius_of_curvature()
-        itrs_x = (m + self._height.to(u.km).data) * \
-            cos(self._latitude.to(u.rad).data) * \
-            cos(self._longitude.to(u.rad).data)
+        itrs_x = (m + self._height.to(u.km)) * cos(self._latitude.to(u.rad)) * \
+            cos(self._longitude.to(u.rad))
 
         return Quantity(itrs_x, u.km)
 
@@ -144,7 +143,7 @@ class GroundLocation:
 
     def _meridional_radius_of_curvature(self):
         return WGS84_MAJOR_AXIS_KM / sqrt(1 - self._ellipse_eccentricity() **
-                                          2 * sin(self._latitude.to(u.rad).data) ** 2)
+                                          2 * sin(self._latitude.to(u.rad)) ** 2)
 
     @property
     def itrs_y(self) -> Quantity:
@@ -153,9 +152,8 @@ class GroundLocation:
         """
 
         m = self._meridional_radius_of_curvature()
-        itrs_y = (m + self._height.to(u.km).data) * \
-            cos(self._latitude.to(u.rad).data) * \
-            sin(self._longitude.to(u.rad).data)
+        itrs_y = (m + self._height.to(u.km)) * cos(self._latitude.to(u.rad)) * \
+            sin(self._longitude.to(u.rad))
 
         return Quantity(itrs_y, u.km)
 
@@ -167,7 +165,7 @@ class GroundLocation:
 
         e = self._ellipse_eccentricity()
         m = self._meridional_radius_of_curvature()
-        itrs_z = (m * (1 - e ** 2) + self._height.to(u.km).data) * \
-            sin(self._latitude.to(u.rad).data)
+        itrs_z = (m * (1 - e ** 2) + self._height.to(u.km)) * \
+            sin(self._latitude.to(u.rad))
 
         return Quantity(itrs_z, u.km)

@@ -26,7 +26,7 @@ def insert_first_n_requests(request_handler, number_to_insert):
         look_angle = request_handler.look_angle(request_index)
         request_vtw_list = request_handler.vtw_list(request_index)
 
-        duration_in_days = Quantity(duration.to(u.s).data / 86400, u.jd2000)
+        duration_in_days = Quantity(duration.to(u.s) / 86400, u.jd2000)
 
         for vtw_index, vtw in enumerate(request_vtw_list):
 
@@ -58,11 +58,11 @@ def insert_first_n_requests(request_handler, number_to_insert):
 
 
 def _look_angle_time(look_angle, desired_look_angle, julian, start, end):
-    julian = julian.to(u.jd2000).data
-    look_angle = look_angle.to(u.deg).data - desired_look_angle.to(u.deg).data
+    julian = julian.to(u.jd2000)
+    look_angle = look_angle.to(u.deg) - desired_look_angle.to(u.deg)
 
-    left_value_index = np.where(julian == start.to(u.jd2000).data)[0][0]
-    right_value_index = np.where(julian == end.to(u.jd2000).data)[0][0]
+    left_value_index = np.where(julian == start.to(u.jd2000))[0][0]
+    right_value_index = np.where(julian == end.to(u.jd2000))[0][0]
 
     left_look_angle = look_angle[left_value_index]
     right_look_angle = look_angle[right_value_index]
@@ -87,10 +87,10 @@ def image_quality_is_met(vtw, start, minimum_image_quality):
 
 
 def image_quality(vtw, start):
-    nadir_time = ((vtw.rise_time + vtw.set_time) / 2).to(u.jd2000).data
-    start_time = start.to(u.jd2000).data
-    ride_time = vtw.rise_time.to(u.jd2000).data
-    return math.floor(10 - 9 * abs(start_time - nadir_time) / (nadir_time - ride_time))
+    nadir_time = ((vtw.rise_time + vtw.set_time) / 2).to(u.jd2000)
+    start_time = start.to(u.jd2000)
+    rise_time = vtw.rise_time.to(u.jd2000)
+    return math.floor(10 - 9 * abs(start_time - nadir_time) / (nadir_time - rise_time))
 
 
 def does_conflict_exists(request_handler, start, duration_in_days):
@@ -98,7 +98,7 @@ def does_conflict_exists(request_handler, start, duration_in_days):
         if not request[0]:
             continue
         scheduled_start = request[2]
-        scheduled_duration = Quantity(request[3].to(u.s).data / 86400, u.jd2000)
+        scheduled_duration = Quantity(request[3].to(u.s) / 86400, u.jd2000)
         scheduled_end = scheduled_start + scheduled_duration
 
         if start <= scheduled_start < start + duration_in_days:

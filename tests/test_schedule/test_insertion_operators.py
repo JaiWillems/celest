@@ -106,7 +106,7 @@ class TestInsertionOperators(TestCase):
     def _schedule_first_request(self):
         rise_time = self.request_handler[0][10][0].rise_time
         set_time = self.request_handler[0][10][0].set_time
-        duration = Quantity(86400 * (set_time.to(u.jd2000).data - rise_time.to(u.jd2000).data), u.s)
+        duration = Quantity(86400 * (set_time.to(u.jd2000) - rise_time.to(u.jd2000)), u.s)
 
         self.request_handler.schedule_request(0, 0, rise_time, duration)
 

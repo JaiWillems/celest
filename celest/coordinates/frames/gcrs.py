@@ -49,10 +49,6 @@ class GCRS(Position3d):
 
     >>> gcrs = GCRS(julian, x, y, z, u.km)
 
-    Convert to the `ITRS` frame:
-
-    >>> itrs = gcrs.convert_to(ITRS)
-
     Save `GCRS` data to a text file:
 
     >>> gcrs.save_text_file("gcrs_data")

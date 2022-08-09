@@ -46,16 +46,17 @@ class TestGroundLocation(TestCase):
         self.assertEqual(self.location.height.data, self.height)
 
     def test_radius(self):
-        self.assertAlmostEqual(self.location.radius.data, 6871.555, delta=0.01)
+        self.assertAlmostEqual(self.location.radius.to(u.km), 6871.555,
+                               delta=0.01)
 
     def test_itrs_x(self):
-        self.assertAlmostEqual(self.location.itrs_x.to(u.km).data, 6343.8162,
+        self.assertAlmostEqual(self.location.itrs_x.to(u.km), 6343.8162,
                                delta=0.005)
 
     def test_itrs_y(self):
-        self.assertAlmostEqual(self.location.itrs_y.to(u.km).data, -2640.8722,
+        self.assertAlmostEqual(self.location.itrs_y.to(u.km), -2640.8722,
                                delta=0.005)
 
     def test_itrs_z(self):
-        self.assertAlmostEqual(self.location.itrs_z.to(u.km).data, -11.2554,
+        self.assertAlmostEqual(self.location.itrs_z.to(u.km), -11.2554,
                                delta=0.005)

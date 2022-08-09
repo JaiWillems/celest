@@ -115,9 +115,9 @@ class TestCoordinateTransformations(TestCase):
         from astropy.time import Time
 
         location = EarthLocation.from_geodetic(
-            self.location.longitude.to(u.deg).data * astropy_u.deg,
-            self.location.latitude.to(u.deg).data * astropy_u.deg,
-            self.location.height.to(u.km).data * astropy_u.km
+            self.location.longitude.to(u.deg) * astropy_u.deg,
+            self.location.latitude.to(u.deg) * astropy_u.deg,
+            self.location.height.to(u.km) * astropy_u.km
         )
 
         times = Time(self.itrs.time.data, format="jd")

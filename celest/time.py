@@ -30,7 +30,7 @@ class Time:
     julian : array_like
         1-D array containing time data in Julian days.
 
-        If time data is not in the J2000 epoch, an offset must be pased in to
+        If time data is not in the J2000 epoch, an offset must be passed in to
         be added to the julian times.
     offset : float, optional
         Offset to convert input time data to the J2000 epoch, default to zero.
@@ -89,10 +89,11 @@ class Time:
         julian : array_like
             1-D array containing time data in Julian days.
 
-            If time data is not in the J2000 epoch, an offset must be pased in to
-            be added to the julian times.
+            If time data is not in the J2000 epoch, an offset must be passed in
+            to be added to the julian times.
         offset : float, optional
-            Offset to convert input time data to the J2000 epoch, default to zero.
+            Offset to convert input time data to the J2000 epoch, default to
+            zero.
         """
 
         time = np.array(julian)
@@ -262,7 +263,7 @@ class Time:
         Quantity(np.array([10.97157662, 12.47807655]), Unit("hourangle"))
         """
 
-        tha = (self.true_solar_time(longitude).to(u.hourangle).data - 12) % 24
+        tha = (self.true_solar_time(longitude).to(u.hourangle) - 12) % 24
         return Quantity(tha, u.hourangle)
 
     def mean_hour_angle(self, longitude: np.ndarray) -> Quantity:
@@ -312,7 +313,7 @@ class Time:
         Quantity(np.array([22.83066666]), Unit("hourangle"))
         """
 
-        mha = (self.mean_solar_time(longitude).to(u.hourangle).data - 12) % 24
+        mha = (self.mean_solar_time(longitude).to(u.hourangle) - 12) % 24
         return Quantity(mha, u.hourangle)
 
     def ut1(self) -> Quantity:
@@ -364,7 +365,7 @@ class Time:
                   datetime.datetime(2013, 1, 1, 0, 59, 59, 999987)])
         """
 
-        year, month, day = from_julian(self._julian)
+        year, month, day = from_julian(Quantity(self._julian, u.jd2000))
         full_days, fractional_day = day.astype(int), day % 1
 
         datetime_list = []
@@ -444,8 +445,8 @@ class Time:
         Quantity(np.array([9.98419514, 16.62892539, 17.78123885]), Unit("hourangle"))
         """
 
-        hour_angle = self.mean_hour_angle(longitude).to(u.hourangle).data
-        right_ascension = sun_right_ascension(self.julian).to(u.hourangle).data
+        hour_angle = self.mean_hour_angle(longitude).to(u.hourangle)
+        right_ascension = sun_right_ascension(self.julian).to(u.hourangle)
 
         return Quantity((hour_angle + right_ascension) % 24, u.hourangle)
 
@@ -476,8 +477,8 @@ class Time:
                   7.723465])
         """
 
-        gmst = self.gmst().data
-        eqn_of_equinoxes = equation_of_equinoxes(self.julian).to(u.deg).data
+        gmst = self.gmst().to(u.hourangle)
+        eqn_of_equinoxes = equation_of_equinoxes(self.julian).to(u.deg)
 
         return Quantity(gmst + eqn_of_equinoxes, u.hourangle)
 
@@ -515,11 +516,11 @@ class Time:
                   17.78148932])
         """
 
-        ut1 = self.ut1().to(u.hourangle).data
-        right_ascension_of_sun = sun_right_ascension(self.julian).to(u.hourangle).data
-        eqn_of_equinoxes = equation_of_equinoxes(self.julian).to(u.deg).data
+        ut1 = self.ut1().to(u.hourangle)
+        right_ascension_of_sun = sun_right_ascension(self.julian).to(u.hourangle)
+        eqn_of_equinoxes = equation_of_equinoxes(self.julian).to(u.deg)
 
         last = ut1 - 12 + right_ascension_of_sun + eqn_of_equinoxes +\
-               np.array(longitude) / 15
+            np.array(longitude) / 15
 
         return Quantity(last % 24, u.hourangle)

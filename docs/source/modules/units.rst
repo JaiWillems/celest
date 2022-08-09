@@ -21,6 +21,9 @@ Initialized units are accessed from the units module which can be imported by th
 
    from celest import units as u
 
+Primary Units
+^^^^^^^^^^^^^
+
 Primary units can then be accessed using a dot notation.
 
 .. code-block:: python
@@ -93,12 +96,30 @@ The following table lists all primary units, their code call sign, and their mea
      - `u.hourangle`
      - Angle
 
+Primary units are instances of the :class:`Unit` class and can be used to create new units.
+
+.. autoclass:: celest.units.core.Unit
+   :members:
+   :inherited-members:
+
+Compound Units
+^^^^^^^^^^^^^^
+
 Primary units can be combined with others through multiplication or division to create compound units.
 
 .. code-block:: python
 
    velocity_unit = u.m / u.s  # Meter per second.
    acceleration_unit = u.m / u.s ^ 2  # Meter per second squared.
+
+Compound units are instances of the :class:`CompoundUnit` class and can be used to create new units.
+
+.. autoclass:: celest.units.core.CompoundUnit
+   :members:
+   :inherited-members:
+
+Passing Units into Celest
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Units are typically passed into Celest's class constructors, methods, and functions as a parameter to specify the data
 measure. Internally, the data and units get stored together in a :class:`Quantity` object that may be returned from a

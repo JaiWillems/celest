@@ -9,31 +9,34 @@ class BaseUnit:
     The `BaseUnit` class defines the operations required for handling units.
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return _to_string(self)
 
     @property
-    def dimension(self):
+    def dimension(self) -> str:
+        """
+        Return the dimension string of the unit.
+        """
         return get_dimension_string(self)
 
     @property
-    def scale(self):
+    def scale(self) -> float:
         """
-        Return scale of the unit.
+        Return the scale of the unit.
         """
         return 1.0
 
     @property
-    def bases(self):
+    def bases(self) -> list:
         """
-        Return the bases of the unit.
+        Return the list of bases of the unit.
         """
         return [self]
 
     @property
-    def powers(self):
+    def powers(self) -> list:
         """
-        Return the powers of the unit.
+        Return the list of powers of the unit.
         """
         return [1]
 
@@ -77,7 +80,7 @@ class BaseUnit:
         elif isinstance(other, (float, int)):
             return CompoundUnit(other, [self], [1])
 
-    def is_unity(self):
+    def is_unity(self) -> bool:
         """
         Return `True` if the unit is unity.
         """
@@ -89,29 +92,46 @@ class NamedUnit(BaseUnit):
 
     The `NamedUnit` class is a `BaseUnit` with a name and associated with a
     namespace.
+
+    Parameters
+    ----------
+    short_name : str
+        The short name of the unit.
+
+        The short name of the unit is used as its namespace identifier.
+    long_name : str
+        The long name of the unit.
+    namespace : dict, optional
+        The namespace to insert the unit into.
     """
 
-    def __init__(self, short_name, long_name, namespace=None):
+    def __init__(self, short_name: str, long_name: str, namespace: dict=None) -> None:
 
         super().__init__()
 
         self._short_name = short_name
         self._long_name = long_name
 
-        self.insert_into_namespace(namespace)
+        self._insert_into_namespace(namespace)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "NamedUnit(\"" + _to_string(self) + "\")"
 
     @property
-    def short_name(self):
+    def short_name(self) -> str:
+        """
+        Return the short name of the unit.
+        """
         return self._short_name
 
     @property
-    def long_name(self):
+    def long_name(self) -> str:
+        """
+        Return the long name of the unit.
+        """
         return self._long_name
 
-    def insert_into_namespace(self, namespace):
+    def _insert_into_namespace(self, namespace):
 
         if namespace is not None and self._short_name not in namespace:
             namespace[self._short_name] = self
@@ -122,9 +142,26 @@ class Unit(NamedUnit, BaseUnit):
 
     The `Unit` class is the main unit object that is associated with a
     namespace and has a name.
+
+    Parameters
+    ----------
+    short_name : str
+        The short name of the unit.
+
+        The short name of the unit is used as its namespace identifier.
+    long_name : str
+        The long name of the unit.
+    namespace : dict, optional
+        The namespace to insert the unit into.
+    base_units : BaseUnit, optional
+        The base units of the unit. That is, how the new unit relates to a base
+        SI unit.
+
+        For example, a kilometer unit has the base units of `1000 * u.m`.
     """
 
-    def __init__(self, short_name, long_name, namespace=None, base_units=None):
+    def __init__(self, short_name: str, long_name: str, namespace: dict=None,
+                 base_units: BaseUnit=None) -> None:
 
         super().__init__(short_name, long_name, namespace)
 
@@ -141,23 +178,23 @@ class Unit(NamedUnit, BaseUnit):
         return "Unit(\"" + _to_string(self) + "\")"
 
     @property
-    def scale(self):
+    def scale(self) -> float:
         """
-        Return scale of the unit.
+        Return the scale of the unit.
         """
         return self._scale
 
     @property
-    def bases(self):
+    def bases(self) -> list:
         """
-        Return the bases of the unit.
+        Return the list of bases of the unit.
         """
         return self._bases
 
     @property
-    def powers(self):
+    def powers(self) -> list:
         """
-        Return the powers of the unit.
+        Return the list of powers of the unit.
         """
         return self._powers
 
@@ -167,9 +204,18 @@ class CompoundUnit(BaseUnit):
 
     The `CompoundUnit` class handles more complicated units that are
     combinations of multiple `Unit` objects.
+
+    Parameters
+    ----------
+    scale : float
+        The scale of the unit.
+    bases : list
+        The list of bases of the unit.
+    powers : list
+        The list of powers of the unit.
     """
 
-    def __init__(self, scale, bases, powers):
+    def __init__(self, scale: float, bases: list, powers: list) -> None:
 
         self._is_unity = False
 
@@ -190,22 +236,22 @@ class CompoundUnit(BaseUnit):
             self._powers = powers
             self._expand_and_collect()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "CompoundUnit(\"" + _to_string(self) + "\")"
 
     @property
-    def scale(self):
+    def scale(self) -> float:
         return self._scale
 
     @property
-    def bases(self):
+    def bases(self) -> list:
         return self._bases
 
     @property
-    def powers(self):
+    def powers(self) -> list:
         return self._powers
 
-    def _expand_and_collect(self):
+    def _expand_and_collect(self) -> None:
         """
         Remove all instances of composite units in `_bases` and `_powers`.
         """
@@ -244,5 +290,5 @@ class CompoundUnit(BaseUnit):
 
         self._is_unity = True if not len(self._bases) else False
 
-    def is_unity(self):
+    def is_unity(self) -> bool:
         return self._is_unity

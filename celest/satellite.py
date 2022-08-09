@@ -149,20 +149,20 @@ class Satellite:
         lvlh_position_array = lvlh_position.to_numpy(u.km)
 
         ground_itrs = ITRS(
-            self.position.time.data,
+            self.position.time.to(u.jd2000),
             np.full((len(lvlh_position.x.data),),
-                    location.itrs_x.to(u.km).data),
+                    location.itrs_x.to(u.km)),
             np.full((len(lvlh_position.y.data),),
-                    location.itrs_y.to(u.km).data),
+                    location.itrs_y.to(u.km)),
             np.full((len(lvlh_position.z.data),),
-                    location.itrs_z.to(u.km).data),
+                    location.itrs_z.to(u.km)),
             u.km
         )
         ground_gcrs = _itrs_to_gcrs(ground_itrs)
         ground_gcrs = np.array([
-            ground_gcrs.x.to(u.km).data,
-            ground_gcrs.y.to(u.km).data,
-            ground_gcrs.z.to(u.km).data
+            ground_gcrs.x.to(u.km),
+            ground_gcrs.y.to(u.km),
+            ground_gcrs.z.to(u.km)
         ]).T
 
         transformation_matrix = _gcrs_to_lvlh_matrix(
@@ -190,7 +190,7 @@ class Satellite:
         pitch = np.arctan2(a31, a33)
         yaw = np.arctan2(a12, a22)
 
-        return Attitude(self.position.time.data, roll, pitch, yaw, u.rad,
+        return Attitude(self.position.time.to(u.jd2000), roll, pitch, yaw, u.rad,
                         location)
 
     def distance(self, location: GroundLocation) -> Quantity:
@@ -208,9 +208,9 @@ class Satellite:
         """
 
         distance = np.linalg.norm(np.array([
-            self.position.x.to(u.km).data - location.itrs_x.to(u.km).data,
-            self.position.y.to(u.km).data - location.itrs_y.to(u.km).data,
-            self.position.z.to(u.km).data - location.itrs_z.to(u.km).data
+            self.position.x.to(u.km) - location.itrs_x.to(u.km),
+            self.position.y.to(u.km) - location.itrs_y.to(u.km),
+            self.position.z.to(u.km) - location.itrs_z.to(u.km)
         ]), axis=0)
 
         return Quantity(distance, u.km)
@@ -234,14 +234,14 @@ class Satellite:
         """
 
         satellite_itrs = np.array([
-            self.position.x.to(u.km).data,
-            self.position.y.to(u.km).data,
-            self.position.z.to(u.km).data
+            self.position.x.to(u.km),
+            self.position.y.to(u.km),
+            self.position.z.to(u.km)
         ]).T
         ground_to_satellite_itrs = np.array([
-            self.position.x.to(u.km).data - location.itrs_x.to(u.km).data,
-            self.position.y.to(u.km).data - location.itrs_y.to(u.km).data,
-            self.position.z.to(u.km).data - location.itrs_z.to(u.km).data
+            self.position.x.to(u.km) - location.itrs_x.to(u.km),
+            self.position.y.to(u.km) - location.itrs_y.to(u.km),
+            self.position.z.to(u.km) - location.itrs_z.to(u.km)
         ]).T
         angles = _get_ang(ground_to_satellite_itrs, satellite_itrs)
 

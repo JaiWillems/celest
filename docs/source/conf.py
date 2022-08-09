@@ -80,3 +80,4 @@ autodoc_default_options = {
 
 # Type hinting for autodoc.
 autodoc_typehints = 'description'
+autodoc_typehints_format = 'short'

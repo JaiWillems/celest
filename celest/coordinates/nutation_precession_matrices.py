@@ -7,6 +7,7 @@ from celest.coordinates.astronomical_quantities import (
     conventional_precession_angles
 )
 from celest.units.quantity import Quantity
+from celest import units as u
 import numpy as np
 
 
@@ -81,9 +82,9 @@ def precession_matrix(julian: Quantity) -> np.ndarray:
 
     zeta, theta, z = conventional_precession_angles(julian)
 
-    a1 = np.radians(zeta.data / 3600)
-    a2 = np.radians(theta.data / 3600)
-    a3 = - np.radians(z.data / 3600)
+    a1 = zeta.to(u.rad)
+    a2 = theta.to(u.rad)
+    a3 = - z.to(u.rad)
 
     s1, c1 = np.sin(a1), np.cos(a1)
     s2, c2 = np.sin(a2), np.cos(a2)
@@ -130,11 +131,11 @@ def nutation_matrix(julian: Quantity) -> np.ndarray:
 
     nutation_in_longitude, nutation_in_obliquity = nutation_components(julian)
     t1, t2, t3 = _calculate_raw_elapsed_jd_century_powers(julian, 3)
-    eps_A = 3600 * mean_obliquity(julian).data - 46.84024 * t1 - 0.00059 * t2 + 0.001813 * t3
+    eps_A = mean_obliquity(julian).to(u.arcsec) - 46.84024 * t1 - 0.00059 * t2 + 0.001813 * t3
 
     a1 = np.radians(eps_A / 3600)
-    a2 = - np.radians(nutation_in_longitude.data / 3600)
-    a3 = - np.radians(eps_A / 3600 + nutation_in_obliquity.data / 3600)
+    a2 = - nutation_in_longitude.to(u.rad)
+    a3 = - np.radians(eps_A / 3600 + nutation_in_obliquity.to(u.deg))
 
     s1, c1 = np.sin(a1), np.cos(a1)
     s2, c2 = np.sin(a2), np.cos(a2)
