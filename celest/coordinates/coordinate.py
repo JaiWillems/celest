@@ -15,6 +15,9 @@ from celest.coordinates.transforms import (
 from typing import Literal
 
 
+MISSING_LOCATION_ERROR_MESSAGE = "The location argument is required to convert to the AzEl frame."
+
+
 class Coordinate:
     """Coordinate(position)
 
@@ -78,6 +81,8 @@ class Coordinate:
         elif frame == WGS84:
             return _itrs_to_wgs84(itrs_position)
         elif frame == AzEl:
+            if location is None:
+                raise ValueError(MISSING_LOCATION_ERROR_MESSAGE)
             return _itrs_to_azel(itrs_position, location)
         else:
             return NotImplemented
@@ -89,6 +94,8 @@ class Coordinate:
         elif frame == WGS84:
             return _itrs_to_wgs84(self._base_position)
         elif frame == AzEl:
+            if location is None:
+                raise ValueError(MISSING_LOCATION_ERROR_MESSAGE)
             return _itrs_to_azel(self._base_position, location)
         else:
             return NotImplemented
@@ -101,6 +108,8 @@ class Coordinate:
         elif frame == GCRS:
             return _itrs_to_gcrs(itrs_position)
         elif frame == AzEl:
+            if location is None:
+                raise ValueError(MISSING_LOCATION_ERROR_MESSAGE)
             return _itrs_to_azel(itrs_position, location)
         else:
             return NotImplemented

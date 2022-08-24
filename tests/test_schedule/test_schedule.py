@@ -53,8 +53,8 @@ class TestSchedule(TestCase):
         schedule.add_request(self.toronto, deadline, duration, priority, quality, look_ang)
 
         self.assertEqual(len(schedule.request_handler.requests), 1)
-        self.assertEqual(schedule.request_handler[0][RequestIndices.deadline], deadline)
-        self.assertEqual(schedule.request_handler[0][RequestIndices.duration], duration)
+        self.assertEqual(schedule.request_handler[0][RequestIndices.deadline].data, deadline)
+        self.assertEqual(schedule.request_handler[0][RequestIndices.duration].data, duration)
         self.assertEqual(schedule.request_handler[0][RequestIndices.priority], priority)
         self.assertEqual(schedule.request_handler[0][RequestIndices.quality], quality)
         self.assertEqual(schedule.request_handler[0][RequestIndices.look_angle], look_ang)
@@ -67,7 +67,7 @@ class TestSchedule(TestCase):
     def test_generate_returns_WindowHandler_when_requests_are_added(self):
 
         schedule = Scheduler(self.satellite, 10)
-        schedule.add_request(self.toronto, Quantity(2460467, u.jd2000), Quantity(30, u.s), 1, 1, None)
+        schedule.add_request(self.toronto, 2460467, 30, 1, 1, None)
         self.assertIsInstance(schedule.generate(100, 0.8, 0.5), WindowCollection)
 
     def test_generate_returns_improved_solutions(self):
@@ -85,19 +85,16 @@ class TestSchedule(TestCase):
 
         schedule = Scheduler(self.satellite, 10)
 
-        deadline = Quantity(2460467, u.jd2000)
-        duration = Quantity(30, u.s)
-
-        schedule.add_request(toronto, deadline, duration, 1, 1, None)
-        schedule.add_request(north_bay, deadline, duration, 1, 1, None)
-        schedule.add_request(sudbury, deadline, duration, 4, 1, None)
-        schedule.add_request(ottawa, deadline, duration, 2, 1, None)
-        schedule.add_request(kingston, deadline, duration, 7, 1, None)
-        schedule.add_request(niagara_falls, deadline, duration, 3, 1, None)
-        schedule.add_request(london, deadline, duration, 4, 1, None)
-        schedule.add_request(mississauga, deadline, duration, 5, 1, None)
-        schedule.add_request(timmins, deadline, duration, 1, 1, None)
-        schedule.add_request(tobermory, deadline, duration, 7, 1, None)
+        schedule.add_request(toronto, 2460467, 30, 1, 1, None)
+        schedule.add_request(north_bay, 2460467, 30, 1, 1, None)
+        schedule.add_request(sudbury, 2460467, 30, 4, 1, None)
+        schedule.add_request(ottawa, 2460467, 30, 2, 1, None)
+        schedule.add_request(kingston, 2460467, 30, 7, 1, None)
+        schedule.add_request(niagara_falls, 2460467, 30, 3, 1, None)
+        schedule.add_request(london, 2460467, 30, 4, 1, None)
+        schedule.add_request(mississauga, 2460467, 30, 5, 1, None)
+        schedule.add_request(timmins, 2460467, 30, 1, 1, None)
+        schedule.add_request(tobermory, 2460467, 30, 7, 1, None)
 
         initialize_solution(schedule.request_handler)
         initial_solution_cost = cost(schedule.request_handler)

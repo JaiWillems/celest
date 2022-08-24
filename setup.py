@@ -16,7 +16,7 @@ DOCLINES = (__doc__ or '').split("\n")
 import setuptools
 
 
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 
 
 setuptools.setup(

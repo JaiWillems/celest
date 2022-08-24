@@ -76,8 +76,17 @@ class TestCoordinate(TestCase):
     def test_itrs_to_azel(self):
         self.assertIsInstance(self.itrs_coordinate.convert_to(AzEl, self.location), AzEl)
 
+    def test_itrs_to_azel_raises_error_with_no_location(self):
+        self.assertRaises(ValueError, self.itrs_coordinate.convert_to, AzEl)
+
     def test_gcrs_to_azel(self):
         self.assertIsInstance(self.gcrs_coordinate.convert_to(AzEl, self.location), AzEl)
 
+    def test_gcrs_to_azel_raises_error_with_no_location(self):
+        self.assertRaises(ValueError, self.gcrs_coordinate.convert_to, AzEl)
+
     def test_wgs84_to_azel(self):
         self.assertIsInstance(self.wgs84_coordinate.convert_to(AzEl, self.location), AzEl)
+
+    def test_wgs84_to_azel_raises_error_with_no_location(self):
+        self.assertRaises(ValueError, self.wgs84_coordinate.convert_to, AzEl)

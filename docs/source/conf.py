@@ -22,7 +22,7 @@ copyright = '2021, Jai Willems'
 author = 'Jai Willems'
 
 # The full version, including alpha/beta/rc tags
-release = '0.3.0'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------

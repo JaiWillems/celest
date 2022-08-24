@@ -14,6 +14,7 @@ from celest.schedule.scheduling_utils import (
 )
 from celest.encounter.window_generator import generate_vtws, Lighting
 from celest.encounter.window_handling import ObservationWindow, WindowCollection
+from celest.units import Quantity
 from celest import units as u
 import math
 import numpy as np
@@ -108,8 +109,8 @@ class Scheduler(ALNS):
         )
         self.request_handler.add_request(
             location,
-            deadline,
-            duration,
+            Quantity(deadline, u.jd2000),
+            Quantity(duration, u.s),
             priority,
             quality,
             look_ang,
@@ -161,7 +162,8 @@ class Scheduler(ALNS):
 
         return self._generate_window_handler_from_request_list(best_solution)
 
-    def _generate_window_handler_from_request_list(self, request_list: RequestHandler) -> WindowCollection:
+    def _generate_window_handler_from_request_list(self, request_list:
+                                                   RequestHandler) -> WindowCollection:
         window_handler = WindowCollection()
         for request in request_list:
 
@@ -183,7 +185,6 @@ class Scheduler(ALNS):
                 ow = ObservationWindow(
                     request[RequestIndices.scheduled_start_time],
                     request[RequestIndices.scheduled_duration],
-                    request[RequestIndices.deadline],
                     request[RequestIndices.location],
                     new_attitude
                 )
