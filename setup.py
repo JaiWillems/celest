@@ -39,9 +39,7 @@ setuptools.setup(
     install_requires=[
         "jplephem",
         "julian",
-        "numpy",
-        "pandas",
-        "polare"
+        "numpy"
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
