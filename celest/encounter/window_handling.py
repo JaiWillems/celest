@@ -21,16 +21,18 @@ class VisibleTimeWindow:
     rise_time : float
         The time at which the satellite is first visible in the jd2000 epoch.
     set_time : float
-        The time at which the satellite is no longer visible in the jd2000 epoch.
+        The time at which the satellite is no longer visible in the jd2000
+        epoch.
     attitude : Attitude
         The attitude of the satellite.
 
     Attributes
     ----------
     rise_time : Quantity
-        The time at which the satellite is visible in the J2000 frame.
+        The time at which the satellite is visible in the JD2000 frame.
     set_time : Quantity
-        The time at which the satellite is no longer visible in the J2000 frame.
+        The time at which the satellite is no longer visible in the JD2000
+        frame.
     attitude : Attitude
         The attitude of the satellite.
     """
@@ -82,7 +84,7 @@ class ObservationWindow:
     Attributes
     ----------
     start_time : Quantity
-        The start time of the encounter in the J2000 frame.
+        The start time of the encounter in the JD2000 frame.
     duration : Quantity
         The duration of the encounter in seconds.
     location : GroundLocation
@@ -129,7 +131,7 @@ class WindowCollection:
     Container to hold window data.
 
     The `WindowCollection` class can only hold one type of window data (i.e.
-    either visible time windows or observation windows) at a time due to there
+    either visible time windows or observation windows) at a time due to their
     differing attributes and physical significance.
 
     Methods

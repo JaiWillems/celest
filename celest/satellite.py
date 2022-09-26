@@ -142,10 +142,12 @@ class Satellite:
         gcrs_velocity = _itrs_to_gcrs(self.velocity)
 
         gcrs_position_array = gcrs_position.to_numpy(u.km)
-        gcrs_velocity_array = gcrs_velocity.to_numpy(u.m/u.s)
+        gcrs_velocity_array = gcrs_velocity.to_numpy(u.m / u.s)
 
-        lvlh_position, lvlh_velocity = _gcrs_to_lvlh(gcrs_position,
-                                                     gcrs_velocity)
+        lvlh_position, lvlh_velocity = _gcrs_to_lvlh(
+            gcrs_position,
+            gcrs_velocity
+        )
         lvlh_position_array = lvlh_position.to_numpy(u.km)
 
         ground_itrs = ITRS(
@@ -169,8 +171,11 @@ class Satellite:
             gcrs_position_array,
             gcrs_velocity_array
         )
-        ground_lvlh = np.einsum('jki, ji -> jk', transformation_matrix,
-                                ground_gcrs)
+        ground_lvlh = np.einsum(
+            'jki, ji -> jk',
+            transformation_matrix,
+            ground_gcrs
+        )
 
         satellite_lvlh_norm = np.linalg.norm(lvlh_position_array, axis=1)
         s = - lvlh_position_array / satellite_lvlh_norm[:, None]

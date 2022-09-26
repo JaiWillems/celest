@@ -1,19 +1,23 @@
 
 
-from celest.units.quantity import Quantity
-from celest import units as u
 from celest.constants import (
     JD2000_DATE,
     DAYS_IN_JULIAN_CENTURY,
+    DAYS_PER_YEAR,
     EARTH_ROTATION_RATE_DEG_PER_DAY,
-    ERA_AT_JD2000_DEG
+    ERA_AT_JD2000_DEG,
+    WGS84_MAJOR_AXIS_KM,
+    WGS83_FIRST_ECCENTRICITY
 )
+from celest.units.quantity import Quantity
+from celest import units as u
+from math import sin, sqrt
 from typing import Tuple
 import numpy as np
 
 
 def earth_rotation_angle(julian: Quantity) -> Quantity:
-    """Return Earth rotation angle in decimal degrees.
+    """Return Earth rotation angle.
 
     Parameters
     ----------
@@ -23,7 +27,7 @@ def earth_rotation_angle(julian: Quantity) -> Quantity:
     Returns
     -------
     Quantity
-        Earth rotation angle in decimal degrees.
+        Earth rotation angle.
 
     Notes
     -----
@@ -31,7 +35,7 @@ def earth_rotation_angle(julian: Quantity) -> Quantity:
 
     .. math:: \gamma^\circ = 360.9856123035484\Delta T + 280.46
 
-    where :math:`\Delta T=JD-2451545` is the elapsed days since the J2000
+    where :math:`\Delta T=JD-2451545` is the elapsed days since the JD2000
     epoch where :math:`JD` is the Julian day. [Kok17a]_
 
     References
@@ -45,6 +49,7 @@ def earth_rotation_angle(julian: Quantity) -> Quantity:
     >>> julian = Quantity(30462.50000, u.jd2000)
     >>> era = earth_rotation_angle(julian)
     """
+
     days_since_jd2000 = julian.to(u.jd2000) - JD2000_DATE
     earth_rotation_angles = (EARTH_ROTATION_RATE_DEG_PER_DAY *
                              days_since_jd2000 + ERA_AT_JD2000_DEG) % 360
@@ -70,11 +75,11 @@ def nutation_angles(julian: Quantity) -> Tuple:
     -------
     tuple
         Tuple of the form, `(D, M, N, F, O)`, where each item is a Quantity
-         object containing the Earth nutation angles in decimal degrees.
+        object containing the Earth nutation angles.
 
     Notes
     -----
-    The time in Julian centeries since J2000, :math:`T`, can be calculated
+    The time in Julian centeries since JD2000, :math:`T`, can be calculated
     from the Julian day, :math:`JD`, from the following:
 
     .. math:: T = \\frac{JD - 2451545}{36525}
@@ -101,6 +106,7 @@ def nutation_angles(julian: Quantity) -> Tuple:
     >>> julian = Quantity(2446895.5, u.jd2000)
     >>> D, M, N, F, O = nutation_angles(julian=julian)
     """
+
     return (
         get_mean_elongation_moon_from_sun_deg(julian),
         get_mean_anomaly_of_sun(julian),
@@ -157,8 +163,7 @@ def nutation_components(julian: Quantity) -> Tuple:
     -------
     tuple
         Tuple of the form, `(longitude, obliquity)`, containing Quantity
-        objects with the nutation components of longitude and obliquity in
-        decimal seconds.
+        objects with the nutation components of longitude and obliquity.
 
     Notes
     -----
@@ -175,6 +180,7 @@ def nutation_components(julian: Quantity) -> Tuple:
     >>> julian = Quantity(2446895.5, u.jd2000)
     >>> delta_psi, delta_epsilon = nutation_componenets(julian=julian)
     """
+
     ascending_node_longitude = get_longitude_of_ascending_node_deg(julian)
     sun_mean_longitude = get_mean_longitude_of_sun(julian)
     moon_mean_longitude = get_mean_longitude_of_moon(julian)
@@ -232,7 +238,7 @@ def conventional_precession_angles(julian: Quantity) -> Tuple:
     Returns
     -------
     Tuple
-        Tuple containing precession angles in decimal arcseconds.
+        Precession angles.
 
     Notes
     -----
@@ -244,6 +250,7 @@ def conventional_precession_angles(julian: Quantity) -> Tuple:
     .. [SL13c] M. Soffel and R. Langhans. Space-Time Reference Systems.
        Astronomy and Astrophysics Library. Springer-Verlag, 2013, pp. 219.
     """
+
     return (
         _get_zeta_precession_angle(julian),
         _get_theta_precession_angle(julian),
@@ -273,7 +280,7 @@ def _get_z_precession_angle(julian: Quantity) -> Quantity:
 
 
 def mean_obliquity(julian: Quantity) -> Quantity:
-    """Return the ecliptic's mean obliquity in the J2000 epoch.
+    """Return the ecliptic's mean obliquity in the JD2000 epoch.
 
     Parameters
     ----------
@@ -283,19 +290,18 @@ def mean_obliquity(julian: Quantity) -> Quantity:
     Returns
     -------
     Quantity
-        Quantity object containing the ecliptic's mean obliquity in degrees and
-        decimals.
+        The ecliptic's mean obliquity.
 
     See Also
     --------
     apparent_obliquity :
-        Return the ecliptic's apparent obliquity in the J2000 epoch.
+        Return the ecliptic's apparent obliquity in the JD2000 epoch.
 
     Notes
     -----
     The methods to calculate the mean obliquity of the ecliptic are given in
     "Astronomical Algorithms" by Jean Meeus and are only valid for 10000 years
-    on either side of J2000. [Mee98d]_
+    on either side of JD2000. [Mee98d]_
 
     References
     ----------
@@ -307,6 +313,7 @@ def mean_obliquity(julian: Quantity) -> Quantity:
     >>> julian = Quantity(2446895.5, u.jd2000)
     >>> epsilon_0 = mean_obliquity(julian=julian)
     """
+
     t, = _calculate_raw_elapsed_jd_century_powers(julian, 1)
     U = t / 100
 
@@ -318,7 +325,7 @@ def mean_obliquity(julian: Quantity) -> Quantity:
 
 
 def apparent_obliquity(julian: Quantity) -> Quantity:
-    """Return the ecliptic's apparent obliquity in the J2000 epoch.
+    """Return the ecliptic's apparent obliquity in the JD2000 epoch.
 
     Parameters
     ----------
@@ -328,19 +335,18 @@ def apparent_obliquity(julian: Quantity) -> Quantity:
     Returns
     -------
     Quantity
-        Quantity object containing the ecliptic's apparent obliquity in degrees
-        and decimals.
+        The ecliptic's apparent obliquity.
 
     See Also
     --------
     mean_obliquity :
-        Return the ecliptic's mean obliquity in the J2000 epoch.
+        Return the ecliptic's mean obliquity in the JD2000 epoch.
 
     Notes
     -----
     The methods to calculate the apparent obliquity of the ecliptic are given
     in "Astronomical Algorithms" by Jean Meeus and are only valid for 10000
-    years on either side of J2000. [Mee98e]_
+    years on either side of JD2000. [Mee98e]_
 
     References
     ----------
@@ -352,6 +358,7 @@ def apparent_obliquity(julian: Quantity) -> Quantity:
     >>> julian = Quantity(2446895.5, u.jd2000)
     >>> epsilon = apparent_obliquity(julian=julian)
     """
+
     average_obliquity = mean_obliquity(julian)
     _, nutation_in_obliquity = nutation_components(julian)
 
@@ -369,7 +376,7 @@ def from_julian(julian: Quantity) -> Tuple:
     Returns
     -------
     Tuple
-        Returns a tuple, `(year, month, day)`, containing 1-D NumPy arrays
+        Tuple of the form, `(year, month, day)`, containing 1-D NumPy arrays
         representing the year, month, and decimal days of the input times.
 
     Notes
@@ -396,12 +403,12 @@ def from_julian(julian: Quantity) -> Tuple:
     a, f = jd.astype(int), jd % 1
 
     ind = np.where(a >= 2291161)[0]
-    alpha = ((a[ind] - 1867216.25) / 36524.25).astype(int)
+    alpha = ((a[ind] - 1867216.25) / DAYS_IN_JULIAN_CENTURY).astype(int)
     a[ind] = a + 1 + alpha - (alpha / 4).astype(int)
 
     b = a + 1524
-    c = ((b - 122.1) / 365.25).astype(int)
-    d = (365.25 * c).astype(int)
+    c = ((b - 122.1) / DAYS_PER_YEAR).astype(int)
+    d = (DAYS_PER_YEAR * c).astype(int)
     e = ((b - d) / 30.6001).astype(int)
 
     day = b - d - (30.6001 * e).astype(int) + f
@@ -450,6 +457,7 @@ def day_of_year(julian: Quantity) -> np.ndarray:
     >>> day_of_year(julian=julian)
     113
     """
+
     year, month, day = from_julian(julian)
 
     K = np.full(day.shape, 2)
@@ -462,7 +470,7 @@ def day_of_year(julian: Quantity) -> np.ndarray:
 
 
 def equation_of_time(julian: Quantity) -> Quantity:
-    """Return the equation of time in decimal degrees.
+    """Return the equation of time.
 
     Parameters
     ----------
@@ -472,7 +480,7 @@ def equation_of_time(julian: Quantity) -> Quantity:
     Returns
     -------
     Quantity
-        Quantity object containing the Equation of Time in decimal degrees.
+        Equation of Time.
 
     Notes
     -----
@@ -490,6 +498,7 @@ def equation_of_time(julian: Quantity) -> Quantity:
     >>> equation_of_time(julian=julian)
     3.427351
     """
+
     sun_mean_longitude = get_mean_longitude_of_sun(julian).to(u.rad)
     sun_mean_anomaly = get_mean_anomaly_of_sun(julian).to(u.rad)
     earth_eccentricity = get_earth_eccentricity(julian).to(u.rad)
@@ -497,14 +506,13 @@ def equation_of_time(julian: Quantity) -> Quantity:
     sun_apparent_obliquity = apparent_obliquity(julian).to(u.rad)
     y = np.tan(sun_apparent_obliquity / 2) ** 2
 
-    time_equation = y * np.sin(2 * sun_mean_longitude) - \
-        2 * earth_eccentricity * np.sin(sun_mean_anomaly) \
-        + 4 * earth_eccentricity * y * np.sin(sun_mean_anomaly) * \
-        np.cos(2 * sun_mean_longitude) - 0.5 * y ** 2 * \
-        np.sin(4 * sun_mean_longitude) - 1.25 * earth_eccentricity \
-        ** 2 * np.sin(2 * sun_mean_anomaly)
+    e1 = y * np.sin(2 * sun_mean_longitude)
+    e2 = - 2 * earth_eccentricity * np.sin(sun_mean_anomaly)
+    e3 = 4 * earth_eccentricity * y * np.sin(sun_mean_anomaly) * np.cos(2 * sun_mean_longitude)
+    e4 = - 0.5 * y ** 2 * np.sin(4 * sun_mean_longitude)
+    e5 = - 1.25 * earth_eccentricity ** 2 * np.sin(2 * sun_mean_anomaly)
 
-    return Quantity(time_equation, u.rad)
+    return Quantity(e1 + e2 + e3 + e4 + e5, u.rad)
 
 
 def get_earth_eccentricity(julian: Quantity) -> Quantity:
@@ -514,7 +522,7 @@ def get_earth_eccentricity(julian: Quantity) -> Quantity:
 
 
 def equation_of_equinoxes(julian: Quantity) -> Quantity:
-    """Return the equation of the equinoxes in decimal arcseconds.
+    """Return the equation of the equinoxes.
 
     Parameters
     ----------
@@ -524,8 +532,7 @@ def equation_of_equinoxes(julian: Quantity) -> Quantity:
     Returns
     -------
     Quantity
-        Quantity object containing the equation of equinoxes in decimal
-        arcseconds.
+        Equation of equinoxes.
 
     Notes
     -----
@@ -545,6 +552,7 @@ def equation_of_equinoxes(julian: Quantity) -> Quantity:
     >>> equation_of_equinoxes(julian=julian)
     -0.2317
     """
+
     nutation_in_longitude, _ = nutation_components(julian)
     obliquity = apparent_obliquity(julian).to(u.rad)
     result = nutation_in_longitude.data * np.cos(obliquity) / 15
@@ -566,8 +574,7 @@ def sun_right_ascension(julian: Quantity) -> Quantity:
     Returns
     -------
     Quantity
-        Quantity object containing containing the right ascension of the mean
-        sun in decimal degrees.
+        Right ascension of the mean sun position.
 
     Notes
     -----
@@ -585,6 +592,7 @@ def sun_right_ascension(julian: Quantity) -> Quantity:
     >>> sun_right_ascension(julian=julian)
     np.array([198.38166])
     """
+
     mean_sun_longitude = get_mean_longitude_of_sun(julian).to(u.deg)
     mean_sun_anomaly = get_mean_anomaly_of_sun(julian).to(u.rad)
 
@@ -599,4 +607,9 @@ def sun_right_ascension(julian: Quantity) -> Quantity:
     alpha = np.arctan2(np.cos(obliquity) * np.sin(sun_true_longitude),
                        np.cos(sun_true_longitude))
 
-    return Quantity(np.degrees(alpha) % 360, u.deg)
+    return Quantity(alpha % (2 * np.pi), u.rad)
+
+
+def radius_of_curvature_in_prime_vertical(latitude: Quantity) -> Quantity:
+    return Quantity(WGS84_MAJOR_AXIS_KM / sqrt(1 -
+                    WGS83_FIRST_ECCENTRICITY ** 2 * sin(latitude.to(u.rad)) ** 2), u.km)

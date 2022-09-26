@@ -13,9 +13,6 @@ class TestToString(TestCase):
     def test_to_string_with_single_unit_positive_power(self):
         self.assertEqual(str(NamedUnit("m", 'meter') ** 2), "m2")
 
-    def test_to_string_with_single_unit_positive_power(self):
-        self.assertEqual(str(NamedUnit("m", 'meter') ** 3), "m3")
-
     def test_to_string_with_single_unit_negative_power(self):
         self.assertEqual(str(NamedUnit("m", 'meter') ** -2), "1 / m2")
 

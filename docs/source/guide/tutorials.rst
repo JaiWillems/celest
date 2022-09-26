@@ -31,7 +31,7 @@ in.
 
 .. code-block:: python
 
-   # Initialize Time object using J2000 data.
+   # Initialize Time object using JD2000 data.
    time = Time(julian=julian)
 
    # Initialize Time object using Mean Julian Date data.

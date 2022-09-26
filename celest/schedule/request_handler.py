@@ -19,11 +19,22 @@ class RequestIndices(IntEnum):
 
 
 class RequestHandler:
+    """RequestHandler()
+
+    Container for handling satellite request scheduling.
+
+    This class is the central data structure that stores and manipulates task
+    fulfillment opportunities and scheduling. It is used in the scheduling
+    algorithm to determine the most optimal satellite operations schedule.
+    """
 
     def __init__(self):
         self.requests = []
         self.number_of_requests = 0
         self.number_of_scheduled_requests = 0
+
+    def __len__(self):
+        return self.number_of_requests
 
     def __getitem__(self, index):
         return self.requests[index]
@@ -41,8 +52,19 @@ class RequestHandler:
 
     def add_request(self, location, deadline, duration, priority, quality, look_ang, vtws):
         self.number_of_requests += 1
-        self.requests.append([False, None, None, None, location, deadline,
-                              duration, priority, quality, look_ang, vtws])
+        self.requests.append([
+            False,
+            None,
+            None,
+            None,
+            location,
+            deadline,
+            duration,
+            priority,
+            quality,
+            look_ang,
+            vtws
+        ])
 
     def schedule_request(self, request_index, vtw_index, start, duration):
         self.requests[request_index][RequestIndices.is_scheduled] = True
@@ -54,7 +76,6 @@ class RequestHandler:
     def unschedule_all_requests(self):
         for index in range(self.number_of_requests):
             self.unschedule_request(index)
-
         self.number_of_scheduled_requests = 0
 
     def unschedule_request(self, request_index):
@@ -62,7 +83,6 @@ class RequestHandler:
         self.requests[request_index][RequestIndices.vtw_index] = None
         self.requests[request_index][RequestIndices.scheduled_start_time] = None
         self.requests[request_index][RequestIndices.scheduled_duration] = None
-
         self.number_of_scheduled_requests -= 1
 
     def is_request_scheduled(self, request_index):
@@ -103,6 +123,10 @@ class RequestHandler:
         key = lambda x: len(x[RequestIndices.vtw_list])
         self.requests = sorted(self.requests, key=key, reverse=True)
 
+    def sort_by_increasing_opportunity(self):
+        key = lambda x: len(x[RequestIndices.vtw_list])
+        self.requests = sorted(self.requests, key=key, reverse=False)
+
     def sort_by_decreasing_conflict_degree(self):
         conflict_degree = []
         conflict_degree_index = []
@@ -123,21 +147,17 @@ class RequestHandler:
         self.requests = [self.requests[index] for index in indices]
 
     def _conflict_degree(self, vtw) -> float:
-        over_lapping_vtws = self._set_of_overlapping_vtws(vtw)
-        total_overlapping_time = 0
+        overlapping_vtws = self._set_of_overlapping_vtws(vtw)
+        total_overlap_time = 0
+        for other_vtw in overlapping_vtws:
+            total_overlap_time +=self._julian_day_overlap_between_vtws(vtw, other_vtw)
 
-        for other_vtw in over_lapping_vtws:
-            total_overlapping_time +=\
-                self._julian_day_overlap_between_vtws(vtw, other_vtw)
-
-        return total_overlapping_time / len(over_lapping_vtws)
+        return total_overlap_time / len(overlapping_vtws)
 
     def _set_of_overlapping_vtws(self, current_vtw) -> list:
         overlap_vtws = []
-
         for request in self.requests:
             for vtw in request[RequestIndices.vtw_list]:
-
                 if self._are_vtws_overlaping(current_vtw, vtw):
                     overlap_vtws.append(vtw)
 
@@ -175,4 +195,7 @@ class RequestHandler:
 
     def sort_vtws_by_increasing_rise_time(self):
         for request in self.requests:
-            request[RequestIndices.vtw_list] = sorted(request[RequestIndices.vtw_list], key=lambda x: x.rise_time.data)
+            request[RequestIndices.vtw_list] = sorted(
+                request[RequestIndices.vtw_list],
+                key=lambda x: x.rise_time.data
+            )

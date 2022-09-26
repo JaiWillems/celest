@@ -17,7 +17,7 @@ class TestUtils(TestCase):
         self.assertListEqual(m.bases, [m])
         self.assertListEqual(m.powers, [1])
 
-    def test_initializing_non_elementary_unit(self):
+    def test_initializing_non_elementary_unit_contains_elementary_unit(self):
         setup_unit("m", "meter", self.namespace)
         setup_unit("km", "kilometer", self.namespace, 1000 * m)
         self.assertIsInstance(km, Unit)

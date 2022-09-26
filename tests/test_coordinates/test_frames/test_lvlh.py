@@ -15,8 +15,13 @@ class TestLVLH(TestCase):
         self.y = np.random.rand(5)
         self.z = np.random.rand(5)
         self.unit = u.km
-        self.valid_lvlh = LVLH(self.julian, self.x, self.y, self.z,
-                               self.unit)
+        self.valid_lvlh = LVLH(
+            self.julian,
+            self.x,
+            self.y,
+            self.z,
+            self.unit
+        )
 
     def test_initialization(self):
         self.assertIsInstance(self.valid_lvlh, LVLH)

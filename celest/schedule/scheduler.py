@@ -157,8 +157,13 @@ class Scheduler(ALNS):
         insert_per_iteration = self.request_handler.number_of_requests
         remove_per_iteration = math.ceil(insert_per_iteration / 4)
 
-        best_solution = self.solve(max_iter, annealing_coeff, react_factor,
-                                   remove_per_iteration, insert_per_iteration)
+        best_solution = self.solve(
+            max_iter,
+            annealing_coeff,
+            react_factor,
+            remove_per_iteration,
+            insert_per_iteration
+        )
 
         return self._generate_window_handler_from_request_list(best_solution)
 
@@ -166,14 +171,14 @@ class Scheduler(ALNS):
                                                    RequestHandler) -> WindowCollection:
         window_handler = WindowCollection()
         for request in request_list:
-
             if request[RequestIndices.is_scheduled]:
 
                 idx = request[RequestIndices.vtw_index]
                 attitude = request[RequestIndices.vtw_list][idx].attitude
                 attitude_idx = np.where(
                     attitude.time.to(u.jd2000).data ==
-                    request[RequestIndices.scheduled_start_time])[0]
+                    request[RequestIndices.scheduled_start_time]
+                )[0]
                 time = attitude.time.data[attitude_idx]
                 roll = attitude.roll.data[attitude_idx]
                 pitch = attitude.pitch.data[attitude_idx]

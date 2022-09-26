@@ -102,7 +102,7 @@ class TestObservationWindow(TestCase):
         self.assertEqual(self.attitude, self.obw.attitude)
 
 
-class TestWindowHandler(TestCase):
+class TestWindowCollection(TestCase):
 
     def setUp(self):
         self.window_handler = WindowCollection()

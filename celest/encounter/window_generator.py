@@ -26,6 +26,7 @@ class Lighting(Enum):
     DAYTIME : int
         Day time lighting condition.
     """
+
     NIGHTTIME = -1
     ANYTIME = 0
     DAYTIME = 1

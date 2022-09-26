@@ -16,7 +16,7 @@ class ITRS(Position3d):
     Parameters
     ----------
     julian : np.ndarray
-        1-D array containing time in the J2000 epoch.
+        1-D array containing time in the JD2000 epoch.
     x, y, z : np.ndarray
         1-D array containing the coordinate data.
     unit : Unit

@@ -51,8 +51,9 @@ class Position2d:
         Returns
         -------
         np.ndarray
-            The coordinate data in the specified unit.
+            The spatial coordinate data in the specified unit.
         """
+
         return np.array([
             self._x.to(unit).data,
             self._y.to(unit).data
@@ -110,8 +111,9 @@ class Position3d:
         Returns
         -------
         np.ndarray
-            The coordinate data in the specified unit.
+            The spatial coordinate data in the specified unit.
         """
+
         return np.array([
             self._x.to(unit).data,
             self._y.to(unit).data,

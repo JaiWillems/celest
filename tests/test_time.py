@@ -5,7 +5,6 @@ from celest.time import Time
 from celest import units as u
 from unittest import TestCase
 import julian as jd
-import unittest
 import numpy as np
 
 
@@ -84,8 +83,8 @@ class TestTime(TestCase):
         julian = [2455368.75, 2459450.85, 2456293.5416666665]
         longitude = [-105, -118.24, 147.46]
 
-        expected_true_hour_angle = np.array([166.0734, 185.671, 341.53]) / 15 % 24
-        actual_true_hour_angle = Time(julian).true_hour_angle(longitude).to(u.hourangle)
+        expected_true_hour_angle = np.array([166.0734, 185.671, 341.53])
+        actual_true_hour_angle = Time(julian).true_hour_angle(longitude).to(u.deg)
 
         self.assertTrue(np.allclose(expected_true_hour_angle,
                                     actual_true_hour_angle, atol=1.51))
@@ -94,8 +93,8 @@ class TestTime(TestCase):
         julian = 2456293.5416666665
         longitude = 147.46
 
-        true_mean_hour_angle = np.array([342.4584]) / 15 % 24
-        test_mean_hour_angle = Time(julian).mean_hour_angle(longitude).to(u.hourangle)
+        true_mean_hour_angle = np.array([342.4584])
+        test_mean_hour_angle = Time(julian).mean_hour_angle(longitude).to(u.deg)
 
         self.assertTrue(np.allclose(true_mean_hour_angle, test_mean_hour_angle,
                         atol=0.01))
@@ -153,7 +152,3 @@ class TestTime(TestCase):
         actual_last = Time(self.julian).last(150).to(u.hourangle)
         
         self.assertTrue(np.allclose(expected_last, actual_last, atol=0.1))
-
-
-if __name__ == "__main__":
-    unittest.main()

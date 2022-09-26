@@ -11,21 +11,19 @@ from celest.coordinates.astronomical_quantities import (
     day_of_year,
     equation_of_time,
     equation_of_equinoxes,
-    sun_right_ascension
+    sun_right_ascension,
+    radius_of_curvature_in_prime_vertical
 )
 from celest import units as u
 from unittest import TestCase
-import numpy as np
 
 
 class TestAstronomicalQuantities(TestCase):
 
     def test_earth_rotation_for_validation(self):
         julian = Quantity(2454545, u.jd2000)
-        actual_era = earth_rotation_angle(julian).data
-        expected_era = 6.2360075 * 180 / np.pi
-
-        self.assertAlmostEqual(expected_era, actual_era, delta=0.01)
+        self.assertAlmostEqual(6.2360075, earth_rotation_angle(julian).to(u.rad),
+                               delta=0.01)
 
     def test_nutation_angles_for_validation(self):
         """
@@ -38,14 +36,15 @@ class TestAstronomicalQuantities(TestCase):
         .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
            1998, pp. 148. isbn: 9780943396613.
         """
+
         julian = Quantity(2446895.5, u.jd2000)
         d, m, n, f, o = nutation_angles(julian)
 
-        self.assertAlmostEqual(d.data, 136.9623, places=4)
-        self.assertAlmostEqual(m.data, 94.9792, places=4)
-        self.assertAlmostEqual(n.data, 229.2784, places=4)
-        self.assertAlmostEqual(f.data, 143.4079, places=4)
-        self.assertAlmostEqual(o.data, 11.2531, places=4)
+        self.assertAlmostEqual(d.to(u.deg), 136.9623, places=4)
+        self.assertAlmostEqual(m.to(u.deg), 94.9792, places=4)
+        self.assertAlmostEqual(n.to(u.deg), 229.2784, places=4)
+        self.assertAlmostEqual(f.to(u.deg), 143.4079, places=4)
+        self.assertAlmostEqual(o.to(u.deg), 11.2531, places=4)
 
     def test_nutation_components_for_validation(self):
         """
@@ -58,17 +57,12 @@ class TestAstronomicalQuantities(TestCase):
         .. [1] Jay Tanner. NeoProgrammics - Science Computations. 2021.
            url: http://www.neoprogrammics.com/nutations/.
         """
+
         julian = Quantity(2449634.50000, u.jd2000)
+        nutation_in_longitude, nutation_in_obliquity = nutation_components(julian)
 
-        expected_nutation_in_longitude = 11.694
-        expected_nutation_in_obliquity = -5.946
-        actual_nutation_in_longitude, actual_nutation_in_obliquity = \
-            nutation_components(julian)
-
-        self.assertAlmostEqual(expected_nutation_in_longitude,
-                               actual_nutation_in_longitude.data, delta=0.5)
-        self.assertAlmostEqual(expected_nutation_in_obliquity,
-                               actual_nutation_in_obliquity.data, delta=0.1)
+        self.assertAlmostEqual(11.694, nutation_in_longitude.data, delta=0.5)
+        self.assertAlmostEqual(-5.946, nutation_in_obliquity.data, delta=0.1)
 
     def test_mean_obliquity_for_validation(self):
         """
@@ -82,12 +76,9 @@ class TestAstronomicalQuantities(TestCase):
            url: https://www.neoprogrammics.com/obliquity_of_the_ecliptic/Obliq
            uity_Of_The_Ecliptic_Calculator.php
         """
+
         julian = Quantity(2459437.81600, u.jd2000)
-
-        expected_mean_obliquity = 23.43648
-        actual_mean_obliquity = mean_obliquity(julian).data
-
-        self.assertAlmostEqual(expected_mean_obliquity, actual_mean_obliquity,
+        self.assertAlmostEqual(23.43648, mean_obliquity(julian).to(u.deg),
                                delta=0.0001)
 
     def test_apparent_obliquity_for_validation(self):
@@ -102,13 +93,10 @@ class TestAstronomicalQuantities(TestCase):
            url: https://www.neoprogrammics.com/obliquity_of_the_ecliptic/Obliq
            uity_Of_The_Ecliptic_Calculator.php
         """
+
         julian = Quantity(2459437.81597, u.jd2000)
-
-        expected_apparent_obliquity = 23.43763
-        actual_apparent_obliquity = apparent_obliquity(julian).data
-
-        self.assertAlmostEqual(expected_apparent_obliquity,
-                               actual_apparent_obliquity, delta=0.0001)
+        self.assertAlmostEqual(23.43763, apparent_obliquity(julian).to(u.deg),
+                               delta=0.0001)
 
     def test_from_julian_for_validation(self):
         """
@@ -116,13 +104,13 @@ class TestAstronomicalQuantities(TestCase):
         -----
         Test cases are generated from the `Julian` Python library.
         """
-        julian = Quantity(2436116.31000, u.jd2000)
-        expected_year, expected_month, expected_day = 1957, 10, 4.81
-        actual_year, actual_month, actual_day = from_julian(julian)
 
-        self.assertTrue(expected_year, actual_year[0])
-        self.assertEqual(expected_month, actual_month[0])
-        self.assertAlmostEqual(expected_day, actual_day[0], delta=0.0001)
+        julian = Quantity(2436116.31000, u.jd2000)
+        year, month, day = from_julian(julian)
+
+        self.assertTrue(1957, year[0])
+        self.assertEqual(10, month[0])
+        self.assertAlmostEqual(4.81, day[0], delta=0.0001)
 
     def test_day_of_year_for_validation(self):
         """
@@ -135,12 +123,9 @@ class TestAstronomicalQuantities(TestCase):
         .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
            1998, pp. 65. isbn: 9780943396613.
         """
+
         julian = Quantity(2443826.5, u.jd2000)
-
-        expected_day = 318
-        actual_day = day_of_year(julian)
-
-        self.assertEqual(expected_day, actual_day)
+        self.assertEqual(318, day_of_year(julian))
 
     def test_equation_of_time_for_validation(self):
         """
@@ -159,13 +144,10 @@ class TestAstronomicalQuantities(TestCase):
            Laboratory -Global Radiation and Aerosols. url:
            https://gml.noaa.gov/grad/solcalc/.
         """
+
         julian = Quantity(2455368.75, u.jd2000)
-
-        expected_equation_of_time = -0.42658
-        actual_equation_of_time = equation_of_time(julian).to(u.deg)
-
-        self.assertAlmostEqual(expected_equation_of_time,
-                               actual_equation_of_time, delta=0.04)
+        self.assertAlmostEqual(-0.42658, equation_of_time(julian).to(u.deg),
+                               delta=0.04)
 
     def test_equation_of_equinoxes_for_validation(self):
         """
@@ -178,13 +160,10 @@ class TestAstronomicalQuantities(TestCase):
         .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
            1998, pp. 88. isbn: 9780943396613.
         """
+
         julian = Quantity(2446895.5, u.jd2000)
-
-        expected_equation_of_equinoxes = -0.23170
-        actual_equation_of_equinoxes = equation_of_equinoxes(julian).data
-
-        self.assertAlmostEqual(expected_equation_of_equinoxes,
-                               actual_equation_of_equinoxes, delta=0.005)
+        self.assertAlmostEqual(-0.23170, equation_of_equinoxes(julian).to(u.arcsec),
+                               delta=0.005)
 
     def test_sun_right_ascension_for_validation(self):
         """
@@ -198,10 +177,7 @@ class TestAstronomicalQuantities(TestCase):
         .. [1] Jean Meeus. Astronomical algorithms. 2nd ed. Willmann-Bell,
            1998, pp. 185. isbn: 9780943396613.
         """
+
         julian = Quantity(2448908.5, u.jd2000)
-
-        expected_sun_right_ascension = 198.38083
-        actual_sun_right_ascension = sun_right_ascension(julian).data
-
-        self.assertAlmostEqual(expected_sun_right_ascension,
-                               actual_sun_right_ascension, delta=0.001)
+        self.assertAlmostEqual(198.38083, sun_right_ascension(julian).to(u.deg),
+                               delta=0.001)

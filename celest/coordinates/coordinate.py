@@ -21,7 +21,7 @@ MISSING_LOCATION_ERROR_MESSAGE = "The location argument is required to convert t
 class Coordinate:
     """Coordinate(position)
 
-    Coordinate frame manipulations and transformations.
+    Coordinate frame transformations.
 
     Parameters
     ----------
@@ -62,6 +62,22 @@ class Coordinate:
 
     def convert_to(self, frame: Literal[ITRS, GCRS, WGS84, AzEl],
                    location: GroundLocation = None):
+        """Convert to new frame.
+
+        Parameters
+        ----------
+        frame : {ITRS, GCRS, WGS84, AzEl}
+            The frame to convert data to.
+        location : GroundLocation, optional
+            The ground location associated with the transformations when
+            necessary.
+
+        Returns
+        -------
+        {ITRS, GCRS, WGS84, AzEl}
+            The new frame representation of the data.
+        """
+
         if isinstance(self._base_position, frame):
             return self._base_position
         elif isinstance(self._base_position, GCRS):
@@ -74,7 +90,7 @@ class Coordinate:
             return NotImplemented
 
     def _convert_from_gcrs(self, frame: Literal[ITRS, WGS84, AzEl],
-                           location: GroundLocation = None):
+                           location: GroundLocation = None) -> Literal[ITRS, WGS84, AzEl]:
         itrs_position = _gcrs_to_itrs(self._base_position)
         if frame == ITRS:
             return itrs_position
@@ -88,7 +104,7 @@ class Coordinate:
             return NotImplemented
 
     def _convert_from_itrs(self, frame: Literal[GCRS, WGS84, AzEl],
-                           location: GroundLocation = None):
+                           location: GroundLocation = None) -> Literal[GCRS, WGS84, AzEl]:
         if frame == GCRS:
             return _itrs_to_gcrs(self._base_position)
         elif frame == WGS84:
@@ -101,7 +117,7 @@ class Coordinate:
             return NotImplemented
 
     def _convert_from_wgs84(self, frame: Literal[ITRS, GCRS, AzEl],
-                            location: GroundLocation = None):
+                            location: GroundLocation = None) -> Literal[ITRS, GCRS, AzEl]:
         itrs_position = _wgs84_to_itrs(self._base_position)
         if frame == ITRS:
             return itrs_position

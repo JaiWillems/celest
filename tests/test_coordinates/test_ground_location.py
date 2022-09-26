@@ -13,9 +13,13 @@ class TestGroundLocation(TestCase):
         self.height = 493.4238
         self.angular_unit = u.deg
         self.height_unit = u.km
-        self.location = GroundLocation(self.latitude, self.longitude,
-                                       self.height, self.angular_unit,
-                                       self.height_unit)
+        self.location = GroundLocation(
+            self.latitude,
+            self.longitude,
+            self.height,
+            self.angular_unit,
+            self.height_unit
+        )
 
     def test_initialization(self):
         self.assertIsInstance(self.location, GroundLocation)
@@ -29,12 +33,16 @@ class TestGroundLocation(TestCase):
         self.assertRaises(ValueError, GroundLocation, 0, 181, 0, u.deg, u.km)
 
     def test_str(self):
-        self.assertEqual(str(self.location),
-                         "00°05′39.84″S 22°36′05.40″W 493.42km")
+        self.assertEqual(
+            str(self.location),
+            "00°05′39.84″S 22°36′05.40″W 493.42km"
+        )
 
     def test_repr(self):
-        self.assertEqual(repr(self.location),
-                         "GroundLocation(-0.0944, -22.6015, 493.4238, Unit(\"deg\"), Unit(\"km\")")
+        self.assertEqual(
+            repr(self.location),
+            "GroundLocation(-0.0944, -22.6015, 493.4238, Unit(\"deg\"), Unit(\"km\"))"
+        )
 
     def test_latitude(self):
         self.assertEqual(self.location.latitude.data, self.latitude)
@@ -46,17 +54,29 @@ class TestGroundLocation(TestCase):
         self.assertEqual(self.location.height.data, self.height)
 
     def test_radius(self):
-        self.assertAlmostEqual(self.location.radius.to(u.km), 6871.555,
-                               delta=0.01)
+        self.assertAlmostEqual(
+            self.location.radius.to(u.km),
+            6871.555,
+            delta=0.01
+        )
 
     def test_itrs_x(self):
-        self.assertAlmostEqual(self.location.itrs_x.to(u.km), 6343.8162,
-                               delta=0.005)
+        self.assertAlmostEqual(
+            self.location.itrs_x.to(u.km),
+            6343.8162,
+            delta=0.005
+        )
 
     def test_itrs_y(self):
-        self.assertAlmostEqual(self.location.itrs_y.to(u.km), -2640.8722,
-                               delta=0.005)
+        self.assertAlmostEqual(
+            self.location.itrs_y.to(u.km),
+            -2640.8722,
+            delta=0.005
+        )
 
     def test_itrs_z(self):
-        self.assertAlmostEqual(self.location.itrs_z.to(u.km), -11.2554,
-                               delta=0.005)
+        self.assertAlmostEqual(
+            self.location.itrs_z.to(u.km),
+            -11.2554,
+            delta=0.005
+        )

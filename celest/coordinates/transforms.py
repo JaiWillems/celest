@@ -12,7 +12,11 @@ from celest.coordinates.nutation_precession_matrices import (
     nutation_matrix
 )
 from celest.coordinates.ground_location import GroundLocation
-from celest.constants import WGS84_MINOR_AXIS_KM, WGS84_MAJOR_AXIS_KM
+from celest.constants import (
+    WGS84_MINOR_AXIS_KM,
+    WGS84_MAJOR_AXIS_KM,
+    WGS83_FIRST_ECCENTRICITY
+)
 from celest import units as u
 from copy import deepcopy
 from typing import Tuple
@@ -46,10 +50,8 @@ def _gcrs_to_itrs(gcrs: GCRS) -> ITRS:
     if not isinstance(gcrs, GCRS):
         raise ValueError(f"Input data is in the {gcrs.__class__} frame and not"
                          " the GCRS frame.")
-    if not (gcrs.x.unit == gcrs.y.unit == gcrs.z.unit):
-        raise ValueError("Input dimensions have mismatched units.")
 
-    dimension = gcrs.x.unit
+    unit = gcrs.x.unit
 
     gcrs = deepcopy(gcrs)
     julian = gcrs.time
@@ -70,7 +72,7 @@ def _gcrs_to_itrs(gcrs: GCRS) -> ITRS:
 
     itrs = _rotate_by_earth_rotation_angle(itrs, -era)
 
-    return ITRS(julian.data, itrs[:, 0], itrs[:, 1], itrs[:, 2], dimension)
+    return ITRS(julian.data, itrs[:, 0], itrs[:, 1], itrs[:, 2], unit)
 
 
 def _rotate_by_earth_rotation_angle(data, degree_era):
@@ -79,7 +81,7 @@ def _rotate_by_earth_rotation_angle(data, degree_era):
     Parameters
     ----------
     data : np.ndarray
-        2-D array containing rows of 3d coordinate data.
+        2-D array containing columns of x, y, z coordinate data.
     degree_era : Quantity
         The Earth rotation angles.
 
@@ -88,6 +90,7 @@ def _rotate_by_earth_rotation_angle(data, degree_era):
     np.ndarray
         Rotated data.
     """
+
     radian_era = degree_era.to(u.rad).data
     c, s = np.cos(radian_era), np.sin(radian_era)
     c1, c2, c3 = np.copy(data).T
@@ -126,10 +129,8 @@ def _itrs_to_gcrs(itrs: ITRS) -> GCRS:
     if not isinstance(itrs, ITRS):
         raise ValueError(f"Input data is in the {itrs.__class__} frame and not"
                          " the ITRS frame.")
-    if not (itrs.x.unit == itrs.y.unit == itrs.z.unit):
-        raise ValueError("Input dimensions have mismatched units.")
 
-    dimension = itrs.x.unit
+    unit = itrs.x.unit
 
     itrs = deepcopy(itrs)
     julian = itrs.time
@@ -150,7 +151,7 @@ def _itrs_to_gcrs(itrs: ITRS) -> GCRS:
     gcrs = np.einsum('ijk, ik -> ij', np.linalg.inv(precession_mtrx), gcrs)
     gcrs = np.einsum('ij, kj -> ki', np.linalg.inv(bias_mtrx), gcrs)
 
-    return GCRS(julian.data, gcrs[:, 0], gcrs[:, 1], gcrs[:, 2], dimension)
+    return GCRS(julian.data, gcrs[:, 0], gcrs[:, 1], gcrs[:, 2], unit)
 
 
 def _itrs_to_wgs84(itrs: ITRS) -> WGS84:
@@ -291,7 +292,7 @@ def _wgs84_to_itrs(wgs84: WGS84) -> ITRS:
     longitude = wgs84.longitude.to(u.rad)
     height = wgs84.height.to(u.km)
 
-    e = np.sqrt(1 - WGS84_MINOR_AXIS_KM ** 2 / WGS84_MAJOR_AXIS_KM ** 2)
+    e = WGS83_FIRST_ECCENTRICITY
     n = WGS84_MAJOR_AXIS_KM / np.sqrt(1 - e ** 2 * np.sin(latitude) ** 2)
 
     itrs_x = (n + height) * np.cos(latitude) * np.cos(longitude)
@@ -328,7 +329,7 @@ def _itrs_to_azel(itrs: ITRS, location: GroundLocation) -> AzEl:
     azimuth = _azimuth(itrs, location)
     elevation = _elevation(itrs, location)
 
-    return AzEl(itrs.time.data, azimuth, elevation, u.deg, location)
+    return AzEl(itrs.time.to(u.jd2000), azimuth, elevation, u.deg, location)
 
 
 def _azimuth(itrs: ITRS, location: GroundLocation) -> np.ndarray:
@@ -348,9 +349,11 @@ def _azimuth(itrs: ITRS, location: GroundLocation) -> np.ndarray:
     """
 
     sat_itrs = np.array([itrs.x.to(u.km), itrs.y.to(u.km), itrs.z.to(u.km)]).T
-    ground_itrs = np.array([location.itrs_x.to(u.km),
-                            location.itrs_y.to(u.km),
-                            location.itrs_z.to(u.km)])
+    ground_itrs = np.array([
+        location.itrs_x.to(u.km),
+        location.itrs_y.to(u.km),
+        location.itrs_z.to(u.km)
+    ])
 
     latitude = location.latitude.to(u.rad)
     radius = location.radius.to(u.km)
@@ -417,9 +420,11 @@ def _elevation(itrs: ITRS, location: GroundLocation) -> np.ndarray:
     """
 
     sat_itrs = np.array([itrs.x.to(u.km), itrs.y.to(u.km), itrs.z.to(u.km)]).T
-    ground_itrs = np.array([location.itrs_x.to(u.km),
-                            location.itrs_y.to(u.km),
-                            location.itrs_z.to(u.km)])
+    ground_itrs = np.array([
+        location.itrs_x.to(u.km),
+        location.itrs_y.to(u.km),
+        location.itrs_z.to(u.km)
+    ])
 
     return 90 - _get_ang(sat_itrs - ground_itrs, ground_itrs)
 
@@ -455,8 +460,8 @@ def _gcrs_to_lvlh(gcrs_position: GCRS, gcrs_velocity: GCRS) -> Tuple[LVLH, LVLH]
         raise ValueError(f"Input velocity is in the {gcrs_velocity.__class__} "
                          "frame and not the GCRS frame.")
 
-    position_dimension = gcrs_position.x.unit
-    velocity_dimension = gcrs_velocity.x.unit
+    position_unit = gcrs_position.x.unit
+    velocity_unit = gcrs_velocity.x.unit
 
     gcrs_position = deepcopy(gcrs_position)
     julian = gcrs_position.time.to(u.jd2000)
@@ -472,24 +477,38 @@ def _gcrs_to_lvlh(gcrs_position: GCRS, gcrs_velocity: GCRS) -> Tuple[LVLH, LVLH]
     velocity = np.concatenate((gcrs_vx, gcrs_vy, gcrs_vz), axis=1)
 
     transformation_matrix = _gcrs_to_lvlh_matrix(position, velocity)
-    transformed_position = np.einsum('ijk, ik -> ij', transformation_matrix,
-                                     position)
-    transformed_velocity = np.einsum('ijk, ik -> ij', transformation_matrix,
-                                     velocity)
+    transformed_position = np.einsum(
+        'ijk, ik -> ij',
+        transformation_matrix,
+        position
+    )
+    transformed_velocity = np.einsum(
+        'ijk, ik -> ij',
+        transformation_matrix,
+        velocity
+    )
 
-    lvlh_position = LVLH(julian, transformed_position[:, 0],
-                         transformed_position[:, 1], transformed_position[:, 2],
-                         position_dimension)
-    lvlh_velocity = LVLH(julian, transformed_velocity[:, 0],
-                         transformed_velocity[:, 1], transformed_velocity[:, 2],
-                         velocity_dimension)
+    lvlh_position = LVLH(
+        julian,
+        transformed_position[:, 0],
+        transformed_position[:, 1],
+        transformed_position[:, 2],
+        position_unit
+    )
+    lvlh_velocity = LVLH(
+        julian,
+        transformed_velocity[:, 0],
+        transformed_velocity[:, 1],
+        transformed_velocity[:, 2],
+        velocity_unit
+    )
 
     return lvlh_position, lvlh_velocity
 
 
 def _gcrs_to_lvlh_matrix(gcrs_position: np.ndarray, gcrs_velocity:
                          np.ndarray) -> np.ndarray:
-    """Return the gcrs to lvlh rotation matrix.
+    """Return the gcrs-to-lvlh rotation matrix.
 
     Parameters
     ----------

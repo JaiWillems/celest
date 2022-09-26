@@ -133,8 +133,6 @@ To allow for unit conversions, Celest uses the :class:`Quantity` class to store 
 typically initialized internally by a class constructor, method, or function and returned to users. The :class:`Quantity`
 class documentation follows.
 
-.. TODO: Detail what constraints apply to the data such that unit conversions can occur (e.g. an addition dunder).
-
 .. autoclass:: celest.units.quantity.Quantity
    :members:
    :noindex:

@@ -248,9 +248,9 @@ class Quantity:
         0.005
         """
 
-        return self._convert_to(new_unit).data
+        return self.convert_to(new_unit).data
 
-    def _convert_to(self, new_unit: Union[Unit, CompoundUnit]) -> "Quantity":
+    def convert_to(self, new_unit: Union[Unit, CompoundUnit]) -> "Quantity":
         """Return a new Quantity object with the new unit.
 
         Parameters
@@ -271,7 +271,7 @@ class Quantity:
 
         Convert to kilometers:
 
-        >>> quantity_in_kilometers = quantity_in_meters._convert_to(u.km)
+        >>> quantity_in_kilometers = quantity_in_meters.convert_to(u.km)
         """
 
         if self._unit.dimension != new_unit.dimension:

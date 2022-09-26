@@ -13,7 +13,7 @@ class WGS84(Position3d):
 
     Coordinates in the WGS84 Earth ellipsoid model.
 
-    The World Geodetic System 84 (WGS84) is the Earth ellipsoid model with its
+    The World Geodetic System 84 (WGS84) is an Earth ellipsoid model with its
     origin located at the Earth's center of mass. The WGS84 meridian of zero
     longitude is located at the IERS reference meridian with the parallel of
     zero latitude located at the WGS84 reference meridian plane. WGS84 is the
@@ -22,7 +22,7 @@ class WGS84(Position3d):
     Parameters
     ----------
     julian : np.ndarray
-        1-D array containing time in the J2000 epoch.
+        1-D array containing time in the JD2000 epoch.
     latitude, longitude, height : np.ndarray
         1-D array containing the coordinate data.
     angular_unit : Unit
@@ -67,7 +67,7 @@ class WGS84(Position3d):
                  length_unit: Unit) -> None:
         """Coordinates in the WGS84 Earth ellipsoid model.
         
-        The World Geodetic System 84 (WGS84) is the Earth ellipsoid model with
+        The World Geodetic System 84 (WGS84) is an Earth ellipsoid model with
         its origin located at the Earth's center of mass. The WGS84 meridian of
         zero longitude is located at the IERS reference meridian with the
         parallel of zero latitude located at the WGS84 reference meridian plane.
@@ -76,7 +76,7 @@ class WGS84(Position3d):
         Parameters
         ----------
         julian : np.ndarray
-            1-D array containing time in the J2000 epoch.
+            1-D array containing time in the JD2000 epoch.
         latitude, longitude, height : np.ndarray
             1-D array containing the coordinate data.
         angular_unit : Unit

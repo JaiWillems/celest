@@ -22,7 +22,7 @@ class Time:
 
     Time transformations.
 
-    `julian + offset` is the Julian time in J2000 epoch which can be converted
+    `julian + offset` is the Julian time in JD2000 epoch which can be converted
     into different time representations useful for astronomical calculations.
 
     Parameters
@@ -30,10 +30,10 @@ class Time:
     julian : array_like
         1-D array containing time data in Julian days.
 
-        If time data is not in the J2000 epoch, an offset must be passed in to
+        If time data is not in the JD2000 epoch, an offset must be passed in to
         be added to the julian times.
     offset : float, optional
-        Offset to convert input time data to the J2000 epoch, default to zero.
+        Offset to convert input time data to the JD2000 epoch, default to zero.
 
     Methods
     -------
@@ -60,7 +60,7 @@ class Time:
 
     Examples
     --------
-    Construct a `Time` object using J2000 input times:
+    Construct a `Time` object using JD2000 input times:
 
     >>> julian = [2460462.50, 2460462.91, 2460463.02]
     >>> time = Time(julian=time, offset=0)
@@ -80,7 +80,7 @@ class Time:
     def __init__(self, julian: np.ndarray, offset: float=0) -> None:
         """Time transformations.
 
-        `julian + offset` is the Julian time in J2000 epoch which can be
+        `julian + offset` is the Julian time in JD2000 epoch which can be
         converted into different time representations useful for astronomical
         calculations.
 
@@ -89,10 +89,10 @@ class Time:
         julian : array_like
             1-D array containing time data in Julian days.
 
-            If time data is not in the J2000 epoch, an offset must be passed in
+            If time data is not in the JD2000 epoch, an offset must be passed in
             to be added to the julian times.
         offset : float, optional
-            Offset to convert input time data to the J2000 epoch, default to
+            Offset to convert input time data to the JD2000 epoch, default to
             zero.
         """
 

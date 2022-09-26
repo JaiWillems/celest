@@ -19,10 +19,13 @@ class AzEl(Position2d):
     satellite in the horizontal plane clockwise from north. Elevation is defined
     as the angle of the satellite above the horzontal plane.
 
+    The horizontal frame is sometimes refered to as the azimuth-elevation
+    (az-el) or altitude-azimuth (alt-az) frame.
+
     Parameters
     ----------
     julian : np.ndarray
-        1-D array containing time in the J2000 epoch.
+        1-D array containing time in the JD2000 epoch.
     azimuth, elevation : np.ndarray
         1-D array containing the coordinate data.
     unit : Unit

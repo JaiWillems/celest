@@ -13,28 +13,23 @@ from unittest import TestCase
 class TestSchedulingUtils(TestCase):
 
     def setUp(self) -> None:
-
         self.request_handler = RequestHandler()
         for request in initialize_request_list():
             self.request_handler.add_request(*request)
 
     def test_initialize_solution(self):
-
         initialize_solution(self.request_handler)
         self.assertEqual(self.request_handler.number_of_scheduled_requests, 7)
 
     def test_is_complete_none_scheduled(self):
-
         self.assertFalse(is_complete(self.request_handler))
 
     def test_is_complete_some_scheduled(self):
-
         self.request_handler.schedule_request(0, 0, 0, 0)
         self.request_handler.schedule_request(1, 0, 0, 0)
         self.assertFalse(is_complete(self.request_handler))
 
     def test_is_complete_all_scheduled(self):
-
         self.request_handler.schedule_request(0, 0, 0, 0)
         self.request_handler.schedule_request(1, 0, 0, 0)
         self.request_handler.schedule_request(2, 0, 0, 0)
@@ -48,11 +43,9 @@ class TestSchedulingUtils(TestCase):
         self.assertTrue(is_complete(self.request_handler))
 
     def test_cost_none_scheduled(self):
-
         self.assertEqual(cost(self.request_handler), 0)
 
     def test_cost_some_scheduled(self):
-
         self.request_handler.schedule_request(0, 0, 0, 0)
         self.request_handler.schedule_request(1, 0, 0, 0)
         actual_cost = - (self.request_handler[0][RequestIndices.priority] +

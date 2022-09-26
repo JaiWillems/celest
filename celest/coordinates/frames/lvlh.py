@@ -12,7 +12,7 @@ import numpy as np
 class LVLH(Position3d):
     """LVLH(julian, x, y, z, unit)
 
-    Coordinates in the level-horizontal-level-vertical or Hill frame.
+    Coordinates in the level-horizontal-level-vertical (LVLH) or Hill frame.
 
     The local-vertical local-horizontal frame (also known as the Hill
     frame) is a body frame where the z-axis is algigned with the negative
@@ -22,7 +22,7 @@ class LVLH(Position3d):
     Parameters
     ----------
     julian : np.ndarray
-        1-D array containing time in the J2000 epoch.
+        1-D array containing time in the JD2000 epoch.
     x, y, z : np.ndarray
         1-D array containing the coordinate data.
     unit : Unit
@@ -32,8 +32,6 @@ class LVLH(Position3d):
     ----------
     x, y, z : Quantity
         Coordinate data.
-    location : GroundLocation
-        Origin of the AzEl frame.
     time : Quantity
         Times associated with coordinate dimensions.
 
@@ -85,7 +83,7 @@ class LVLH(Position3d):
         Parameters
         ----------
         julian : np.ndarray
-            1-D array containing time in the J2000 epoch.
+            1-D array containing time in the JD2000 epoch.
         x, y, z : np.ndarray
             1-D array containing the coordinate data.
         unit : Unit

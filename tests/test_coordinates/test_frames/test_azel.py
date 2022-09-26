@@ -16,8 +16,13 @@ class TestAzEl(TestCase):
         self.elevation = np.random.rand(5)
         self.unit = u.deg
         self.location = GroundLocation(43.6532, -79.3832, 175, u.deg, u.m)
-        self.valid_azel = AzEl(self.julian, self.azimuth, self.elevation,
-                               self.unit, self.location)
+        self.valid_azel = AzEl(
+            self.julian,
+            self.azimuth,
+            self.elevation,
+            self.unit,
+            self.location
+        )
 
     def test_initialization(self):
         self.assertIsInstance(self.valid_azel, AzEl)
@@ -38,15 +43,29 @@ class TestAzEl(TestCase):
         julian = np.random.rand(1)
         azimuth = np.random.rand(2)
         elevation = np.random.rand(3)
-        self.assertRaises(ValueError, AzEl, julian, azimuth, elevation,
-                          self.unit, self.location)
+        self.assertRaises(
+            ValueError,
+            AzEl,
+            julian,
+            azimuth,
+            elevation,
+            self.unit,
+            self.location
+        )
 
     def test_error_raised_when_wrong_dimension_input_passed_in(self):
         julian = np.random.rand(1, 1)
         azimuth = np.random.rand(2, 2)
         elevation = np.random.rand(3, 3)
-        self.assertRaises(ValueError, AzEl, julian, azimuth, elevation,
-                          self.unit, self.location)
+        self.assertRaises(
+            ValueError,
+            AzEl,
+            julian,
+            azimuth,
+            elevation,
+            self.unit,
+            self.location
+        )
 
     def test_save_to_text_file_saves_file(self):
         file_name = "azel_test_file"

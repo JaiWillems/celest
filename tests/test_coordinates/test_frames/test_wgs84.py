@@ -16,9 +16,14 @@ class TestWGS84(TestCase):
         self.height = np.random.rand(5)
         self.angular_unit = u.deg
         self.length_unit = u.km
-        self.valid_wgs84 = WGS84(self.julian, self.latitude, self.longitude,
-                                 self.height, self.angular_unit,
-                                 self.length_unit)
+        self.valid_wgs84 = WGS84(
+            self.julian,
+            self.latitude,
+            self.longitude,
+            self.height,
+            self.angular_unit,
+            self.length_unit
+        )
 
     def test_initialization(self):
         self.assertIsInstance(self.valid_wgs84, WGS84)
@@ -44,16 +49,32 @@ class TestWGS84(TestCase):
         latitude = np.random.rand(2)
         longitude = np.random.rand(3)
         height = np.random.rand(4)
-        self.assertRaises(ValueError, WGS84, julian, latitude, longitude,
-                          height, self.angular_unit, self.length_unit)
+        self.assertRaises(
+            ValueError,
+            WGS84,
+            julian,
+            latitude,
+            longitude,
+            height,
+            self.angular_unit,
+            self.length_unit
+        )
 
     def test_error_raised_when_wrong_dimension_input_passed_in(self):
         julian = np.random.rand(1, 1)
         latitude = np.random.rand(2, 2)
         longitude = np.random.rand(3, 3)
         height = np.random.rand(4, 4)
-        self.assertRaises(ValueError, WGS84, julian, latitude, longitude,
-                          height, self.angular_unit, self.length_unit)
+        self.assertRaises(
+            ValueError,
+            WGS84,
+            julian,
+            latitude,
+            longitude,
+            height,
+            self.angular_unit,
+            self.length_unit
+        )
 
     def test_save_to_text_file_saves_file(self):
         file_name = "wgs84_test_file"

@@ -16,11 +16,8 @@ def _ISO6709_representation(latitude: Quantity, longitude: Quantity, height:
     Parameters
     ----------
     latitude : Quantity
-        Latitude angle in decimal degrees.
     longitude : Quantity
-        Longitude angle in decimal degrees.
     height : Quantity
-        Altitude in km.
 
     Returns
     -------
@@ -28,11 +25,11 @@ def _ISO6709_representation(latitude: Quantity, longitude: Quantity, height:
         ISO6709 standardized position string.
     """
 
-    latitude_string = _get_latitude_string(latitude)
-    longitude_string = _get_longitude_string(longitude)
-    altitude_string = _get_altitude_string(height)
-
-    return latitude_string + " " + longitude_string + " " + altitude_string
+    return " ".join([
+        _get_latitude_string(latitude),
+        _get_longitude_string(longitude),
+        _get_height_string(height)
+    ])
 
 
 def _get_latitude_string(latitude: Quantity) -> str:
@@ -42,10 +39,25 @@ def _get_latitude_string(latitude: Quantity) -> str:
     return sexigesimal_latitude + direction
 
 
-def _get_sexagesimal_string(absolute_deg_angle: float) -> str:
-    degree_string = "%.3s" % str(int(absolute_deg_angle)).zfill(2)
-    minute_string = "%.2s" % str(int(absolute_deg_angle * 60 % 60)).zfill(2)
-    second_string = str("%.2f" % (absolute_deg_angle * 3600 % 60)).zfill(5)
+def _get_sexagesimal_string(degree_angle: float) -> str:
+    """Return the sexagesimal representation of a degree angle.
+
+    It is assumed that the input angle is always positive.
+
+    Parameters
+    ----------
+    degree_angle : float
+        An absolute value degree angle.
+
+    Returns
+    -------
+    str
+        Sexagesimal representation string of `degree_angle`.
+    """
+
+    degree_string = "%.3s" % str(int(degree_angle)).zfill(2)
+    minute_string = "%.2s" % str(int(degree_angle * 60 % 60)).zfill(2)
+    second_string = str("%.2f" % (degree_angle * 3600 % 60)).zfill(5)
 
     return degree_string + DEGREE_SYMBOL + minute_string + MINUTE_SYMBOL + \
         second_string + SECOND_SYMBOL
@@ -58,5 +70,5 @@ def _get_longitude_string(longitude: Quantity) -> str:
     return sexigesimal_longitude + direction
 
 
-def _get_altitude_string(altitude: Quantity) -> str:
+def _get_height_string(altitude: Quantity) -> str:
     return ("%.2f" % altitude.data) + str(altitude.unit)

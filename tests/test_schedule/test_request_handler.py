@@ -12,6 +12,9 @@ class TestRequestHandler(TestCase):
         for request in initialize_request_list():
             self.request_handler.add_request(*request)
 
+    def test_len(self):
+        self.assertEqual(10, len(self.request_handler))
+
     def test_getitem(self):
         self.assertListEqual(self.request_handler[0],
                              self.request_handler.requests[0])
@@ -156,6 +159,20 @@ class TestRequestHandler(TestCase):
         self.assertEqual(len(self.request_handler[7][RequestIndices.vtw_list]), 18)
         self.assertEqual(len(self.request_handler[8][RequestIndices.vtw_list]), 18)
         self.assertEqual(len(self.request_handler[9][RequestIndices.vtw_list]), 18)
+
+    def test_sort_by_increasing_opportunity(self):
+        self.request_handler.sort_by_increasing_opportunity()
+
+        self.assertEqual(len(self.request_handler[0][RequestIndices.vtw_list]), 18)
+        self.assertEqual(len(self.request_handler[1][RequestIndices.vtw_list]), 18)
+        self.assertEqual(len(self.request_handler[2][RequestIndices.vtw_list]), 18)
+        self.assertEqual(len(self.request_handler[3][RequestIndices.vtw_list]), 18)
+        self.assertEqual(len(self.request_handler[4][RequestIndices.vtw_list]), 19)
+        self.assertEqual(len(self.request_handler[5][RequestIndices.vtw_list]), 19)
+        self.assertEqual(len(self.request_handler[6][RequestIndices.vtw_list]), 19)
+        self.assertEqual(len(self.request_handler[7][RequestIndices.vtw_list]), 19)
+        self.assertEqual(len(self.request_handler[8][RequestIndices.vtw_list]), 19)
+        self.assertEqual(len(self.request_handler[9][RequestIndices.vtw_list]), 20)
 
     def test_sort_vtws_by_increasing_conflict_degree(self):
         self.request_handler.sort_vtws_by_increasing_conflict_degree()

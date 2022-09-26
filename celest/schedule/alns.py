@@ -177,8 +177,7 @@ class ALNS:
             list of probabilities.
         """
 
-        weight_sum = sum(weights)
-        return [weight / weight_sum for weight in weights]
+        return [weight / sum(weights) for weight in weights]
 
     def _get_repair_index(self) -> int:
         """Return index of the repair function to be used.
@@ -252,7 +251,7 @@ class ALNS:
         else:
             probability = math.exp(100 * (temporary_cost - current_cost) /
                                    (T * current_cost))
-            return random.choices([False, True], [1 - probability, probability])[0]
+            return False if random.random() > probability else True
 
     def _update_destroy_weights(self, l: float, score: int,
                                 destroy_function_index: int) -> None:

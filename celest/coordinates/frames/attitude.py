@@ -21,7 +21,7 @@ class Attitude(Position3d):
     Parameters
     ----------
     julian : np.ndarray
-        1-D array containing time in the J2000 epoch.
+        1-D array containing time in the JD2000 epoch.
     roll, pitch, yaw : np.ndarray
         1-D array containing the coordinate data.
     unit : Unit
@@ -75,7 +75,7 @@ class Attitude(Position3d):
         Parameters
         ----------
         julian : np.ndarray
-            1-D array containing time in the J2000 epoch.
+            1-D array containing time in the JD2000 epoch.
         roll, pitch, yaw : np.ndarray
             1-D array containing the coordinate data.
         unit : Unit

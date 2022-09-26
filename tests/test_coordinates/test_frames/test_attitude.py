@@ -17,8 +17,14 @@ class TestAttitude(TestCase):
         self.yaw = np.random.rand(5)
         self.unit = u.deg
         self.location = GroundLocation(52.1579, -106.6702, 0.482, u.deg, u.km)
-        self.valid_attitude = Attitude(self.julian, self.roll, self.pitch,
-                                       self.yaw, self.unit, self.location)
+        self.valid_attitude = Attitude(
+            self.julian,
+            self.roll,
+            self.pitch,
+            self.yaw,
+            self.unit,
+            self.location
+        )
 
     def test_initialization(self):
         self.assertIsInstance(self.valid_attitude, Attitude)
@@ -41,16 +47,32 @@ class TestAttitude(TestCase):
         x = np.random.rand(2)
         y = np.random.rand(3)
         z = np.random.rand(4)
-        self.assertRaises(ValueError, Attitude, julian, x, y, z, self.unit,
-                          self.location)
+        self.assertRaises(
+            ValueError,
+            Attitude,
+            julian,
+            x,
+            y,
+            z,
+            self.unit,
+            self.location
+        )
 
     def test_error_raised_when_wrong_dimension_input_passed_in(self):
         julian = np.random.rand(1, 1)
         x = np.random.rand(2, 2)
         y = np.random.rand(3, 3)
         z = np.random.rand(4, 4)
-        self.assertRaises(ValueError, Attitude, julian, x, y, z, self.unit,
-                          self.location)
+        self.assertRaises(
+            ValueError,
+            Attitude,
+            julian,
+            x,
+            y,
+            z,
+            self.unit,
+            self.location
+        )
 
     def test_save_to_text_file_saves_file(self):
         file_name = "attitude_test_file"
