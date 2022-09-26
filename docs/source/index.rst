@@ -3,26 +3,41 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Celest Documentation
-====================
+.. figure:: ../../branding/logo/celest_logo_transparent_wide.png
+   :width: 400
+   :alt: Celest Logo
 
-Celest is a satellite mission planning software designed for the University of
-Toronto Aerospace Team, which is applying the program to a hyperspectral
-imaging CubeSat mission. The library aims to provide the necessary tools for
+.. image:: https://badge.fury.io/py/celest.svg
+   :target: https://pypi.org/project/celest/
+   :alt: PyPI version
+
+.. image:: https://img.shields.io/pypi/l/celest
+   :target: https://github.com/JaiWillems/celest/blob/main/LICENSE.txt
+   :alt: License
+
+.. image:: https://static.pepy.tech/personalized-badge/celest?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=downloads
+   :target: https://pepy.tech/project/celest
+   :alt: Downloads
+
+.. image:: https://readthedocs.org/projects/celest/badge/?version=latest
+   :target: https://celest.readthedocs.io/en/latest/
+   :alt: Documentation Status
+
+.. image:: https://img.shields.io/pypi/pyversions/celest
+   :target: https://img.shields.io/pypi/pyversions/celest
+   :alt: Python
+
+.. image:: https://img.shields.io/pypi/wheel/celest
+   :target: https://img.shields.io/pypi/wheel/celest
+   :alt: format
+
+Celest Overview
+---------------
+
+Celest is a satellite mission planning software designed for a remote sensing
+CubeSat mission profile. The library aims to provide the necessary tools for
 celestial orbital conversions and satellite-to-ground interactions such as
-determining imaging/transmission opportunities.
-
-Celest is currently in the development phase and is subject to significant
-changes. The program aims to incorporate a high-order adaptive orbit
-propagator and state-of-the-art scheduling algorithm for agile earth
-observation satellite (AEOS) imaging encounters.
-
-What can the program do?
-------------------------
-
-Currently, the program requires satellite position data in either the gcrs,
-itrs, or geographical frame and the corresponding times. Celest can then calculate different position representations, time representations, and ground
-encounter calculations.
+determining and scheduling imaging/transmission opportunities.
 
 What can be expected of the project?
 ------------------------------------
@@ -32,12 +47,12 @@ incorporated into the library to allow for a complete mission planning workflow
 from inputting orbital parameters to calculating satellite-to-ground encounter
 opportunities.
 
-We also intend to incorporate a window scheduling system that will be used to
-develop an optimal satellite itinerary for satellite mission planning.
-
 Other features that are being considered include a terminal interface, higher
-fidelity conversion calculations, window/data visuals, data loaders, and more
+fidelity conversions, window/data visuals, data loaders, and more
 robust ground tracking by incorporating forward motion compensation.
+
+Index
+-----
 
 .. toctree::
    :maxdepth: 2
@@ -51,5 +66,9 @@ robust ground tracking by incorporating forward motion compensation.
    :maxdepth: 2
    :caption: Modules
 
-   modules/satellite
+   modules/coordinate
    modules/encounter
+   modules/satellite
+   modules/schedule
+   modules/time
+   modules/units

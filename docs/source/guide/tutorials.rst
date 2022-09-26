@@ -1,164 +1,375 @@
 Tutorials
 =========
 
-Position and Time Conversions
------------------------------
+.. contents:: Contents
+   :depth: 1
+   :local:
 
-Celest allows for various time and position representations that may
-prove useful in a mission planning context. Here, we will explore
-the basic interactions with the :class:`Time` and :class:`Coordinate` classes.
-For details on all possible conversions, refer to the :ref:`Time <Time Class>`
-and :ref:`Coordinate <Coordinate Class>` documentation.
+Time Conversions
+----------------
 
-.. code-block::
+Celest provides the :class:`Time` class that can be used for various time transformations. The :class:`Time` class can
+be imported from the time module by the following import statement:
+
+.. code-block:: python
+
+   from celest.time import Time
+
+We begin by importing the time data into the program. Since celest takes in time series data as NumPy arrays, we
+recommend using NumPy's :py:func:`loadtxt` or :py:func:`genfromtxt` functions. The time arrays should contain `float`
+time values.
+
+.. code-block:: python
 
    import numpy as np
-   from celest.satellite import Time, Coordinate
 
-We begin by importing the desired position and time data into the program.
-Since Celest takes in data as NumPy arrays, it is recommended to use NumPy's
-:py:func:`loadtxt` or :py:func:`genfromtxt` functions. The data should be
-loaded such that all array values are of a type `float`.
+   julian = np.loadtxt(`julian.txt`)
 
-.. code-block::
+Using the time array, we can initialize the :class:`Time` class. The input time shall be some julian variant. If times
+not in the JD2000 epoch are passed in, an offset that can be added to the input time to make it JD2000 must be passed
+in.
 
-   # Load time and data from external sources.
-   julian = np.loadtxt('julian.txt')
-   gcrs = np.loadtxt('gcrs.txt')
+.. code-block:: python
 
-We can then instantiate the :class:`Time` class. The input data
-should be Julian time data in the J2000 epoch. The appropriate offset can be
-applied using the `offset` keyword to incorporate data from other epochs. This
-offset will be added to the input data when stored in the :class:`Time` object.
-
-.. code-block::
-
-   # Initialize Time object using J2000 data.
-   time = Time(julian)
+   # Initialize Time object using JD2000 data.
+   time = Time(julian=julian)
 
    # Initialize Time object using Mean Julian Date data.
-   time = Time(julian, offset=2400000.5)
+   time = Time(julian=julian, offset=2400000.5)
 
 Different time representations can then be accessed through various methods.
 Some examples are shown below.
 
-.. code-block::
+.. code-block:: python
 
    # Get Greenwich Apparent Sidereal Time.
    gast = time.gast()
 
-   # Get Mean Hour Angle.
-   mha = time.mean_solar_time(longitude=-79.3832)
+   # Get mean solar time.
+   mst = time.mean_solar_time(longitude=-79.3832)
 
-   # Get datetime representaions.
+   # Get datetime representations.
    datetime_data = time.datetime()
 
-The :class:`Coordinate` class can be instantiated using a data array of
-positions, a frame specifier, and time information associated with the
-position data. Three input position frames are currently supported by the
-:class:`Coordinate` class: the geocentric celestial reference system (GCRS),
-international terrestrial reference system (ITRS), and geodetic reference
-system (GRS).
+Position Conversions
+--------------------
 
-.. code-block::
+Celest provides a suite for converting between different coordinate representations. For conversions, the most important
+classes are the frame specific classes that hold data for a single coordinate frame and the :class:`Coordinates` class
+to handle frame conversions. These different classes can be imported from the coordinate module using the following
+statement:
 
-   # Initialize Coordinate object using GCRS data.
-   position = Coordinate(gcrs, frame='gcrs', time=julian, offset=0)
+.. code-block:: python
 
-   # Initialize Coordinate object using ITRS data.
-   position = Coordinate(itrs, frame='itrs', time=julian, offset=0)
+   from celest.coordinate import AzEl, GCRS, ITRS, Coordinates
 
-   # Initialize Coordinate object using GCRS data.
-   position = Coordinate(geo, frame='geo', time=julian, offset=0)
+We begin by importing the initial coordinate data into the program. Since celest takes in position data as NumPy arrays,
+we recommend using NumPy's :py:func:`loadtxt` or :py:func:`genfromtxt` functions. The position arrays should contain
+`float` values.
 
-The :class:`Coordinate` class inherits the :class:`Time` class; as a result,
-any time methods can be accessed using the :class:`Coordinate` class.
+.. code-block:: python
 
-Similar to the :class:`Time` class, different coordinate representations can be
-accessed through various methods. Some examples are shown below.
+   import numpy as np
 
-.. code-block::
+   julian_data = np.loadtxt(`julian.txt`)
+   gcrs_position_data = np.loadtxt(`gcrs_position.txt`)
 
-   from celest.encounter import GroundPosition
-   toronto = GroundPosition(latitude=43.6532, longitude=-79.3832)
+Using the loaded position array in the GCRS frame, we can initialize a :class:`GCRS` object.
 
-   # Get horizontal coordinates.
-   alt, az = position.horizontal(location=toronto)
+.. code-block:: python
 
-   # Get ITRS data.
-   itrs_position = position.itrs()
+   from celest import units as u
 
-   # Get GRS data with ISO6709 formatted output strings.
-   geo_position = position.geo(iso=True)
+   gcrs_position = GCRS(
+      julian=julian_data,
+      x=gcrs_position_data[:, 0],
+      y=gcrs_position_data[:, 1],
+      z=gcrs_position_data[:, 2],
+      unit=u.km
+   )
 
-Notice that some methods require using a :class:`GroundPosition` object as
-a parameter to specify a ground location. The :class:`GroundPosition` object
-can be imported from the encounter module.
+We can then create a :class:`Coordinates` object that holds the position object and use it to convert to different
+frames. Most frames require no additional arguments for conversions, however, some frames require a location passed in.
+
+.. code-block:: python
+
+   from celest.coordinate import GroundLocation
+
+   # Create the Coordinates object.
+   coordinates = Coordinates(gcrs_position)
+
+   # Convert to ITRS.
+   itrs_position = coordinates.convert_to(ITRS)
+
+   # Convert to AzEl (requires a ground location).
+   toronto = GroundLocation(
+      latitude=43.6532,
+      longitude=-79.3832,
+      height=0.76,
+      angular_unit=u.deg,
+      length_unit=u.km
+   )
+   azel_position = coordinates.convert_to(AzEl, location=toronto)
+
+Once the conversions are complete, the coordinate data can be accessed through a series of attributes. Such data is
+stored as :class:`Quantity` objects allowing for easy unit conversions.
+
+.. code-block:: python
+
+   # Get the ITRS coordinates as Quantity objects.
+   x = itrs_position.x
+   y = itrs_position.y
+   z = itrs_position.z
+
+   # Get the AzEl coordinates as Quantity objects in degrees.
+   az = azel_position.az.to(u.deg)
+   el = azel_position.el.to(u.deg)
 
 Window Generation Workflow
 --------------------------
 
-The primary window generation workflow can be broken down into three stages:
+One of the primary goals of Celest is to provide tools for satellite planning. This includes window generation and
+scheduling. The window generation workflow can be broken down into three stages:
 
-#. Import and prepare time and position data,
-#. Specify ground locations, and
-#. Generate and save windows.
+#. Processing data,
+#. Specifying ground locations, and
+#. Generating window data.
 
-The first step is to import and prepare the time and position data. This
-includes setting up the :class:`Satellite` object that holds the necessary but
-insufficient information to generate the desired windows.
+We begin by importing the time and position data to initialize the :class:`Satellite` class.
 
-.. code-block::
+.. code-block:: python
 
+   from celest.coordinates import GCRS
+   from celest.satellite import Satellite
+   from celest import units as u
    import numpy as np
-   from celest.satellite import Time, Coordinate, Satellite
-   from celest.encounter import GroundPosition, windows
 
-   # Load the data.
-   julian = np.loadtxt('julian.txt')
-   gcrs = np.loadtxt('gcrs.txt')
+   julian_data = np.loadtxt(`julian.txt`)
+   gcrs_position_data = np.loadtxt(`gcrs_position.txt`)
+   gcrs_velocity_data = np.loadtxt(`gcrs_velocity.txt`)
 
-   # Initialize satellite representation.
-   satellite = Satellite(position=gcrs, frame='gcrs', time=julian, offset=0)
+    gcrs_position = GCRS(
+        julian=julian_data,
+        x=gcrs_position_data[:, 0],
+        y=gcrs_position_data[:, 1],
+        z=gcrs_position_data[:, 2],
+        unit=u.km
+    )
+    gcrs_velocity = GCRS(
+        julian=julian_data,
+        x=gcrs_velocity_data[:, 0],
+        y=gcrs_velocity_data[:, 1],
+        z=gcrs_velocity_data[:, 2],
+        unit=u.m/u.s
+    )
 
-Next, we specify the ground locations for which we wish to generate windows. To
-accomplish this, we define a :class:`GroundPosition` object for each location
-we wish to encounter. If various encounter types for one location are desired,
-only one :class:`GroundPosition` object is required.
+   satellite = Satellite(position=gcrs_position, velocity=gcrs_velocity)
 
-.. code-block::
+To generate window data, we need to specify the ground locations involved in the encounters. If we want to image the
+Canadian cities of Toronto, Calgary, and Vancouver, we need to initialize three :class:`GroundLocation` objects.
 
-   # Define ground position.
-   toronto = GroundPosition(latitude=43.6532, longitude=-79.3832)
-   saskatoon = GroundPosition(latitude=52.1579, longitude=-106.6702)
+.. code-block:: python
 
-We are now ready to generate windows. The :py:func:`windows.generate` function
-takes a satellite and ground location as an input and will populate a
-:class:`Windows` object with visible window times for the encounter
-defined by the `enc` and `ang` keywords.
+   from celest.coordinates import GroundLocation
 
-There are two encounter types that Celest currently supports: (1) imaging
-encounters where the satellite is in view of the ground location, and (2) data
-transmission encounters where the ground location is in view of the satellite.
-The `enc` keyword specifies the type of encounter as either and imaging
-(`enc="image"`) or data transmission (`enc="data link"`) type.
+   toronto = GroundLocation(
+      latitude=43.6532,
+      longitude=-79.3832,
+      height=0.76,
+      angular_unit=u.deg,
+      length_unit=u.km
+   )
+   calgary = GroundLocation(
+      latitude=51.0486,
+      longitude=-114.0708,
+      height=1.045,
+      angular_unit=u.deg,
+      length_unit=u.km
+   )
+   vancouver = GroundLocation(
+      latitude=49.2827,
+      longitude=-123.1207,
+      height=0.0,
+      angular_unit=u.deg,
+      length_unit=u.km
+   )
 
-The `ang` keyword defines the constraint angle that borders a
-viable/non-viable encounter region. The constraint angle type used for imaging
-encounters is the off-nadir angle measured in increasing degrees from the
-satellite's nadir to the ground location. Transmission encounters use the
-altitude angle of the satellite as measured in increasing degrees above the
-horizon (as seen from the ground location).
+We can now create window data using the :py:func:`generate_vtws` function.
 
-The lighting conditions can also be set. For example, to image only in the
-daylight, we can set `lighting=1`.
+.. code-block:: python
 
-.. code-block::
+   from celest.window import generate_vtws, Lighting
 
-   # Generate ground location windows.
-   toronto_IMG_windows = windows.generate(satellite=satellite, location=toronto, enc="image", ang=30, lighting=1)
-   toronto_GL_windows = windows.generate(satellite=satellite, location=toronto, enc="data link", ang=10, lighting=0)
+   # Generate window data for Toronto.
+   toronto_vtws = generate_vtws(
+      satellite=satellite,
+      location=toronto,
+      vis_threshold=10,
+      lighting=Lighting.DAYTIME
+   )
 
-   # Save satellite encounter windows.
-   toronto_IMG_windows.save(fname="toronto_IMG_windows.csv", delimiter=",")
-   toronto_DL_windows.save(fname="toronto_DL_windows.csv", delimiter=",")
+   # Generate window data for Calgary.
+   calgary_vtws = generate_vtws(
+      satellite=satellite,
+      location=calgary,
+      vis_threshold=10,
+      lighting=Lighting.DAYTIME
+   )
+
+   # Generate window data for Vancouver.
+   vancouver_vtws = generate_vtws(
+      satellite=satellite,
+      location=vancouver,
+      vis_threshold=10,
+      lighting=Lighting.DAYTIME
+   )
+
+More About Windows
+^^^^^^^^^^^^^^^^^^
+
+Using Celest effectively requires a good understanding of the concept of windows and how to define them. In their most
+basic form, a window is defined as a time where there exists a line of sight between the satellite and the ground
+location. Theoretically, this line of sight should exist whenever the satellite has a positive elevation angle with
+respect to the ground location. However, do to obstructions such as topography or structures, the line of sight may only
+exist when the satellite's elevation angle is above some threshold: the visibility threshold. This threshold can be
+passed into the :py:func:`generate_vtws` function as the `vis_threshold` argument.
+
+The other primary parameter of a window is the lighting condition. Some types of encounters may require specific
+lighting conditions. For example, an imaging encounter may require the satellite to be in the daytime, while a data
+transfer encounter may occur at any time of day. The :class:`Lighting` enum provides a list of possible lighting
+conditions that can be passed into the :py:func:`generate_vtws` function under the `lighting` argument.
+
+Scheduling Workflow
+-------------------
+
+One of the primary goals of Celest is to provide tools for satellite planning. This includes window generation and
+scheduling. The scheduling workflow can be broken down into four stages:
+
+#. Processing data,
+#. Specifying ground locations,
+#. Defining encounter requests, and
+#. Generating a satellite schedule.
+
+We begin by importing the time and position data to initialize the :class:`Scheduler` class.
+
+.. code-block:: python
+
+   from celest.coordinates import GCRS
+   from celest.satellite import Satellite
+   from celest.schedule import Scheduler
+   from celest import units as u
+   import numpy as np
+
+   julian_data = np.loadtxt(`julian.txt`)
+   gcrs_position_data = np.loadtxt(`gcrs_position.txt`)
+   gcrs_velocity_data = np.loadtxt(`gcrs_velocity.txt`)
+
+    gcrs_position = GCRS(
+        julian=julian_data,
+        x=gcrs_position_data[:, 0],
+        y=gcrs_position_data[:, 1],
+        z=gcrs_position_data[:, 2],
+        unit=u.km
+    )
+    gcrs_velocity = GCRS(
+        julian=julian_data,
+        x=gcrs_velocity_data[:, 0],
+        y=gcrs_velocity_data[:, 1],
+        z=gcrs_velocity_data[:, 2],
+        unit=u.m/u.s
+    )
+
+   satellite = Satellite(position=gcrs_position, velocity=gcrs_velocity)
+   scheduler = Scheduler(satellite=satellite, vis_threshold=10)
+
+To generate window data, we need to specify the ground locations involved in the encounters. If we want to image the
+Canadian cities of Toronto, Calgary, and Vancouver, we need to initialize three :class:`GroundLocation` objects.
+
+.. code-block:: python
+
+   from celest.coordinates import GroundLocation
+
+    toronto = GroundLocation(
+        latitude=43.6532,
+        longitude=-79.3832,
+        height=0.76,
+        angular_unit=u.deg,
+        length_unit=u.km
+    )
+    calgary = GroundLocation(
+        latitude=51.0486,
+        longitude=-114.0708,
+        height=1.045,
+        angular_unit=u.deg,
+        length_unit=u.km
+    )
+    vancouver = GroundLocation(
+        latitude=49.2827,
+        longitude=-123.1207,
+        height=0.0,
+        angular_unit=u.deg,
+        length_unit=u.km
+    )
+
+We now need to specify the encounters that we want to schedule; this is done through adding a request to the
+`scheduler`. A request is a desired encounter between the satellite and a ground location that meets certain criteria.
+The scheduler then generates the possible windows for the request and works to schedule one of the windows that meets
+all criteria. There are various parameters that define a request:
+
+#. The ground location associated with the satellite-to-ground encounter,
+#. The deadline for when the encounter should occur before,
+#. The duration that the encounter should be scheduled for,
+#. The priority of the request over other requests,
+#. The quality of the encounter which defines how nadir the encounter occurs,
+#. A specific look angle for the encounter if desired, and
+#. The lighting condition for the encounter.
+
+Note that a request being added to the scheduler does not guarantee that the request will be scheduled. The scheduler
+will search for the most optimal schedule without conflicts. Therefore, if significant conflicts exist (violations of
+the request criteria or overlaping of scheduled tasks), the scheduler may not be able to find a schedule that both
+schedules all tasks and has no conflicts, in this case, the lower priority request will be ignored.
+
+.. code-block:: python
+
+   from celest.encounter import Lighting
+
+   schedule.add_request(
+      location=toronto,
+      deadline=2460467,
+      duration=30,
+      priority=5,
+      quality=1,
+      look_ang=None,
+      lighting=Lighting.DAYTIME
+   )
+   schedule.add_request(
+      location=calgary,
+      deadline=2460467,
+      duration=30,
+      priority=3,
+      quality=1,
+      look_ang=None,
+      lighting=Lighting.DAYTIME
+   )
+   schedule.add_request(
+      location=vancouver,
+      deadline=2460467,
+      duration=30,
+      priority=1,
+      quality=1,
+      look_ang=None,
+      lighting=Lighting.DAYTIME
+   )
+
+The schedule can now be generated and the data exported. Note that the scheduler may take significant time to search
+for an optimal solution. The parameters that govern the search are will affect this time; these parameters are:
+
+#. The number of schedule iterations to make during the search,
+#. The annealing coefficient for the simulated annealing process that governs the acceptance probability of a non-improving solution, and
+#. The reactivity factor that determines the effect of past iterations on the current search for an optimal solution.
+
+.. code-block:: python
+
+   # Determine a feasible schedule.
+   schedule = scheduler.generate(max_iter=100, annealing_coeff=0.8, react_factor=0.5)
+   schedule.save_text_file(file_name="canada_imaging_schedule")

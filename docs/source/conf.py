@@ -22,7 +22,7 @@ copyright = '2021, Jai Willems'
 author = 'Jai Willems'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.0'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -30,7 +30,12 @@ release = '0.2.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'sphinx.ext.autosectionlabel']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.coverage',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autosectionlabel'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -56,5 +61,23 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
 
-html_logo = 'figures/celest_documentation_logo.png'
-html_theme_options = {'logo_only': True, 'display_version': False}
+html_logo = '../../branding/logo/transparent_background_large.png'
+html_theme_options = {
+    'logo_only': True,
+    'display_version': False
+}
+
+# Remove module prefixes from autodoc.
+add_module_names = False
+
+# Override the default autodoc options.
+autodoc_default_options = {
+    'class-doc-from': 'init',
+    'member-order': 'groupwise',
+    'show-inheritance': True,
+    'undoc-members': True
+}
+
+# Type hinting for autodoc.
+autodoc_typehints = 'description'
+autodoc_typehints_format = 'short'

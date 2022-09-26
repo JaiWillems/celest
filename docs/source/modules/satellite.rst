@@ -1,44 +1,62 @@
-Satellite Module
-================
+Satellite
+=========
 
-Time Class
-----------
+.. contents:: Contents
+   :depth: 1
+   :local:
 
-The :class:`Time` class allows for flexible and convenient time specifications.
-It takes Julian data in the J2000 epoch or another epoch with an appropriate
-offset (added to the times to achieve the J200 epoch). Example usage
-of the :class:`Time` class to carry out conversions can be seen on the
-tutorials page :ref:`here <Position and Time Conversions>`.
+Satellite Overview
+------------------
 
-.. autoclass:: celest.satellite.Time
-   :members:
-   :show-inheritance:
-   :noindex:
-
-Coordinate Class
-----------------
-
-The :class:`Coordinate` class, which inherits the :class:`Time` class, is used
-to represent a satellite's position and can be used to carry out coordinate
-transformations between different frames. The Example usage of the
-:class:`Coordinate` class to carry out conversions can be seen in the tutorials
-page :ref:`here <Position and Time Conversions>`.
-
-.. autoclass:: celest.satellite.Coordinate
-   :members:
-   :show-inheritance:
-   :noindex:
+The satellite module provides the :class:`Satellite` class for satellite specific computations. The following sections
+will detail the functionality of the :class:`Satellite` class as well as providing a more in depth discussion of the
+attitude and look-angle calculations.
 
 Satellite Class
 ---------------
 
-The :class:`Satellite` class, which inherits the :class:`Coordinate` class, is
-used to hold all necessary information for a given satellite such that it can
-be passed into the :py:func:window.generate` function for mission planning.
-Example usage of the :class:`Satellite` in a mission planning capacity can be
-seen on the tutorials page :ref:`here <Window Generation Workflow>`.
+The :class:`Satellite` class represents an Earth observation satellite and allows for satellite specific computations.
+
+.. note::
+   The :class:`Satellite.attitude()` method requires both satellite position and velocity to be defined.
+
+The :class:`Satellite` class can be imported via the following:
+
+.. code-block:: python
+
+   from celest.satellite import Satellite
 
 .. autoclass:: celest.satellite.Satellite
    :members:
-   :show-inheritance:
    :noindex:
+
+Satellite Attitude Definition
+-----------------------------
+
+A satellite's attitude defines the orientation of the attitude in some frame by providing the Euler angles required to
+rotate the satellite from the given frame into it's body fixed frame. Therefore, defining the satellite's attitude
+requires the satellite's initial and final orientations in a common frame: the
+:ref:`LVLH frame <Local-Vertical-Local-Horizontal (LVLH)>`. With this knowledge, the angles required to rotate from the
+initial to final orientation can be computed; these angles are the roll, pitch, and yaw angles.
+
+Assuming an Earth observation satellite, the initial orientation is defined as having the satellite's camera pointing
+in the direction of the lvlh's positive z-axis. The final orientation is the orientation in the lvlh frame
+where the camera is pointing in the direction a target of interest (i.e. when the camera is pointing towards a ground
+location). The attitude angles are then determined and adhere to the following definitions:
+
+#. Roll is the angle about the lvlh's x-axis,
+#. Pitch is the angle about the lvlh's y-axis, and
+#. Yaw is the angle about the lvlh's z-axis.
+
+Rotating a vector from the satellites initial orientation to the final orientation is performed by applying a Euler-213
+(or pitch-roll-yaw) sequence to the vector.
+
+Satellite Look-Angle Definition
+-------------------------------
+
+The look-angle (or off-nadir angle) is the angle between a vector pointing from the satellite to the target and the
+satellite's nadir vector and is a measure of a ground target's position relative to the satellite's nadir. This can be
+a useful metric for determining the satellite's image quality. If a large look-angle exists for a ground target, then
+imaging of that location would induce significant skew in the resultant data. In the other extreme, if a zero look-angle
+exists, the satellite would be directly overhead the target inducing little to no distortion in the data. The look-angle
+is always positive by definition.

@@ -1,6 +1,10 @@
 Contributing
 ============
 
+.. contents:: Contents
+   :depth: 1
+   :local:
+
 Getting Started
 ---------------
 
